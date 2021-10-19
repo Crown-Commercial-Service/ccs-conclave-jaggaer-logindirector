@@ -1,8 +1,8 @@
-name: .NET Core CI
+name: .NET Core - trigger CI
 
 on:
-  # push:
-  #   branches: [ develop ]
+  push:
+    branches: [ develop ]
   pull_request:
     branches: [ develop ]
 
@@ -15,7 +15,7 @@ jobs:
     - uses: actions/checkout@v2
       
     - name: Setup .NET
-      uses: actions/setup-dotnet@v1.7.2
+      uses: actions/setup-dotnet@v1
       with:
          dotnet-version: 5.0.x
  

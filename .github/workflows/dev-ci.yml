@@ -40,4 +40,18 @@ jobs:
     #     name: WebApp1
     #     path: ${{ github.workspace }}/src/WebApp1/bin/Debug/netcoreapp3.1/publish/
     #   test
-        
+    
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Deploy to Cloud Foundry
+        uses: jhunt/cf-push@v1
+        with:
+          api:      ${{ secrets.CF_API }}
+          org:      ${{ secrets.CF_ORG }}
+          space:    ${{ secrets.CF_SPACE }}
+          username: ${{ secrets.CF_USERNAME }}
+          password: ${{ secrets.CF_PASSWORD }}
+          manifest: manifest.yml
+          validate: false

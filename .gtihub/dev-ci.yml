@@ -1,4 +1,4 @@
-name: .NET Core - trigger CI
+name: login director - trigger CI
 
 on:
   push:

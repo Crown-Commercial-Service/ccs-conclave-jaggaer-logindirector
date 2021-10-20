@@ -38,9 +38,10 @@ jobs:
       with:
         name: deploymentArchive
         path: ${{ github.workspace }}/logindirector/bin/Debug/net5.0/publish/
-
   deploy:
+
     runs-on: ubuntu-latest
+
     needs: build
     steps:
       - name: cf login to GOV.UK Platform as a Service
@@ -50,8 +51,8 @@ jobs:
           user: ${{ secrets.CF_USERNAME }}
           password: ${{ secrets.CF_PASSWORD }}
       - name: cf target -o my-org -s development
-      - uses: comsysto/cloudfoundry-action/cli@v1.0
-      - name: Deploy to Cloud Foundry
+        uses: comsysto/cloudfoundry-action/cli@v1.0
+      # - name: Deploy to Cloud Foundry
         with:
           org:      ${{ secrets.CF_ORG }}
           space:    ${{ secrets.CF_SPACE }}

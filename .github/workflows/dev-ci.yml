@@ -54,9 +54,9 @@ jobs:
         uses: comsysto/cloudfoundry-action/cli@v1.0
       # - name: Deploy to Cloud Foundry
         with:
-          org:      ${{ secrets.CF_ORG }}
-          space:    ${{ secrets.CF_SPACE }}
-          args: target -o ${{ secrets.CF_ORG }} -s ${{ secrets.CF_SPACE }}
+          # org:      ${{ secrets.CF_ORG }}
+          # space:    ${{ secrets.CF_SPACE_DEVELOPMENT }}
+          args: target -o ${{ secrets.CF_ORG }} -s ${{ secrets.CF_SPACE_DEVELOPMENT }}
         # with:
         #   api:      ${{ secrets.CF_API }}
         #   org:      ${{ secrets.CF_ORG }}

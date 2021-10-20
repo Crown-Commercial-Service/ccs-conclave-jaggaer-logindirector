@@ -75,6 +75,6 @@ jobs:
       - name: cf push
         uses: comsysto/cloudfoundry-action/cli@v1.0
         with:
-          args: push -f manifest.yml --no-start --no-start
+          args: push -f ${{ github.workspace }}/manifest.yml --no-start --no-start
           # manifest: manifest.yml
           # validate: false

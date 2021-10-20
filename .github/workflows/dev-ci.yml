@@ -21,15 +21,15 @@ jobs:
  
     - name: Restore
       run: dotnet restore
-      working-directory: ./logindirector
+      working-directory: ${{ github.workspace }}/logindirector/logindirector.csproj
  
     - name: Build
-      run: dotnet build --configuration Release --no-restore
-      working-directory: ./logindirector
+      run: dotnet build ${{ github.workspace }}/logindirector/logindirector.csproj --configuration Release --no-restore
+      #working-directory: ./logindirector
  
     - name: Test
-      run: dotnet test --no-restore
-      working-directory: ./logindirector
+      run: dotnet test ${{ github.workspace }}/logindirector/logindirector.csproj --no-restore
+      #working-directory: ./logindirector
 
     - name: Publish
       run: dotnet publish ${{ github.workspace }}/logindirector/logindirector.csproj
@@ -38,7 +38,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: logindirector
-        path: ${{ github.workspace }}/logindirector/bin/Debug/netcoreapp5.0/publish/
+        path: ${{ github.workspace }}/logindirector/bin/Debug/net5.0/publish/
 
   # # deploy:
   #   runs-on: ubuntu-latest

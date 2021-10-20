@@ -13,7 +13,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-      
+    
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
@@ -37,7 +37,7 @@ jobs:
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: WebApp1
+        name: logindirector
         path: ${{ github.workspace }}/logindirector/bin/Debug/netcoreapp3.1/publish/
 
   deploy:
@@ -54,8 +54,8 @@ jobs:
       - uses: comsysto/cloudfoundry-action/cli@v1.0
       # - name: Deploy to Cloud Foundry
         with:
-          org:      ${{ secrets.CF_ORG }}
-          space:    ${{ secrets.CF_SPACE }}
+          # org:      ${{ secrets.CF_ORG }}
+          # space:    ${{ secrets.CF_SPACE }}
           args: target -o ${{ secrets.CF_ORG }} -s ${{ secrets.CF_SPACE }}
         # uses: jhunt/cf-push@v1
         # with:

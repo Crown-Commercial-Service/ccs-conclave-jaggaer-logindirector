@@ -67,14 +67,14 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: deploymentArchive
-      - name: Read deploymentInfo.json
-        id: deploymentInfo
-        uses: comsysto/deployment-information-action/read@v1.0
-        with:
-          archive-path: deploymentArchive
+      # - name: Read deploymentInfo.json
+      #   id: deploymentInfo
+      #   uses: comsysto/deployment-information-action/read@v1.0
+      #   with:
+      #     archive-path: deploymentArchive
       - name: cf push
         uses: comsysto/cloudfoundry-action/cli@v1.0
         with:
-          args: push -f manifest.yml  -p ${{ steps.deploymentInfo.outputs.artifact-path }} --no-start --no-start
+          args: push -f manifest.yml --no-start --no-start
           # manifest: manifest.yml
           # validate: false

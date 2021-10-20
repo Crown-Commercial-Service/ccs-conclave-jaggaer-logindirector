@@ -31,27 +31,42 @@ jobs:
       run: dotnet test --no-restore
       working-directory: ./logindirector
 
-    # - name: Publish
-    #   run: dotnet publish ${{ github.workspace }}/src/WebApp1/WebApp1.csproj
+    - name: Publish
+      run: dotnet publish ${{ github.workspace }}/logindirector/logindirector.csproj
     
-    # - name: Upload Build Artifact
-    #   uses: actions/upload-artifact@v2
-    #   with:
-    #     name: WebApp1
-    #     path: ${{ github.workspace }}/src/WebApp1/bin/Debug/netcoreapp3.1/publish/
-    #   test
-    
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: WebApp1
+        path: ${{ github.workspace }}/logindirector/bin/Debug/netcoreapp3.1/publish/
+
   deploy:
     runs-on: ubuntu-latest
+    needs:  build
     steps:
-      - uses: actions/checkout@v2
-      - name: Deploy to Cloud Foundry
-        uses: jhunt/cf-push@v1
+      - name: cf login to GOV.UK Platform as a Service
+        uses: comsysto/cloudfoundry-action/auth@v1.0
         with:
-          api:      ${{ secrets.CF_API }}
+          api: ${{ secrets.CF_API }}
+          user: ${{ secrets.CF_USERNAME }}
+          password: ${{ secrets.CF_PASSWORD }}
+      - name: cf target -o my-org -s development
+      - uses: comsysto/cloudfoundry-action/cli@v1.0
+      # - name: Deploy to Cloud Foundry
+        with:
           org:      ${{ secrets.CF_ORG }}
           space:    ${{ secrets.CF_SPACE }}
-          username: ${{ secrets.CF_USERNAME }}
-          password: ${{ secrets.CF_PASSWORD }}
-          manifest: manifest.yml
-          validate: false
+          args: target -o ${{ secrets.CF_ORG }} -s ${{ secrets.CF_SPACE }}
+        # uses: jhunt/cf-push@v1
+        # with:
+        #   api:      ${{ secrets.CF_API }}
+        #   org:      ${{ secrets.CF_ORG }}
+        #   space:    ${{ secrets.CF_SPACE }}
+        #   username: ${{ secrets.CF_USERNAME }}
+        #   password: ${{ secrets.CF_PASSWORD }}
+      - name: cf push
+        uses: comsysto/cloudfoundry-action/cli@v1.0
+        with:
+          args: push -f manifest.yml --no-start
+          # manifest: manifest.yml
+          # validate: false

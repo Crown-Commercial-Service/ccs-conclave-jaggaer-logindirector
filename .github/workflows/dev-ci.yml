@@ -36,36 +36,44 @@ jobs:
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: logindirector
+        name: deploymentArchive
         path: ${{ github.workspace }}/logindirector/bin/Debug/net5.0/publish/
 
-  # # deploy:
-  #   runs-on: ubuntu-latest
-  #   needs: build
-  #   steps:
-  #     - name: cf login to GOV.UK Platform as a Service
-  #       uses: comsysto/cloudfoundry-action/auth@v1.0
-  #       with:
-  #         api: ${{ secrets.CF_API }}
-  #         user: ${{ secrets.CF_USERNAME }}
-  #         password: ${{ secrets.CF_PASSWORD }}
-  #     - name: cf target -o my-org -s development
-  #     - uses: comsysto/cloudfoundry-action/cli@v1.0
-  #       # - name: Deploy to Cloud Foundry
-  #       with:
-  #         # org:      ${{ secrets.CF_ORG }}
-  #         # space:    ${{ secrets.CF_SPACE }}
-  #         args: target -o ${{ secrets.CF_ORG }} -s ${{ secrets.CF_SPACE }}
-  #       # uses: jhunt/cf-push@v1
-  #       # with:
-  #       #   api:      ${{ secrets.CF_API }}
-  #       #   org:      ${{ secrets.CF_ORG }}
-  #       #   space:    ${{ secrets.CF_SPACE }}
-  #       #   username: ${{ secrets.CF_USERNAME }}
-  #       #   password: ${{ secrets.CF_PASSWORD }}
-  #     - name: cf push
-  #       uses: comsysto/cloudfoundry-action/cli@v1.0
-  #       with:
-  #         args: push -f manifest.yml --no-start
-  #         # manifest: manifest.yml
-  #         # validate: false
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: cf login to GOV.UK Platform as a Service
+        uses: comsysto/cloudfoundry-action/auth@v1.0
+        with:
+          api: ${{ secrets.CF_API }}
+          user: ${{ secrets.CF_USERNAME }}
+          password: ${{ secrets.CF_PASSWORD }}
+      - name: cf target -o my-org -s development
+      - uses: comsysto/cloudfoundry-action/cli@v1.0
+      - name: Deploy to Cloud Foundry
+        with:
+          org:      ${{ secrets.CF_ORG }}
+          space:    ${{ secrets.CF_SPACE }}
+          args: target -o ${{ secrets.CF_ORG }} -s ${{ secrets.CF_SPACE }}
+        # with:
+        #   api:      ${{ secrets.CF_API }}
+        #   org:      ${{ secrets.CF_ORG }}
+        #   space:    ${{ secrets.CF_SPACE }}
+        #   username: ${{ secrets.CF_USERNAME }}
+        #   password: ${{ secrets.CF_PASSWORD }}
+      - name: Download artifact
+        uses: actions/download-artifact@v1
+        with:
+          name: deploymentArchive
+      - name: Read deploymentInfo.json
+        id: deploymentInfo
+        uses: comsysto/deployment-information-action/read@v1.0
+        with:
+          archive-path: deploymentArchive
+      - name: cf push
+        uses: comsysto/cloudfoundry-action/cli@v1.0
+        with:
+          args: push -f manifest.yml  -p ${{ steps.deploymentInfo.outputs.artifact-path }} --no-start --no-start
+          # manifest: manifest.yml
+          # validate: false

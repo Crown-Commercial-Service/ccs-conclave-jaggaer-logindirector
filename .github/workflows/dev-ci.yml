@@ -14,16 +14,21 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       
-    - name: Setup .NET
+    - name: Setup .NET v5.0
       uses: actions/setup-dotnet@v1
       with:
-         dotnet-version: '5.0.100-preview.2.20176.6'
+          dotnet-version: '5.0.x'
+          
+    - name: Setup .NET Core v3.1
+      uses: actions/setup-dotnet@v1
+      with:
+          dotnet-version: '3.1.x'
  
     - name: Restore
       run: dotnet restore ${{ github.workspace }}/logindirector/logindirector.csproj
  
     - name: Build
-      run: dotnet build ${{ github.workspace }}/logindirector/logindirector.csproj --configuration Release --no-restore
+      run: dotnet build ${{ github.workspace }}/logindirector/logindirector.csproj --configuration Release --no-restore --framework net5.0
       #working-directory: ./logindirector
  
     - name: Test

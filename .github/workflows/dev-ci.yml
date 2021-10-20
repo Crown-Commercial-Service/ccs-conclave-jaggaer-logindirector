@@ -17,7 +17,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
-         dotnet-version: 5.0.9
+         dotnet-version: '5.0.100'
  
     - name: Restore
       run: dotnet restore ${{ github.workspace }}/logindirector/logindirector.csproj

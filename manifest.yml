@@ -1,6 +1,6 @@
 applications:
   - name: logindirector
     instances: 1
-    memory: 32M
+    memory: 512M
     buildpack: https://github.com/cloudfoundry/dotnet-core-buildpack.git
     random-route: true

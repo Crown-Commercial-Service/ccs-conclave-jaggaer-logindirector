@@ -25,9 +25,9 @@ jobs:
         run: dotnet build --configuration Release --no-restore
         working-directory: ./logindirector
 
-      - name: Test
-        run: dotnet test --no-restore
-        working-directory: ./logindirector
+      # - name: Test
+      #   run: dotnet test --no-restore
+      #   working-directory: ./logindirector
 
     # - name: Publish
     #   run: dotnet publish ${{ github.workspace }}/logindirector/logindirector.csproj

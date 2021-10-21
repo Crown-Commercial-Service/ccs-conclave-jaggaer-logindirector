@@ -2,9 +2,9 @@ name: login director - trigger CI
 
 on:
   push:
-    branches: [ develop ]
+    branches: [develop]
   pull_request:
-    branches: [ develop ]
+    branches: [develop]
 
 jobs:
   build:
@@ -12,42 +12,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-      
-    - name: Setup .NET v5.0
-      uses: actions/setup-dotnet@v1
-      with:
-          dotnet-version: '5.0.x'
-          
-    - name: Setup .NET Core v3.1
-      uses: actions/setup-dotnet@v1
-      with:
-          dotnet-version: '3.1.x'
- 
-    - name: Restore
-      run: dotnet restore ${{ github.workspace }}/logindirector/logindirector.csproj
- 
-    - name: Build
-      run: dotnet build ${{ github.workspace }}/logindirector/logindirector.csproj --configuration Release --no-restore --framework net5.0
-      #working-directory: ./logindirector
- 
-    - name: Test
-      run: dotnet test ${{ github.workspace }}/logindirector/logindirector.csproj --no-restore
-      #working-directory: ./logindirector
+      - uses: actions/checkout@v2
 
-    - name: Publish
-      run: dotnet publish ${{ github.workspace }}/logindirector/logindirector.csproj
+      - name: Setup .NET v5.0
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: "5.0.x"
+      - name: Copy manifest.yaml
+        run: cp ./manifest.yaml ${{ github.workspace }}/logindirector/bin/Debug/net5.0/publish/
 
-    - name: Upload Build Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: deploymentArchive
-        path: ${{ github.workspace }}/logindirector/bin/Debug/net5.0/publish/
+      - name: Restore
+        run: dotnet restore ${{ github.workspace }}/logindirector/logindirector.csproj
+
+      - name: Build
+        run: dotnet build ${{ github.workspace }}/logindirector/logindirector.csproj --configuration Release --no-restore --framework net5.0
+        #working-directory: ./logindirector
+
+      - name: Test
+        run: dotnet test ${{ github.workspace }}/logindirector/logindirector.csproj --no-restore
+        #working-directory: ./logindirector
+
+      - name: Publish
+        run: dotnet publish ${{ github.workspace }}/logindirector/logindirector.csproj
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: deploymentArchive
+          path: ${{ github.workspace }}/logindirector/bin/Debug/net5.0/publish/
   deploy:
 
-    runs-on: ubuntu-latest
-
     needs: build
+    if: github.event_name == 'release'
+
+    runs-on: ubuntu-latest
+    
     steps:
       - name: cf login to GOV.UK Platform as a Service
         uses: comsysto/cloudfoundry-action/auth@v1.0
@@ -57,7 +56,7 @@ jobs:
           password: ${{ secrets.CF_PASSWORD }}
       - name: cf target -o my-org -s development
         uses: comsysto/cloudfoundry-action/cli@v1.0
-      # - name: Deploy to Cloud Foundry
+        # - name: Deploy to Cloud Foundry
         with:
           # org:      ${{ secrets.CF_ORG }}
           # space:    ${{ secrets.CF_SPACE_DEVELOPMENT }}

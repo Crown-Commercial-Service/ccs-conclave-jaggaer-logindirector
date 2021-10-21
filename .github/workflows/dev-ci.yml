@@ -53,7 +53,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: deploymentArchive
-          path: ${{ github.workspace }}/logindirector/bin/Debug/netcoreapp5.0/publish/
+          path: ${{ github.workspace }}/logindirector/bin/Debug/netcoreapp3.0/publish/
 
   deploy:
 
@@ -69,7 +69,7 @@ jobs:
         with:
           dotnet-version: 5.0.400
 
-          
+
       - name: Download artifact
         uses: actions/download-artifact@v1
         with:

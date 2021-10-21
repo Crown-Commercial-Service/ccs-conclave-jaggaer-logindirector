@@ -18,8 +18,8 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: "5.0.x"
-      - name: Copy manifest.yaml
-        run: cp ./manifest.yaml ${{ github.workspace }}/logindirector/bin/Debug/net5.0/publish/
+      # - name: Copy manifest.yaml
+      #   run: cp ./manifest.yaml ${{ github.workspace }}/logindirector/bin/Debug/net5.0/publish/
 
       - name: Restore
         run: dotnet restore ${{ github.workspace }}/logindirector/logindirector.csproj
@@ -46,7 +46,7 @@ jobs:
     if: github.event_name == 'release'
 
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: cf login to GOV.UK Platform as a Service
         uses: comsysto/cloudfoundry-action/auth@v1.0

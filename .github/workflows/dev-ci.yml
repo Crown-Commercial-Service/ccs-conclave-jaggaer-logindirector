@@ -53,7 +53,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: deploymentArchive
-          path: ${{ github.workspace }}/logindirector/bin/Debug/netcoreapp3.0/publish/
+          path: ${{ github.workspace }}/logindirector/bin/Debug/netcoreapp3.1/publish/
 
   deploy:
 

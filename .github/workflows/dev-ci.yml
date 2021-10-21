@@ -77,14 +77,11 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: deploymentArchive
-      # - name: Read deploymentInfo.json
-      #   id: deploymentInfo
-      #   uses: comsysto/deployment-information-action/read@v1.0
-      #   with:
-      #     archive-path: deploymentArchive
+
       - name: cf push
         uses: comsysto/cloudfoundry-action/cli@v1.0
         with:
           args: push logindirector -b 'https://github.com/cloudfoundry/dotnet-core-buildpack.git' -i 1 -k 512M -s cflinuxfs3 --no-start --no-start
           # manifest: manifest.yml
           # validate: false
+          

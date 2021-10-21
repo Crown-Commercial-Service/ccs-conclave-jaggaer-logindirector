@@ -5,11 +5,25 @@ on:
     branches: [develop]
   pull_request:
     branches: [develop]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.gitignore'
+      - '**/*.gitattributes'
 
 jobs:
   build:
 
     runs-on: ubuntu-latest
+
+    env:
+      # Disable sending usage data to Microsof
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      # Stop wasting time caching packages
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+      DOTNET_NOLOGO: true
+      DOTNET_GENERATE_ASPNET_CERTIFICATE: false
+      DOTNET_ADD_GLOBAL_TOOLS_TO_PATH: false
+      DOTNET_MULTILEVEL_LOOKUP: 0
 
     steps:
       - uses: actions/checkout@v2
@@ -40,6 +54,7 @@ jobs:
         with:
           name: deploymentArchive
           path: ${{ github.workspace }}/logindirector/bin/Debug/netcoreapp5.0/publish/
+
   deploy:
 
     needs: build
@@ -54,34 +69,19 @@ jobs:
         with:
           dotnet-version: 5.0.400
 
-      - name: cf login to GOV.UK Platform as a Service
-        uses: comsysto/cloudfoundry-action/auth@v1.0
-        with:
-          api: ${{ secrets.CF_API }}
-          user: ${{ secrets.CF_USERNAME }}
-          password: ${{ secrets.CF_PASSWORD }}
-      - name: cf target -o my-org -s development
-        uses: comsysto/cloudfoundry-action/cli@v1.0
-        # - name: Deploy to Cloud Foundry
-        with:
-          # org:      ${{ secrets.CF_ORG }}
-          # space:    ${{ secrets.CF_SPACE_DEVELOPMENT }}
-          args: target -o ${{ secrets.CF_ORG }} -s ${{ secrets.CF_SPACE_DEVELOPMENT }}
-        # with:
-        #   api:      ${{ secrets.CF_API }}
-        #   org:      ${{ secrets.CF_ORG }}
-        #   space:    ${{ secrets.CF_SPACE }}
-        #   username: ${{ secrets.CF_USERNAME }}
-        #   password: ${{ secrets.CF_PASSWORD }}
+          
       - name: Download artifact
         uses: actions/download-artifact@v1
         with:
           name: deploymentArchive
 
-      - name: cf push
-        uses: comsysto/cloudfoundry-action/cli@v1.0
+      - name: Deploy to Cloud Foundry
+        uses: jhunt/cf-push@v1
         with:
-          args: push logindirector -b 'https://github.com/cloudfoundry/dotnet-core-buildpack.git' -i 1 -k 512M -s cflinuxfs3 --no-start --no-start
-          # manifest: manifest.yml
-          # validate: false
-          
+          api:      ${{ secrets.CF_API }}
+          org:      ${{ secrets.CF_ORG }}
+          space:    ${{ secrets.CF_SPACE_DEVELOPMENT  }}
+          username: ${{ secrets.CF_USERNAME }}
+          password: ${{ secrets.CF_PASSWORD }}
+          manifest: manifest.yml
+          validate: false

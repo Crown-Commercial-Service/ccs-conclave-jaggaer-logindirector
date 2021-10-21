@@ -2,9 +2,9 @@ name: login director - trigger CI
 
 on:
   push:
-    branches: [ develop ]
+    branches: [develop]
   pull_request:
-    branches: [ develop ]
+    branches: [develop]
 
 jobs:
   build:
@@ -12,32 +12,73 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-      
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v1
-      with:
-         dotnet-version: 5.0.x
- 
-    - name: Restore
-      run: dotnet restore
-      working-directory: ./logindirector
- 
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
-      working-directory: ./logindirector
- 
-    - name: Test
-      run: dotnet test --no-restore
-      working-directory: ./logindirector
+      - uses: actions/checkout@v2
 
-    # - name: Publish
-    #   run: dotnet publish ${{ github.workspace }}/src/WebApp1/WebApp1.csproj
-    
-    # - name: Upload Build Artifact
-    #   uses: actions/upload-artifact@v2
-    #   with:
-    #     name: WebApp1
-    #     path: ${{ github.workspace }}/src/WebApp1/bin/Debug/netcoreapp3.1/publish/
-    #   test
-        
+      - name: Setup .NET v5.0
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.400
+      # - name: Copy manifest.yaml
+      #   run: cp ./manifest.yaml ${{ github.workspace }}/logindirector/bin/Debug/net5.0/publish/
+
+      - name: Restore
+        run: dotnet restore ${{ github.workspace }}/logindirector/logindirector.csproj
+
+      - name: Build
+        run: dotnet build ${{ github.workspace }}/logindirector/logindirector.csproj --configuration Release --no-restore --framework net5.0
+        #working-directory: ./logindirector
+
+      - name: Test
+        run: dotnet test ${{ github.workspace }}/logindirector/logindirector.csproj --no-restore
+        #working-directory: ./logindirector
+
+      - name: Publish
+        run: dotnet publish ${{ github.workspace }}/logindirector/logindirector.csproj
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: deploymentArchive
+          path: ${{ github.workspace }}/logindirector/bin/Debug/net5.0/publish/
+  deploy:
+
+    needs: build
+    if: github.event_name == 'release'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: cf login to GOV.UK Platform as a Service
+        uses: comsysto/cloudfoundry-action/auth@v1.0
+        with:
+          api: ${{ secrets.CF_API }}
+          user: ${{ secrets.CF_USERNAME }}
+          password: ${{ secrets.CF_PASSWORD }}
+      - name: cf target -o my-org -s development
+        uses: comsysto/cloudfoundry-action/cli@v1.0
+        # - name: Deploy to Cloud Foundry
+        with:
+          # org:      ${{ secrets.CF_ORG }}
+          # space:    ${{ secrets.CF_SPACE_DEVELOPMENT }}
+          args: target -o ${{ secrets.CF_ORG }} -s ${{ secrets.CF_SPACE_DEVELOPMENT }}
+        # with:
+        #   api:      ${{ secrets.CF_API }}
+        #   org:      ${{ secrets.CF_ORG }}
+        #   space:    ${{ secrets.CF_SPACE }}
+        #   username: ${{ secrets.CF_USERNAME }}
+        #   password: ${{ secrets.CF_PASSWORD }}
+      - name: Download artifact
+        uses: actions/download-artifact@v1
+        with:
+          name: deploymentArchive
+      # - name: Read deploymentInfo.json
+      #   id: deploymentInfo
+      #   uses: comsysto/deployment-information-action/read@v1.0
+      #   with:
+      #     archive-path: deploymentArchive
+      - name: cf push
+        uses: comsysto/cloudfoundry-action/cli@v1.0
+        with:
+          args: push logindirector -b 'https://github.com/cloudfoundry/dotnet-core-buildpack.git' -i 1 -k 512M --no-start --no-start
+          # manifest: manifest.yml
+          # validate: false

@@ -25,7 +25,7 @@ jobs:
         run: dotnet restore ${{ github.workspace }}/logindirector/logindirector.csproj
 
       - name: Build
-        run: dotnet build ${{ github.workspace }}/logindirector/logindirector.csproj --configuration Release --no-restore --framework net5.0
+        run: dotnet build ${{ github.workspace }}/logindirector/logindirector.csproj --configuration Release --no-restore
         #working-directory: ./logindirector
 
       - name: Test
@@ -39,15 +39,21 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: deploymentArchive
-          path: ${{ github.workspace }}/logindirector/bin/Debug/net5.0/publish/
+          path: ${{ github.workspace }}/logindirector/bin/Debug/netcoreapp5.0/publish/
   deploy:
 
     needs: build
-    
+
 
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v2
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.400
+
       - name: cf login to GOV.UK Platform as a Service
         uses: comsysto/cloudfoundry-action/auth@v1.0
         with:
@@ -77,8 +83,8 @@ jobs:
       #   with:
       #     archive-path: deploymentArchive
       - name: cf push
-        uses: comsysto/cloudfoundry-action/cli@v1.0
+        uses: comsysto/cloudfoundry-action/cli@develop
         with:
-          args: push logindirector -b 'https://github.com/cloudfoundry/dotnet-core-buildpack.git' -i 1 -k 512M --no-start --no-start
+          args: push logindirector -b 'https://github.com/cloudfoundry/dotnet-core-buildpack.git' -i 1 -k 512M -s cflinuxfs3 --no-start --no-start
           # manifest: manifest.yml
           # validate: false

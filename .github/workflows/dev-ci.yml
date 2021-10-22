@@ -59,10 +59,10 @@ jobs:
           name: deploymentArchive
           path: ${{ github.workspace }}/logindirector/bin/Debug/netcoreapp3.1/publish/
 
-  build_and_deploy:
+  deploy:
 
     # if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
-    # needs: build
+    needs: build
 
     runs-on: ubuntu-latest
     env:

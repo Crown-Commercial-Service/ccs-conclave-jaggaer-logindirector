@@ -3,16 +3,21 @@ name: login director - trigger CI
 on:
   push:
     branches: [develop]
-  pull_request:
-  
     paths-ignore:
-      - '**/*.md'
-      - '**/*.gitignore'
-      - '**/*.gitattributes'
+      - "**/*.md"
+      - "**/*.gitignore"
+      - "**/*.gitattributes"
+  pull_request:
+    types: [closed, opened, synchronize]
+    branches: [develop]
+    paths-ignore:
+      - "**/*.md"
+      - "**/*.gitignore"
+      - "**/*.gitattributes"
 
 jobs:
   build:
-
+  
     runs-on: ubuntu-latest
 
     env:
@@ -26,14 +31,25 @@ jobs:
       DOTNET_MULTILEVEL_LOOKUP: 0
 
     steps:
+      - name: Checking your input
+        run: |
+          echo "github.event.pull_request.merged           : $MERGED_RAW"
+          echo "github.event.pull_request.merged == 'true' : $MERGED_TRUE_STR"
+          echo "github.event.pull_request.merged  == true  : $MERGED_TRUE_BOOL"
+        env:
+          MERGED_RAW: ${{ github.event.pull_request.merged }}
+          MERGED_TRUE_STR: ${{ github.event.pull_request.merged == 'true' }}
+          MERGED_TRUE_BOOL: ${{ github.event.pull_request.merged == true }}
       - uses: actions/checkout@v2
 
+      
+      
+      
       - name: Setup .NET v5.0
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 5.0.400
-      # - name: Copy manifest.yaml
-      #   run: cp ./manifest.yaml ${{ github.workspace }}/logindirector/bin/Debug/net5.0/publish/
+
 
       - name: Restore
         run: dotnet restore ${{ github.workspace }}/logindirector/logindirector.csproj
@@ -56,20 +72,28 @@ jobs:
           path: ${{ github.workspace }}/logindirector/bin/Debug/netcoreapp3.1/publish/
 
   deploy:
-
-    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
-    needs: build
-
-
+    if: github.event.pull_request.merged
     runs-on: ubuntu-latest
 
+    needs: build
+
+    env:
+      # Disable sending usage data to Microsof
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      # Stop wasting time caching packages
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+      DOTNET_NOLOGO: true
+      DOTNET_GENERATE_ASPNET_CERTIFICATE: false
+      DOTNET_ADD_GLOBAL_TOOLS_TO_PATH: false
+      DOTNET_MULTILEVEL_LOOKUP: 0
+
     steps:
+      - run: echo PR #${{ github.event.number }} has been merged
       - uses: actions/checkout@v2
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 5.0.400
-
 
       - name: Download artifact
         uses: actions/download-artifact@v1
@@ -79,10 +103,18 @@ jobs:
       - name: Deploy to Cloud Foundry
         uses: jhunt/cf-push@v1
         with:
-          api:      ${{ secrets.CF_API }}
-          org:      ${{ secrets.CF_ORG }}
-          space:    ${{ secrets.CF_SPACE_DEVELOPMENT  }}
+          api: ${{ secrets.CF_API }}
+          org: ${{ secrets.CF_ORG }}
+          space: ${{ secrets.CF_SPACE_DEVELOPMENT  }}
           username: ${{ secrets.CF_USERNAME }}
           password: ${{ secrets.CF_PASSWORD }}
           manifest: manifest.yml
           validate: false
+
+  # close_job:
+  #   # this job will only run if the PR has been closed without being merged
+  #   if: github.event.pull_request.merged != true
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - run: |
+  #       echo PR #${{ github.event.number }} has been closed without being merged

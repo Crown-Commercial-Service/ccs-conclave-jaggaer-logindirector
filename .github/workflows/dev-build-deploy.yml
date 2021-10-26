@@ -110,7 +110,7 @@ jobs:
           path: ${{ github.workspace }}/logindirector/bin/Debug/netcoreapp3.1/publish/
 
       - name: Deploy to Cloud Foundry - development
-        if: github.ref == 'refs/heads/develop'
+        if: ${{ github.base_ref == 'develop' }}
         uses: jhunt/cf-push@v1
         with:
           api: ${{ secrets.CF_API }}
@@ -122,7 +122,7 @@ jobs:
           validate: false
 
       - name: Deploy to Cloud Foundry - staging / testing
-        if: github.ref == 'refs/heads/staging'
+        if: ${{ github.base_ref == 'staging' }}
         uses: jhunt/cf-push@v1
         with:
           api: ${{ secrets.CF_API }}
@@ -134,7 +134,7 @@ jobs:
           validate: false
 
       - name: Deploy to Cloud Foundry - production
-        if: github.ref == 'refs/heads/main'
+        if: ${{ github.base_ref == 'main' }}
         uses: jhunt/cf-push@v1
         with:
           api: ${{ secrets.CF_API }}

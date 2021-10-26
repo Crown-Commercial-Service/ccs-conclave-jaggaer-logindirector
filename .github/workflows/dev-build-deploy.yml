@@ -8,6 +8,7 @@ on:
       - '**/*.gitignore'
       - '**/*.gitattributes'
   pull_request:
+    types: [ assigned, opened, synchronize]
     branches: [develop]
     paths-ignore:
       - '**/*.md'
@@ -59,9 +60,10 @@ jobs:
           name: deploymentArchive
           path: ${{ github.workspace }}/logindirector/bin/Debug/netcoreapp3.1/publish/
 
-  deploy:
 
-    # if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+  deploy:
+    if: github.event.action= 'closed' && github.event.pull_request.merged == true
+    # if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
     needs: build
 
     runs-on: ubuntu-latest

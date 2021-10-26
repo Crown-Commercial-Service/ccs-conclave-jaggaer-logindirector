@@ -39,12 +39,12 @@ jobs:
           MERGED_RAW: ${{ github.event.pull_request.merged }}
           MERGED_TRUE_BOOL: ${{ github.event.pull_request.merged == true }}
       - uses: actions/checkout@v2
-      - name: Set output
-        id: vars
-        run: echo ::set-output name=short_ref::${github.base_ref}
+      # - name: Set output
+      #   id: vars
+      #   run: echo ::set-output name=short_ref::${github.base_ref}
 
       - name: Check output
-        run: echo ${{ steps.vars.outputs.short_ref }}
+        run: echo ${{ github.base_ref }}
       
       - name: Setup .NET v5.0
         uses: actions/setup-dotnet@v1
@@ -68,7 +68,7 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ steps.vars.outputs.short_ref }}-deploymentArchive
+          name: ${{ github.base_ref }}-deploymentArchive
           path: ${{ github.workspace }}/logindirector/bin/Debug/netcoreapp3.1/publish/
 
   deploy:

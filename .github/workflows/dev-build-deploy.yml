@@ -41,7 +41,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Set output
         id: vars
-        run: echo ::set-output name=short_ref::${GITHUB_REF#refs/*/}
+        run: echo ::set-output name=short_ref::${github.event.pull_request.base.ref}
 
       - name: Check output
         run: echo ${{ steps.vars.outputs.short_ref }}
@@ -93,7 +93,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Set output
         id: vars
-        run: echo ::set-output name=short_ref::${GITHUB_REF#refs/*/}
+        run: echo ::set-output name=short_ref::${github.event.pull_request.base.ref}
 
       - name: Check output
         run: echo ${{ steps.vars.outputs.short_ref }}

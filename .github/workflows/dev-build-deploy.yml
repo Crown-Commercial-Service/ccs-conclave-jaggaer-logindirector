@@ -1,15 +1,15 @@
-name: login director - trigger CI
+name: login director - build on PR and deploy on PR merged (pushed)
 
 on:
   push:
-    branches: [develop]
+    branches: [develop, staging, main]
     paths-ignore:
       - "**/*.md"
       - "**/*.gitignore"
       - "**/*.gitattributes"
   pull_request:
     types: [closed, opened, synchronize]
-    branches: [develop]
+    branches: [develop, staging, main]
     paths-ignore:
       - "**/*.md"
       - "**/*.gitignore"
@@ -34,22 +34,22 @@ jobs:
       - name: Checking your input
         run: |
           echo "github.event.pull_request.merged           : $MERGED_RAW"
-          echo "github.event.pull_request.merged == 'true' : $MERGED_TRUE_STR"
           echo "github.event.pull_request.merged  == true  : $MERGED_TRUE_BOOL"
         env:
           MERGED_RAW: ${{ github.event.pull_request.merged }}
-          MERGED_TRUE_STR: ${{ github.event.pull_request.merged == 'true' }}
           MERGED_TRUE_BOOL: ${{ github.event.pull_request.merged == true }}
       - uses: actions/checkout@v2
+      # - name: Set output
+      #   id: vars
+      #   run: echo ::set-output name=short_ref::${github.base_ref}
 
-      
-      
+      - name: Check output
+        run: echo ${{ github.base_ref }}
       
       - name: Setup .NET v5.0
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 5.0.400
-
 
       - name: Restore
         run: dotnet restore ${{ github.workspace }}/logindirector/logindirector.csproj
@@ -68,7 +68,7 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: deploymentArchive
+          name: ${{ github.base_ref }}-deploymentArchive
           path: ${{ github.workspace }}/logindirector/bin/Debug/netcoreapp3.1/publish/
 
   deploy:
@@ -86,10 +86,18 @@ jobs:
       DOTNET_GENERATE_ASPNET_CERTIFICATE: false
       DOTNET_ADD_GLOBAL_TOOLS_TO_PATH: false
       DOTNET_MULTILEVEL_LOOKUP: 0
+    
 
     steps:
       - run: echo PR #${{ github.event.number }} has been merged
       - uses: actions/checkout@v2
+      # - name: Set output
+      #   id: vars
+      #   run: echo ::set-output name=short_ref::${github.base_ref}
+
+      - name: Check output
+        run: echo ${{ github.base_ref }}
+
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
         with:
@@ -98,9 +106,11 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v1
         with:
-          name: deploymentArchive
+          name: ${{ github.base_ref}}-deploymentArchive
+          path: ${{ github.workspace }}/logindirector/bin/Debug/netcoreapp3.1/publish/
 
-      - name: Deploy to Cloud Foundry
+      - name: Deploy to Cloud Foundry - development
+        if: github.ref == 'refs/heads/develop'
         uses: jhunt/cf-push@v1
         with:
           api: ${{ secrets.CF_API }}
@@ -108,12 +118,36 @@ jobs:
           space: ${{ secrets.CF_SPACE_DEVELOPMENT  }}
           username: ${{ secrets.CF_USERNAME }}
           password: ${{ secrets.CF_PASSWORD }}
-          manifest: manifest.yml
+          manifest: manifest_dev.yml
+          validate: false
+
+      - name: Deploy to Cloud Foundry - staging / testing
+        if: github.ref == 'refs/heads/staging'
+        uses: jhunt/cf-push@v1
+        with:
+          api: ${{ secrets.CF_API }}
+          org: ${{ secrets.CF_ORG }}
+          space: ${{ secrets.CF_SPACE_STAGING  }}
+          username: ${{ secrets.CF_USERNAME }}
+          password: ${{ secrets.CF_PASSWORD }}
+          manifest: manifest_staging.yml
+          validate: false
+
+      - name: Deploy to Cloud Foundry - production
+        if: github.ref == 'refs/heads/main'
+        uses: jhunt/cf-push@v1
+        with:
+          api: ${{ secrets.CF_API }}
+          org: ${{ secrets.CF_ORG }}
+          space: ${{ secrets.CF_SPACE_DEVELOPMENT  }}
+          username: ${{ secrets.CF_USERNAME }}
+          password: ${{ secrets.CF_PASSWORD }}
+          manifest: manifest_prod.yml
           validate: false
 
   # close_job:
   #   # this job will only run if the PR has been closed without being merged
-  #   if: github.event.pull_request.merged != true
+  #   if: github.event.pull_request.merged != false
   #   runs-on: ubuntu-latest
   #   steps:
   #   - run: |

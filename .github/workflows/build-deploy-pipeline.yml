@@ -39,9 +39,6 @@ jobs:
           MERGED_RAW: ${{ github.event.pull_request.merged }}
           MERGED_TRUE_BOOL: ${{ github.event.pull_request.merged == true }}
       - uses: actions/checkout@v2
-      # - name: Set output
-      #   id: vars
-      #   run: echo ::set-output name=short_ref::${github.base_ref}
 
       - name: Check output
         run: echo ${{ github.base_ref }}
@@ -118,9 +115,9 @@ jobs:
           manifest: manifest_dev.yml
           validate: false
 
-      - name: Cloudfoundry Dev deployment result
-        if: ${{ github.base_ref == 'develop' }}
-        run: echo "Deployment was ${{ steps.cf_dev.outputs.deploymentResult }}
+      # - name: Cloudfoundry Dev deployment result
+      #   if: ${{ github.base_ref == 'develop' }}
+      #   run: echo "Deployment was ${{ steps.cf_dev.outputs.deploymentResult }}
 
       - name: Deploy to Cloud Foundry - staging / testing
         id: cf_stage
@@ -135,9 +132,9 @@ jobs:
           manifest: manifest_staging.yml
           validate: false
 
-      - name: Cloudfoundry Test deployment result
-        if: ${{ github.base_ref == 'staging' }}
-        run: echo "Deployment was ${{ steps.cf_stage.outputs.deploymentResult }}
+      # - name: Cloudfoundry Test deployment result
+      #   if: ${{ github.base_ref == 'staging' }}
+      #   run: echo "Deployment was ${{ steps.cf_stage.outputs.deploymentResult }}
 
       - name: Deploy to Cloud Foundry - production
         id: cf_prod
@@ -152,9 +149,9 @@ jobs:
           manifest: manifest_prod.yml
           validate: false
 
-      - name: Cloudfoundry Prod deployment result
-        if: ${{ github.base_ref == 'main' }}
-        run: echo "Deployment was ${{ steps.cf_prod.outputs.deploymentResult }}
+      # - name: Cloudfoundry Prod deployment result
+      #   if: ${{ github.base_ref == 'main' }}
+      #   run: echo "Deployment was ${{ steps.cf_prod.outputs.deploymentResult }}
 
   # close_job:
   #   # this job will only run if the PR has been closed without being merged

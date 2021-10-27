@@ -8,13 +8,13 @@ updates:
   # Enable version updates for nuget
   - package-ecosystem: "nuget" # See documentation for possible values
   # Look for `package.json` and `lock` files in the `root` directory
-    directory: "/" # Location of package manifests
+    directory: "/logindirector/" # Location of package manifests
     # Check the nuget registry for updates every day (weekdays)
     schedule:
       interval: "daily"
 
-    # Maintain dependencies for GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "daily" 
+  #   # Maintain dependencies for GitHub Actions
+  # - package-ecosystem: "github-actions"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "daily" 

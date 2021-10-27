@@ -106,7 +106,7 @@ jobs:
           # path: ${{ github.workspace }}/logindirector/bin/Release/netcoreapp3.1/publish/
 
       - name: Deploy to Cloud Foundry - development
-        id: cf
+        id: cf_dev
         if: ${{ github.base_ref == 'develop' }}
         uses: jhunt/cf-push@v1
         with:
@@ -117,9 +117,10 @@ jobs:
           password: ${{ secrets.CF_PASSWORD }}
           manifest: manifest_dev.yml
           validate: false
+        run: echo "Deployment was ${{ steps.cf_dev.outputs.deploymentResult }}
 
       - name: Deploy to Cloud Foundry - staging / testing
-        id: cf
+        id: cf_stage
         if: ${{ github.base_ref == 'staging' }}
         uses: jhunt/cf-push@v1
         with:
@@ -130,9 +131,10 @@ jobs:
           password: ${{ secrets.CF_PASSWORD }}
           manifest: manifest_staging.yml
           validate: false
+        run: echo "Deployment was ${{ steps.cf_stage.outputs.deploymentResult }}
 
       - name: Deploy to Cloud Foundry - production
-        id: cf
+        id: cf_prod
         if: ${{ github.base_ref == 'main' }}
         uses: jhunt/cf-push@v1
         with:
@@ -143,9 +145,9 @@ jobs:
           password: ${{ secrets.CF_PASSWORD }}
           manifest: manifest_prod.yml
           validate: false
+        run: echo "Deployment was ${{ steps.cf_prod.outputs.deploymentResult }}
 
-      - name: Cloudfoundry deployment result
-        run: echo "Deployment was ${{ steps.cf.outputs.deploymentResult }}
+      
   # close_job:
   #   # this job will only run if the PR has been closed without being merged
   #   if: github.event.pull_request.merged != false

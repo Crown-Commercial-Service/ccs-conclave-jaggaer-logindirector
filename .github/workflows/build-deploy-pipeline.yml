@@ -87,13 +87,9 @@ jobs:
       DOTNET_ADD_GLOBAL_TOOLS_TO_PATH: false
       DOTNET_MULTILEVEL_LOOKUP: 0
     
-
     steps:
       - run: echo PR #${{ github.event.number }} has been merged
       - uses: actions/checkout@v2
-      # - name: Set output
-      #   id: vars
-      #   run: echo ::set-output name=short_ref::${github.base_ref}
 
       - name: Check output
         run: echo ${{ github.base_ref }}
@@ -107,9 +103,10 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: ${{ github.base_ref}}-deploymentArchive
-          path: ${{ github.workspace }}/logindirector/bin/Debug/netcoreapp3.1/publish/
+          # path: ${{ github.workspace }}/logindirector/bin/Release/netcoreapp3.1/publish/
 
       - name: Deploy to Cloud Foundry - development
+        id: cf
         if: ${{ github.base_ref == 'develop' }}
         uses: jhunt/cf-push@v1
         with:
@@ -122,6 +119,7 @@ jobs:
           validate: false
 
       - name: Deploy to Cloud Foundry - staging / testing
+        id: cf
         if: ${{ github.base_ref == 'staging' }}
         uses: jhunt/cf-push@v1
         with:
@@ -134,6 +132,7 @@ jobs:
           validate: false
 
       - name: Deploy to Cloud Foundry - production
+        id: cf
         if: ${{ github.base_ref == 'main' }}
         uses: jhunt/cf-push@v1
         with:
@@ -145,6 +144,8 @@ jobs:
           manifest: manifest_prod.yml
           validate: false
 
+      - name: Cloudfoundry deployment result
+        run: echo "Deployment was ${{ steps.cf.outputs.deploymentResult }}
   # close_job:
   #   # this job will only run if the PR has been closed without being merged
   #   if: github.event.pull_request.merged != false

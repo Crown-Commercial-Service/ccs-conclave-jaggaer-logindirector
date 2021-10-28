@@ -1,16 +1,21 @@
 ﻿<Properties StartupConfiguration="{FBA5C90F-9C42-43B6-9B2E-BD002D444DAE}|Default">
   <MonoDevelop.Ide.ItemProperties.logindirector PreferredExecutionTarget="/Applications/Google Chrome.app" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Startup.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Constants/Constants.cs">
     <Files>
       <File FileName="appsettings.json" Line="10" Column="2" />
-      <File FileName="Properties/launchSettings.json" Line="11" Column="21" />
+      <File FileName="Properties/launchSettings.json" Line="29" Column="1" />
       <File FileName="Startup.cs" Line="28" Column="10" />
+      <File FileName="Constants/Constants.cs" Line="8" Column="10" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State name="__root__">
           <Node name="logindirector" expanded="True">
-            <Node name="logindirector" expanded="True" selected="True" />
+            <Node name="logindirector" expanded="True">
+              <Node name="Constants" expanded="True">
+                <Node name="Constants.cs" selected="True" />
+              </Node>
+            </Node>
           </Node>
         </State>
       </Pad>

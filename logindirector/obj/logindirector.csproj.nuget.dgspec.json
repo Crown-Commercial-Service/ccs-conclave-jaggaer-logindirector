@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/Users/naresh.kumar2/Documents/source/ccs-conclave-jaggaer-logindirector/logindirector/logindirector.csproj": {}
+    "/Users/nathan.topping/ccs-conclave-jaggaer-logindirector/logindirector/logindirector.csproj": {}
   },
   "projects": {
-    "/Users/naresh.kumar2/Documents/source/ccs-conclave-jaggaer-logindirector/logindirector/logindirector.csproj": {
+    "/Users/nathan.topping/ccs-conclave-jaggaer-logindirector/logindirector/logindirector.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/naresh.kumar2/Documents/source/ccs-conclave-jaggaer-logindirector/logindirector/logindirector.csproj",
+        "projectUniqueName": "/Users/nathan.topping/ccs-conclave-jaggaer-logindirector/logindirector/logindirector.csproj",
         "projectName": "logindirector",
-        "projectPath": "/Users/naresh.kumar2/Documents/source/ccs-conclave-jaggaer-logindirector/logindirector/logindirector.csproj",
-        "packagesPath": "/Users/naresh.kumar2/.nuget/packages/",
-        "outputPath": "/Users/naresh.kumar2/Documents/source/ccs-conclave-jaggaer-logindirector/logindirector/obj/",
+        "projectPath": "/Users/nathan.topping/ccs-conclave-jaggaer-logindirector/logindirector/logindirector.csproj",
+        "packagesPath": "/Users/nathan.topping/.nuget/packages/",
+        "outputPath": "/Users/nathan.topping/ccs-conclave-jaggaer-logindirector/logindirector/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/Users/naresh.kumar2/.nuget/NuGet/NuGet.Config"
+          "/Users/nathan.topping/.config/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net5.0"
@@ -55,7 +55,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/5.0.400/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/5.0.201/RuntimeIdentifierGraph.json"
         }
       }
     }

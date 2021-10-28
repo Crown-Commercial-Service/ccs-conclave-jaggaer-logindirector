@@ -11,10 +11,8 @@
       <Pad Id="ProjectPad">
         <State name="__root__">
           <Node name="logindirector" expanded="True">
-            <Node name="logindirector" expanded="True">
-              <Node name="Constants" expanded="True">
-                <Node name="Constants.cs" selected="True" />
-              </Node>
+            <Node name="logindirector" expanded="True" selected="True">
+              <Node name="Constants" expanded="True" />
             </Node>
           </Node>
         </State>

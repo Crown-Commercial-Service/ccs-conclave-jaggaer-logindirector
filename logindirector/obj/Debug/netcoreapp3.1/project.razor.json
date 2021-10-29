@@ -14402,38 +14402,38 @@
   "RootNamespace": "logindirector",
   "Documents": [
     {
-      "FilePath": "/Users/naresh.kumar2/Documents/source/ccs-conclave-jaggaer-logindirector/logindirector/Pages/Privacy.cshtml",
-      "TargetPath": "Pages\\Privacy.cshtml",
+      "FilePath": "/Users/naresh.kumar2/Documents/source/ccs-conclave-jaggaer-logindirector/logindirector/Views/Home/Index.cshtml",
+      "TargetPath": "Views\\Home\\Index.cshtml",
       "FileKind": "mvc"
     },
     {
-      "FilePath": "/Users/naresh.kumar2/Documents/source/ccs-conclave-jaggaer-logindirector/logindirector/Pages/_ViewImports.cshtml",
-      "TargetPath": "Pages\\_ViewImports.cshtml",
+      "FilePath": "/Users/naresh.kumar2/Documents/source/ccs-conclave-jaggaer-logindirector/logindirector/Views/Shared/Error.cshtml",
+      "TargetPath": "Views\\Shared\\Error.cshtml",
       "FileKind": "mvc"
     },
     {
-      "FilePath": "/Users/naresh.kumar2/Documents/source/ccs-conclave-jaggaer-logindirector/logindirector/Pages/_ViewStart.cshtml",
-      "TargetPath": "Pages\\_ViewStart.cshtml",
+      "FilePath": "/Users/naresh.kumar2/Documents/source/ccs-conclave-jaggaer-logindirector/logindirector/Views/_ViewStart.cshtml",
+      "TargetPath": "Views\\_ViewStart.cshtml",
       "FileKind": "mvc"
     },
     {
-      "FilePath": "/Users/naresh.kumar2/Documents/source/ccs-conclave-jaggaer-logindirector/logindirector/Pages/Shared/_ValidationScriptsPartial.cshtml",
-      "TargetPath": "Pages\\Shared\\_ValidationScriptsPartial.cshtml",
+      "FilePath": "/Users/naresh.kumar2/Documents/source/ccs-conclave-jaggaer-logindirector/logindirector/Views/Shared/_ValidationScriptsPartial.cshtml",
+      "TargetPath": "Views\\Shared\\_ValidationScriptsPartial.cshtml",
       "FileKind": "mvc"
     },
     {
-      "FilePath": "/Users/naresh.kumar2/Documents/source/ccs-conclave-jaggaer-logindirector/logindirector/Pages/Index.cshtml",
-      "TargetPath": "Pages\\Index.cshtml",
+      "FilePath": "/Users/naresh.kumar2/Documents/source/ccs-conclave-jaggaer-logindirector/logindirector/Views/Home/Privacy.cshtml",
+      "TargetPath": "Views\\Home\\Privacy.cshtml",
       "FileKind": "mvc"
     },
     {
-      "FilePath": "/Users/naresh.kumar2/Documents/source/ccs-conclave-jaggaer-logindirector/logindirector/Pages/Error.cshtml",
-      "TargetPath": "Pages\\Error.cshtml",
+      "FilePath": "/Users/naresh.kumar2/Documents/source/ccs-conclave-jaggaer-logindirector/logindirector/Views/_ViewImports.cshtml",
+      "TargetPath": "Views\\_ViewImports.cshtml",
       "FileKind": "mvc"
     },
     {
-      "FilePath": "/Users/naresh.kumar2/Documents/source/ccs-conclave-jaggaer-logindirector/logindirector/Pages/Shared/_Layout.cshtml",
-      "TargetPath": "Pages\\Shared\\_Layout.cshtml",
+      "FilePath": "/Users/naresh.kumar2/Documents/source/ccs-conclave-jaggaer-logindirector/logindirector/Views/Shared/_Layout.cshtml",
+      "TargetPath": "Views\\Shared\\_Layout.cshtml",
       "FileKind": "mvc"
     }
   ],

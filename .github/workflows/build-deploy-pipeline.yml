@@ -112,7 +112,7 @@ jobs:
           space: ${{ secrets.CF_SPACE_DEVELOPMENT  }}
           username: ${{ secrets.CF_USERNAME }}
           password: ${{ secrets.CF_PASSWORD }}
-          manifest: manifest_dev.yml
+          manifest: manifest/manifest_dev.yml
           validate: false
 
       # - name: Cloudfoundry Dev deployment result
@@ -129,7 +129,7 @@ jobs:
           space: ${{ secrets.CF_SPACE_STAGING  }}
           username: ${{ secrets.CF_USERNAME }}
           password: ${{ secrets.CF_PASSWORD }}
-          manifest: manifest_staging.yml
+          manifest: manifest/manifest_staging.yml
           validate: false
 
       # - name: Cloudfoundry Test deployment result
@@ -146,7 +146,7 @@ jobs:
           space: ${{ secrets.CF_SPACE_DEVELOPMENT  }}
           username: ${{ secrets.CF_USERNAME }}
           password: ${{ secrets.CF_PASSWORD }}
-          manifest: manifest_prod.yml
+          manifest: manifest/manifest_prod.yml
           validate: false
 
       # - name: Cloudfoundry Prod deployment result

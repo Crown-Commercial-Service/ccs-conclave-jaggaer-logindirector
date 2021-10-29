@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.809.4
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "logindirector", "logindirector.csproj", "{FBA5C90F-9C42-43B6-9B2E-BD002D444DAE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "logindirector", "logindirector.csproj", "{FDF76F5E-B9F7-4F2A-9D4F-290B6A9F7D9C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{FBA5C90F-9C42-43B6-9B2E-BD002D444DAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FBA5C90F-9C42-43B6-9B2E-BD002D444DAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FBA5C90F-9C42-43B6-9B2E-BD002D444DAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FBA5C90F-9C42-43B6-9B2E-BD002D444DAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDF76F5E-B9F7-4F2A-9D4F-290B6A9F7D9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDF76F5E-B9F7-4F2A-9D4F-290B6A9F7D9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDF76F5E-B9F7-4F2A-9D4F-290B6A9F7D9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDF76F5E-B9F7-4F2A-9D4F-290B6A9F7D9C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -27,10 +27,10 @@
 /Users/nathan.topping/ccs-conclave-jaggaer-logindirector/logindirector/obj/Debug/netcoreapp3.1/logindirector.pdb
 /Users/nathan.topping/ccs-conclave-jaggaer-logindirector/logindirector/obj/Debug/netcoreapp3.1/logindirector.genruntimeconfig.cache
 /Users/nathan.topping/ccs-conclave-jaggaer-logindirector/logindirector/obj/Debug/netcoreapp3.1/logindirector.csproj.CopyComplete
-/Users/nathan.topping/ccs-conclave-jaggaer-logindirector/logindirector/obj/Debug/netcoreapp3.1/Razor/Views/Error.cshtml.g.cs
-/Users/nathan.topping/ccs-conclave-jaggaer-logindirector/logindirector/obj/Debug/netcoreapp3.1/Razor/Views/Index.cshtml.g.cs
-/Users/nathan.topping/ccs-conclave-jaggaer-logindirector/logindirector/obj/Debug/netcoreapp3.1/Razor/Views/Privacy.cshtml.g.cs
 /Users/nathan.topping/ccs-conclave-jaggaer-logindirector/logindirector/obj/Debug/netcoreapp3.1/Razor/Views/Shared/_Layout.cshtml.g.cs
 /Users/nathan.topping/ccs-conclave-jaggaer-logindirector/logindirector/obj/Debug/netcoreapp3.1/Razor/Views/Shared/_ValidationScriptsPartial.cshtml.g.cs
 /Users/nathan.topping/ccs-conclave-jaggaer-logindirector/logindirector/obj/Debug/netcoreapp3.1/Razor/Views/_ViewImports.cshtml.g.cs
 /Users/nathan.topping/ccs-conclave-jaggaer-logindirector/logindirector/obj/Debug/netcoreapp3.1/Razor/Views/_ViewStart.cshtml.g.cs
+/Users/nathan.topping/ccs-conclave-jaggaer-logindirector/logindirector/obj/Debug/netcoreapp3.1/Razor/Views/Home/Index.cshtml.g.cs
+/Users/nathan.topping/ccs-conclave-jaggaer-logindirector/logindirector/obj/Debug/netcoreapp3.1/Razor/Views/Home/Privacy.cshtml.g.cs
+/Users/nathan.topping/ccs-conclave-jaggaer-logindirector/logindirector/obj/Debug/netcoreapp3.1/Razor/Views/Shared/Error.cshtml.g.cs

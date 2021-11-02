@@ -1,5 +1,6 @@
 .github/workflows/build-deploy-pipelin.yml
 
+#
 *.swp
 *.*~
 project.lock.json

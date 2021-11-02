@@ -14427,6 +14427,11 @@
       "FileKind": "mvc"
     },
     {
+      "FilePath": "/Users/naresh.kumar2/Documents/source/ccs-conclave-jaggaer-logindirector/logindirector/Views/Home/AuthTest.cshtml",
+      "TargetPath": "Views\\Home\\AuthTest.cshtml",
+      "FileKind": "mvc"
+    },
+    {
       "FilePath": "/Users/naresh.kumar2/Documents/source/ccs-conclave-jaggaer-logindirector/logindirector/Views/_ViewImports.cshtml",
       "TargetPath": "Views\\_ViewImports.cshtml",
       "FileKind": "mvc"

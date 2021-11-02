@@ -1,4 +1,4 @@
-.github/workflows/build-deploy-pipelin.yml
+.github/workflows/build-deploy-pipeline.yml
 
 *.swp
 *.*~

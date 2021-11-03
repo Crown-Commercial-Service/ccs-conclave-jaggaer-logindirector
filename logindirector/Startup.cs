@@ -75,9 +75,6 @@ namespace logindirector
                 // Configure the Token Request Url
                 options.TokenEndpoint = ssoDomain + Configuration.GetValue<string>("SsoService:RoutePaths:TokenPath");
 
-                // Map the user's email into claims - we'll need this later
-                options.ClaimActions.MapJsonKey(ClaimTypes.Email, "sub");
-
                 // We don't access the adaptor service here - we can't get to external API clients here.  But we do need to decode and store the user email so that we can access it later
                 options.Events = new OAuthEvents
                 {

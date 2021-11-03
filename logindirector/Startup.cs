@@ -4,6 +4,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authentication.OAuth;
+using Microsoft.AspNetCore.Authentication;
+using System.Security.Claims;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using logindirector.Services;
 
 namespace logindirector
 {
@@ -24,6 +30,9 @@ namespace logindirector
             {
                 options.Secure = CookieSecurePolicy.Always;
             });
+
+            // Register any custom services we have
+            services.AddScoped<IAdaptorClientServices, AdaptorClientServices>();
 
             // Configure our Authentication setup
             services.AddAuthentication(options =>
@@ -66,11 +75,28 @@ namespace logindirector
                 // Configure the Token Request Url
                 options.TokenEndpoint = ssoDomain + Configuration.GetValue<string>("SsoService:RoutePaths:TokenPath");
 
-                // Configure the Adaptor Service Url
-                options.UserInformationEndpoint = ssoDomain + Configuration.GetValue<string>("SsoService:RoutePaths:AdaptorPath");
+                // Map the user's email into claims - we'll need this later
+                options.ClaimActions.MapJsonKey(ClaimTypes.Email, "sub");
 
-                // TODO: Should the accessing of the Adaptor Service go here?
-                // TODO: Checking roles should be done in a helper, that way we can more easily set the error display?
+                // We don't access the adaptor service here - we can't get to external API clients here.  But we do need to decode and store the user email so that we can access it later
+                options.Events = new OAuthEvents
+                {
+                    OnCreatingTicket = async context =>
+                    {
+                        // Use a Jwt Decoder to decode the access token, and fetch the "sub" value
+                        JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
+                        JwtSecurityToken tokenValues = handler.ReadJwtToken(context.AccessToken);
+
+                        // Save the "sub" value to our Claims as the Email value
+                        List<Claim> userClaims = new List<Claim>
+                        {
+                            new Claim(ClaimTypes.Email, tokenValues.Subject)
+                        };
+
+                        ClaimsIdentity appIdentity = new ClaimsIdentity(userClaims);
+                        context.Principal.AddIdentity(appIdentity);
+                    }
+                };
             });
 
             services.AddControllersWithViews();

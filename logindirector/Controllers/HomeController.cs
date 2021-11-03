@@ -1,8 +1,12 @@
 ﻿using System.Diagnostics;
+using System.Linq;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Authorization;
 using logindirector.Models;
+using logindirector.Models.AdaptorService;
+using logindirector.Services;
 
 namespace logindirector.Controllers
 {
@@ -10,10 +14,12 @@ namespace logindirector.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        public IAdaptorClientServices _adaptorClientServices;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, IAdaptorClientServices adaptorClientServices)
         {
             _logger = logger;
+            _adaptorClientServices = adaptorClientServices;
         }
 
         public IActionResult Index()
@@ -30,6 +36,17 @@ namespace logindirector.Controllers
         [Authorize]
         public IActionResult AuthTest()
         {
+            //string test = User.Claims.FirstOrDefault(o => o.Type == ClaimTypes.Role).Value;
+            //string name = User.Claims.FirstOrDefault(o => o.Type == ClaimTypes.Email).Value;
+
+            // TODO: Uuse above comments to check we have email in claims
+            // Access adaptor service using claims
+            // Register additional claims using values from adaptor service
+            // Validate user access using roles
+            // Refactor all of this into a separate method which can be called from many places if needed
+
+            AdaptorUserModel tempModel = _adaptorClientServices.GetUserInformation("jaeggersup01@yopmail.com").Result;
+
             return View();
         }
 

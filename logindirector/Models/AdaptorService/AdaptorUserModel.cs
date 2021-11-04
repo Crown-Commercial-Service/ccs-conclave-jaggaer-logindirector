@@ -1,5 +1,5 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace logindirector.Models.AdaptorService
 {
@@ -15,14 +15,16 @@ namespace logindirector.Models.AdaptorService
         [JsonProperty("lastName")]
         public string familyName { get; set; }
 
-        // TODO: Build out the rest of this model and its submodels
+        [JsonProperty("rolePermissionInfo")]
+        public List<AdaptorUserRoleModel> coreRoles { get; set; }
 
-        // roles
+        [JsonProperty("additionalRoles")]
+        public List<string> additionalRoles { get; set; }
 
-        // additional roles
+        [JsonProperty("userContactPoints")]
+        public List<AdaptorUserContactModel> contactInfo { get; set; }
 
-        // contact info
-
-        // org info
+        [JsonProperty("organisationAdditionalIdentifiers")]
+        public List<AdaptorOrganisationModel> orgInfo { get; set; }
     }
 }

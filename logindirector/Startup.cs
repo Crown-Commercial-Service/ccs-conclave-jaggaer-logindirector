@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authentication.OAuth;
-using Microsoft.AspNetCore.Authentication;
+using System;
 using System.Security.Claims;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -33,6 +33,15 @@ namespace logindirector
 
             // Register any custom services we have
             services.AddScoped<IAdaptorClientServices, AdaptorClientServices>();
+
+            // Enable Session for the app
+            services.AddDistributedMemoryCache();
+            services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(15);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+            });
 
             // Configure our Authentication setup
             services.AddAuthentication(options =>
@@ -120,6 +129,8 @@ namespace logindirector
             // Enable SSO Authentication for the application.  Set authenticate BEFORE authorization to prevent redirect looping
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.UseSession();
 
             app.UseEndpoints(endpoints =>
             {

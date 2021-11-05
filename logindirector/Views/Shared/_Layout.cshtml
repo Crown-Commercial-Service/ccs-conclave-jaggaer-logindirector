@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+﻿@using StackExchange.Profiling
+@addTagHelper *, MiniProfiler.AspNetCore.Mvc
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -8,6 +11,7 @@
     <link rel="stylesheet" href="~/css/site.css" />
 </head>
 <body>
+     <mini-profiler position="@RenderPosition.Right" max-traces="5" />
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container">

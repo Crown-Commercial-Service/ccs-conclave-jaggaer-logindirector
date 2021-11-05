@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using System;
+using System.Threading.Tasks;
 using System.Security.Claims;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -87,7 +88,7 @@ namespace logindirector
                 // We don't access the adaptor service here - we can't get to external API clients here.  But we do need to decode and store the user email so that we can access it later
                 options.Events = new OAuthEvents
                 {
-                    OnCreatingTicket = async context =>
+                    OnCreatingTicket = context =>
                     {
                         // Use a Jwt Decoder to decode the access token, and fetch the "sub" value
                         JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
@@ -101,6 +102,8 @@ namespace logindirector
 
                         ClaimsIdentity appIdentity = new ClaimsIdentity(userClaims);
                         context.Principal.AddIdentity(appIdentity);
+
+                        return Task.CompletedTask;
                     }
                 };
             });

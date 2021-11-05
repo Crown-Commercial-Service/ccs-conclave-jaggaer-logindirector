@@ -109,6 +109,8 @@ namespace logindirector
             });
 
             services.AddControllersWithViews();
+            services.AddMiniProfiler(options => options.RouteBasePath = "/profiler");
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -116,6 +118,7 @@ namespace logindirector
         {
             if (env.IsDevelopment())
             {
+                 app.UseMiniProfiler();
                 app.UseDeveloperExceptionPage();
             }
             else

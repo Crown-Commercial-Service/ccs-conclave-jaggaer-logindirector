@@ -4,6 +4,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authentication.OAuth;
+using System;
+using System.Threading.Tasks;
+using System.Security.Claims;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using logindirector.Services;
 
 namespace logindirector
 {
@@ -23,6 +30,18 @@ namespace logindirector
             services.Configure<CookiePolicyOptions>(options =>
             {
                 options.Secure = CookieSecurePolicy.Always;
+            });
+
+            // Register any custom services we have
+            services.AddScoped<IAdaptorClientServices, AdaptorClientServices>();
+
+            // Enable Session for the app
+            services.AddDistributedMemoryCache();
+            services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(15);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
             });
 
             // Configure our Authentication setup
@@ -66,11 +85,27 @@ namespace logindirector
                 // Configure the Token Request Url
                 options.TokenEndpoint = ssoDomain + Configuration.GetValue<string>("SsoService:RoutePaths:TokenPath");
 
-                // Configure the Adaptor Service Url
-                options.UserInformationEndpoint = ssoDomain + Configuration.GetValue<string>("SsoService:RoutePaths:AdaptorPath");
+                // We don't access the adaptor service here - we can't get to external API clients here.  But we do need to decode and store the user email so that we can access it later
+                options.Events = new OAuthEvents
+                {
+                    OnCreatingTicket = context =>
+                    {
+                        // Use a Jwt Decoder to decode the access token, and fetch the "sub" value
+                        JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
+                        JwtSecurityToken tokenValues = handler.ReadJwtToken(context.AccessToken);
 
-                // TODO: Should the accessing of the Adaptor Service go here?
-                // TODO: Checking roles should be done in a helper, that way we can more easily set the error display?
+                        // Save the "sub" value to our Claims as the Email value
+                        List<Claim> userClaims = new List<Claim>
+                        {
+                            new Claim(ClaimTypes.Email, tokenValues.Subject)
+                        };
+
+                        ClaimsIdentity appIdentity = new ClaimsIdentity(userClaims);
+                        context.Principal.AddIdentity(appIdentity);
+
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
             services.AddControllersWithViews();
@@ -97,6 +132,8 @@ namespace logindirector
             // Enable SSO Authentication for the application.  Set authenticate BEFORE authorization to prevent redirect looping
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.UseSession();
 
             app.UseEndpoints(endpoints =>
             {

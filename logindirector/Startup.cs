@@ -11,6 +11,7 @@ using System.Security.Claims;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using logindirector.Services;
+using logindirector.Helpers;
 
 namespace logindirector
 {
@@ -34,6 +35,7 @@ namespace logindirector
 
             // Register any custom services we have
             services.AddScoped<IAdaptorClientServices, AdaptorClientServices>();
+            services.AddScoped<IHelpers, UserHelpers>();
 
             // Enable Session for the app
             services.AddDistributedMemoryCache();
@@ -85,6 +87,9 @@ namespace logindirector
                 // Configure the Token Request Url
                 options.TokenEndpoint = ssoDomain + Configuration.GetValue<string>("SsoService:RoutePaths:TokenPath");
 
+                // Configure the Access Denied Path
+                options.AccessDeniedPath = Configuration.GetValue<string>("UnauthorisedDisplayPath");
+
                 // We don't access the adaptor service here - we can't get to external API clients here.  But we do need to decode and store the user email so that we can access it later
                 options.Events = new OAuthEvents
                 {
@@ -118,12 +123,13 @@ namespace logindirector
         {
             if (env.IsDevelopment())
             {
-                 app.UseMiniProfiler();
+                app.UseMiniProfiler();
                 app.UseDeveloperExceptionPage();
             }
             else
             {
-                app.UseExceptionHandler("/Home/Error");
+                // TODO: Need to make this a real error page handler for unauthorised access display
+                app.UseExceptionHandler(Configuration.GetValue<string>("UnauthorisedDisplayPath"));
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }

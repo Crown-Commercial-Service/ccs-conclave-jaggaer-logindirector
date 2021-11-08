@@ -8,6 +8,7 @@
     <Folder Include="Services\" />
     <Folder Include="Models\AdaptorService\" />
     <Folder Include="Constants\" />
+    <Folder Include="Helpers\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MiniProfiler.AspNetCore.Mvc" Version="4.2.22" />

@@ -1,7 +1,8 @@
 applications:
-  - name: logindirector
+  - name: test-logindirector
     instances: 1
     memory: 512M
     buildpack: https://github.com/cloudfoundry/dotnet-core-buildpack.git
     stack: cflinuxfs3
-    random-route: true
+      routes:
+    - route: test-logindirector.london.cloudapps.digital

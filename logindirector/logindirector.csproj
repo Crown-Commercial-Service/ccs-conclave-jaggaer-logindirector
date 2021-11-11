@@ -9,6 +9,8 @@
     <Folder Include="Models\AdaptorService\" />
     <Folder Include="Constants\" />
     <Folder Include="Helpers\" />
+    <Folder Include="wwwroot\Assets\" />
+    <Folder Include="wwwroot\Assets\styles\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MiniProfiler.AspNetCore.Mvc" Version="4.2.22" />

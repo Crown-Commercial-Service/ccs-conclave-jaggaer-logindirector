@@ -148,7 +148,7 @@ namespace logindirector
             {
                 endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
+                    pattern: "{controller=Request}/{action=Index}/{id?}");
             });
         }
     }

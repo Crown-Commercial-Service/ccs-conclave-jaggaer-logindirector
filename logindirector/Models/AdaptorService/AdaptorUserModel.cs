@@ -9,6 +9,9 @@ namespace logindirector.Models.AdaptorService
         [JsonProperty("userDetailId")]
         public string userId { get; set; }
 
+        [JsonProperty("userName")]
+        public string emailAddress { get; set; }
+
         [JsonProperty("firstName")]
         public string givenName { get; set; }
 

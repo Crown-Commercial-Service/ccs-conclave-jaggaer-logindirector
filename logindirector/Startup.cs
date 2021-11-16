@@ -27,6 +27,9 @@ namespace logindirector
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // Enable application caching
+            services.AddMemoryCache();
+
             // Set cookies to always be secure
             services.Configure<CookiePolicyOptions>(options =>
             {
@@ -148,7 +151,7 @@ namespace logindirector
             {
                 endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
+                    pattern: "{controller=Request}/{action=Index}/{id?}");
             });
         }
     }

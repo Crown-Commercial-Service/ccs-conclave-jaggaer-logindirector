@@ -1,0 +1,40 @@
+﻿@{
+    ViewData["Title"] = "Account Merging";
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <h1 class="govuk-heading-xl page-title page-title--tight">Public Procurement Gateway</h1>
+        <p class="govuk-body">We can see you already have an eSourcing user account.  Would you like to merge it with your Public Procurement Gateway account?</p>
+        <p class="govuk-body">Merging your account would allow you to access the eSourcing platform using your new Public Procurement account, without any loss of your procurement history.</p>
+        <br />
+        <form method="POST" action="/"><!-- TODO: Correct route when we've setup the backend route for this -->
+
+            <div class="govuk-form-group">
+                <fieldset class="govuk-fieldset">
+                    <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
+                        <h2 class="govuk-fieldset__heading">
+                            What would you like to do?
+                        </h2>
+                    </legend>
+                    <div class="govuk-radios">
+                        <div class="govuk-radios__item">
+                            <input class="govuk-radios__input" id="account-merge" name="account-decision" type="radio" value="merge">
+                            <label class="govuk-label govuk-radios__label" for="account-merge">
+                                Merge with existing eSourcing account
+                            </label>
+                        </div>
+                        <div class="govuk-radios__item">
+                            <input class="govuk-radios__input" id="account-create" name="account-decision" type="radio" value="create">
+                            <label class="govuk-label govuk-radios__label" for="account-create">
+                                Create a new account to link to your Conclave account
+                            </label>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+
+            <p class="govuk-body"><button class="govuk-button" type="submit">Continue ></button></p>
+        </form>
+    </div>
+</div>

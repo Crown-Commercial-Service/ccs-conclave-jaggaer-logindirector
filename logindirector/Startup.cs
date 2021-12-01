@@ -135,7 +135,6 @@ namespace logindirector
             }
             else
             {
-                // TODO: Need to make this a real error page handler for unauthorised access display
                 app.UseExceptionHandler(Configuration.GetValue<string>("UnauthorisedDisplayPath"));
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();

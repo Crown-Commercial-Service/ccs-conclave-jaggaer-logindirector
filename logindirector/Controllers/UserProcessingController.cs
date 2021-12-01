@@ -66,17 +66,12 @@ namespace logindirector.Controllers
                         if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_ActionRequired)
                         {
                             // The user needs to either merge or create a Jaegger account - display the merge prompt
-                            // TODO: Show view when that branch is merged
+                            return View("~/Views/Merging/MergePrompt.cshtml");
                         }
                         else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_AlreadyMerged)
                         {
                             // User is already merged, so we're good here - send the user to have their initial request processed
                             return RedirectToAction("ActionRequest", "Request");
-                        }
-                        else
-                        {
-                            // This is an error response - can't proceed with operations, so display a generic error
-                            return View("~/Views/Errors/Generic.cshtml");
                         }
                     }
                 }
@@ -85,12 +80,11 @@ namespace logindirector.Controllers
                     // User is not permitted to use the Login Director - log error, and present error
                     _logger.LogError("Attempted access by unauthorised SSO user - " + userEmail);
 
-                    // TODO: Change this to a dedicated unauthorised error page display
-                    return View("~/Views/Errors/Generic.cshtml");
+                    return View("~/Views/Errors/Unauthorised.cshtml");
                 }
             }
 
-            // If we've got to here, the user isn't properly authenticated - something has gone wrong, so display a generic error
+            // If we've got to here, the user isn't properly authenticated or the Tenders API gave us an error response, so display a generic error
             return View("~/Views/Errors/Generic.cshtml");
         }
 

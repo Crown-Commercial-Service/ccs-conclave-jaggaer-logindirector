@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using logindirector.Constants;
 using logindirector.Models;
 
@@ -16,10 +17,12 @@ namespace logindirector.Controllers
     public class RequestController : Controller
     {
         public IMemoryCache _memoryCache;
+        public IConfiguration Configuration { get; }
 
-        public RequestController(IMemoryCache memoryCache)
+        public RequestController(IMemoryCache memoryCache, IConfiguration configuration)
         {
             _memoryCache = memoryCache;
+            Configuration = configuration;
         }
 
         // Catch all route for all incoming requests - order set to 999 to ensure fixed routes supercede it
@@ -92,6 +95,18 @@ namespace logindirector.Controllers
 
             // No valid user detected - return false
             return false;
+        }
+
+        // Fixed unauthorised route - we need this setting up as fixed display too, to serve the middleware
+        [Route("/director/unauthorised", Order = 1)]
+        public IActionResult Unauthorised()
+        {
+            ErrorViewModel model = new ErrorViewModel
+            {
+                DashboardUrl = Configuration.GetValue<string>("DashboardPath")
+            };
+
+            return View("~/Views/Errors/Unauthorised.cshtml", model);
         }
 
 

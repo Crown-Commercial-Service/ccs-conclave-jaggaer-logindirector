@@ -1,8 +1,13 @@
 ﻿using System;
+using System.Net;
 using System.Web;
 using System.Threading.Tasks;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using logindirector.Constants;
+using logindirector.Models.TendersApi;
 
 namespace logindirector.Services
 {
@@ -19,22 +24,37 @@ namespace logindirector.Services
         }
 
         // Retrieves the status of a Jaegger user matching the authenticated user
-        // TODO: Change output format to model once route works correctly
-        public async Task<string> GetUserStatus(string username)
+        public async Task<UserStatusModel> GetUserStatus(string username, string accessToken)
         {
-            string tempReturnValue = "";
+            UserStatusModel model = null;
 
             try
             {
                 // Fetch the information we need from the User route
                 string userRouteUri = Configuration.GetValue<string>("TendersApi:ApiDomain") + Configuration.GetValue<string>("TendersApi:RoutePaths:UserPath");
 
-                string responseContent = await PerformTendersRequest(userRouteUri + HttpUtility.HtmlEncode(username));
+                GenericResponseModel responseModel = await PerformTendersRequest(userRouteUri + HttpUtility.HtmlEncode(username), accessToken);
 
-                if (responseContent != null)
+                if (responseModel != null)
                 {
-                    // TODO: Map response to a model, including status code (can't do this until the result is as we expect though).  For now, just return the string
-                    tempReturnValue = responseContent;
+                    // We now need to map our response to a useful model to return
+                    model = new UserStatusModel();
+
+                    if (responseModel.StatusCode == HttpStatusCode.NotFound)
+                    {
+                        // The user either doesn't exist in Jaegger, or their account is unmerged
+                        model.UserStatus = AppConstants.Tenders_UserStatus_ActionRequired;
+                    }
+                    else if (responseModel.StatusCode == HttpStatusCode.OK)
+                    {
+                        // The user exists in Jaegger and their account has already been merged
+                        model.UserStatus = AppConstants.Tenders_UserStatus_AlreadyMerged;
+                    }
+                    else
+                    {
+                        // This is an unexpected error response from Tenders that we can't handle
+                        model.UserStatus = AppConstants.Tenders_UserStatus_Error;
+                    }
                 }
             }
             catch (Exception ex)
@@ -42,24 +62,39 @@ namespace logindirector.Services
                 _logger.LogError("Could not retrieve user information from Tenders API for " + username, ex);
             }
 
-            return tempReturnValue;
+            return model;
         }
 
         // Core method that performs a request to the Tenders API using parameters passed to it
-        public async Task<string> PerformTendersRequest(string routeUri)
+        public async Task<GenericResponseModel> PerformTendersRequest(string routeUri, string accessToken)
         {
-            string responseContent = "";
+            GenericResponseModel model = null;
 
             try
             {
-                // TODO: Communicate with API.  Need to see the Postman collection to see what I need to pass before I can write this
+                // Establish a GET request to the specified route
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, routeUri);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+                HttpClientHandler handler = new HttpClientHandler();
+                using (HttpClient client = new HttpClient(handler))
+                {
+                    HttpResponseMessage response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+
+                    // Now we have a response, we need to map a generic response model from it to use later - because we'll need access to the status code as well as the value later
+                    model = new GenericResponseModel
+                    {
+                        StatusCode = response.StatusCode,
+                        ResponseValue = await response.Content.ReadAsStringAsync()
+                    };
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError("Error communicating with Tenders API at " + routeUri, ex);
             }
 
-            return responseContent;
+            return model;
         }
     }
 }

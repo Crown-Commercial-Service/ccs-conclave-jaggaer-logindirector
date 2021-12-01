@@ -109,6 +109,9 @@ namespace logindirector
                             new Claim(ClaimTypes.Email, tokenValues.Subject)
                         };
 
+                        // Save the token to our Claims in the Authentication value
+                        userClaims.Add(new Claim(ClaimTypes.Authentication, context.AccessToken));
+
                         ClaimsIdentity appIdentity = new ClaimsIdentity(userClaims);
                         context.Principal.AddIdentity(appIdentity);
 

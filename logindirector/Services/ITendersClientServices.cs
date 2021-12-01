@@ -1,12 +1,13 @@
 ﻿using System.Threading.Tasks;
+using logindirector.Models.TendersApi;
 
 namespace logindirector.Services
 {
     // Interface class for TendersClientServices
     public interface ITendersClientServices
     {
-        Task<string> GetUserStatus(string username);
+        Task<UserStatusModel> GetUserStatus(string username, string accessToken);
 
-        Task<string> PerformTendersRequest(string routeUri);
+        Task<GenericResponseModel> PerformTendersRequest(string routeUri, string accessToken);
     }
 }

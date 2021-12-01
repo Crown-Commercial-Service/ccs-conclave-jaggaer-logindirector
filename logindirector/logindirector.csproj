@@ -13,6 +13,7 @@
     <Folder Include="wwwroot\Assets\styles\" />
     <Folder Include="Views\Errors\" />
     <Folder Include="Models\TendersApi\" />
+    <Folder Include="Views\Merging\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MiniProfiler.AspNetCore.Mvc" Version="4.2.22" />

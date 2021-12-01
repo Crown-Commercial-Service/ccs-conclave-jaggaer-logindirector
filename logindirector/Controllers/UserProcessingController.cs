@@ -58,20 +58,24 @@ namespace logindirector.Controllers
 
                     // Now access the Tenders API to work out whether this user needs a account merge/creation or just forwarding
                     string accessToken = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Authentication)?.Value;
-                    UserStatusModel userStatusModel = _tendersClientServices.GetUserStatus(userEmail, accessToken).Result;
 
-                    if (userStatusModel != null)
+                    if (!string.IsNullOrWhiteSpace(accessToken))
                     {
-                        // Now we have a user status response, work out what to do with the user
-                        if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_ActionRequired)
+                        UserStatusModel userStatusModel = _tendersClientServices.GetUserStatus(userEmail, accessToken).Result;
+
+                        if (userStatusModel != null)
                         {
-                            // The user needs to either merge or create a Jaegger account - display the merge prompt
-                            return View("~/Views/Merging/MergePrompt.cshtml");
-                        }
-                        else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_AlreadyMerged)
-                        {
-                            // User is already merged, so we're good here - send the user to have their initial request processed
-                            return RedirectToAction("ActionRequest", "Request");
+                            // Now we have a user status response, work out what to do with the user
+                            if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_ActionRequired)
+                            {
+                                // The user needs to either merge or create a Jaegger account - display the merge prompt
+                                return View("~/Views/Merging/MergePrompt.cshtml");
+                            }
+                            else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_AlreadyMerged)
+                            {
+                                // User is already merged, so we're good here - send the user to have their initial request processed
+                                return RedirectToAction("ActionRequest", "Request");
+                            }
                         }
                     }
                 }

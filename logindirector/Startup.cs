@@ -38,6 +38,7 @@ namespace logindirector
 
             // Register any custom services we have
             services.AddScoped<IAdaptorClientServices, AdaptorClientServices>();
+            services.AddScoped<ITendersClientServices, TendersClientServices>();
             services.AddScoped<IHelpers, UserHelpers>();
 
             // Enable Session for the app
@@ -108,6 +109,9 @@ namespace logindirector
                             new Claim(ClaimTypes.Email, tokenValues.Subject)
                         };
 
+                        // Save the token to our Claims in the Authentication value
+                        userClaims.Add(new Claim(ClaimTypes.Authentication, context.AccessToken));
+
                         ClaimsIdentity appIdentity = new ClaimsIdentity(userClaims);
                         context.Principal.AddIdentity(appIdentity);
 
@@ -131,7 +135,6 @@ namespace logindirector
             }
             else
             {
-                // TODO: Need to make this a real error page handler for unauthorised access display
                 app.UseExceptionHandler(Configuration.GetValue<string>("UnauthorisedDisplayPath"));
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();

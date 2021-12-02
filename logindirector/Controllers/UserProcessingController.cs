@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using logindirector.Models.AdaptorService;
+using logindirector.Models.TendersApi;
 using logindirector.Services;
 using logindirector.Helpers;
 using logindirector.Constants;
@@ -21,13 +22,15 @@ namespace logindirector.Controllers
     {
         private readonly ILogger<UserProcessingController> _logger;
         public IAdaptorClientServices _adaptorClientServices;
+        public ITendersClientServices _tendersClientServices;
         public IHelpers _userHelpers;
         public IMemoryCache _memoryCache;
 
-        public UserProcessingController(ILogger<UserProcessingController> logger, IAdaptorClientServices adaptorClientServices, IHelpers userHelpers, IMemoryCache memoryCache)
+        public UserProcessingController(ILogger<UserProcessingController> logger, IAdaptorClientServices adaptorClientServices, ITendersClientServices tendersClientServices, IHelpers userHelpers, IMemoryCache memoryCache)
         {
             _logger = logger;
             _adaptorClientServices = adaptorClientServices;
+            _tendersClientServices = tendersClientServices;
             _userHelpers = userHelpers;
             _memoryCache = memoryCache;
         }
@@ -53,23 +56,39 @@ namespace logindirector.Controllers
                     // Then add a record for this user to the central session cache
                     AddUserToCentralSessionCache(userModel);
 
-                    // TODO: Tenders API interaction will go here
+                    // Now access the Tenders API to work out whether this user needs a account merge/creation or just forwarding
+                    string accessToken = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Authentication)?.Value;
 
-                    // We've done all we need to here, so now send the user to have their initial request processed
-                    return RedirectToAction("ActionRequest", "Request");
+                    if (!string.IsNullOrWhiteSpace(accessToken))
+                    {
+                        UserStatusModel userStatusModel = _tendersClientServices.GetUserStatus(userEmail, accessToken).Result;
+
+                        if (userStatusModel != null)
+                        {
+                            // Now we have a user status response, work out what to do with the user
+                            if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_ActionRequired)
+                            {
+                                // The user needs to either merge or create a Jaegger account - display the merge prompt
+                                return View("~/Views/Merging/MergePrompt.cshtml");
+                            }
+                            else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_AlreadyMerged)
+                            {
+                                // User is already merged, so we're good here - send the user to have their initial request processed
+                                return RedirectToAction("ActionRequest", "Request");
+                            }
+                        }
+                    }
                 }
                 else
                 {
                     // User is not permitted to use the Login Director - log error, and present error
                     _logger.LogError("Attempted access by unauthorised SSO user - " + userEmail);
 
-                    // TODO: Change this to a dedicated error page display
-                    return View("~/Views/Errors/Generic.cshtml");
+                    return View("~/Views/Errors/Unauthorised.cshtml");
                 }
             }
 
-            // If we've got to here, the user isn't properly authenticated.  Display an error
-            // TODO: Change this to a dedicated error page display
+            // If we've got to here, the user isn't properly authenticated or the Tenders API gave us an error response, so display a generic error
             return View("~/Views/Errors/Generic.cshtml");
         }
 

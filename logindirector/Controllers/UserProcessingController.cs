@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
+using Rollbar;
 using logindirector.Models.AdaptorService;
 using logindirector.Models.TendersApi;
 using logindirector.Services;
@@ -20,15 +20,13 @@ namespace logindirector.Controllers
 {
     public class UserProcessingController : Controller
     {
-        private readonly ILogger<UserProcessingController> _logger;
         public IAdaptorClientServices _adaptorClientServices;
         public ITendersClientServices _tendersClientServices;
         public IHelpers _userHelpers;
         public IMemoryCache _memoryCache;
 
-        public UserProcessingController(ILogger<UserProcessingController> logger, IAdaptorClientServices adaptorClientServices, ITendersClientServices tendersClientServices, IHelpers userHelpers, IMemoryCache memoryCache)
+        public UserProcessingController(IAdaptorClientServices adaptorClientServices, ITendersClientServices tendersClientServices, IHelpers userHelpers, IMemoryCache memoryCache)
         {
-            _logger = logger;
             _adaptorClientServices = adaptorClientServices;
             _tendersClientServices = tendersClientServices;
             _userHelpers = userHelpers;
@@ -82,7 +80,7 @@ namespace logindirector.Controllers
                 else
                 {
                     // User is not permitted to use the Login Director - log error, and present error
-                    _logger.LogError("Attempted access by unauthorised SSO user - " + userEmail);
+                    RollbarLocator.RollbarInstance.Error("Attempted access by unauthorised SSO user - " + userEmail);
 
                     return View("~/Views/Errors/Unauthorised.cshtml");
                 }

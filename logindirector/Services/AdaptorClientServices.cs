@@ -4,8 +4,8 @@ using System.Net.Http.Headers;
 using System.Web;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Rollbar;
 using logindirector.Models.AdaptorService;
 
 namespace logindirector.Services
@@ -13,12 +13,10 @@ namespace logindirector.Services
     // Service Client for the SSO Adaptor service - where we fetch user and department data from
     public class AdaptorClientServices : IAdaptorClientServices
     {
-        private readonly ILogger<AdaptorClientServices> _logger;
         public IConfiguration Configuration { get; }
 
-        public AdaptorClientServices(ILogger<AdaptorClientServices> logger, IConfiguration configuration)
+        public AdaptorClientServices(IConfiguration configuration)
         {
-            _logger = logger;
             Configuration = configuration;
         }
 
@@ -42,7 +40,7 @@ namespace logindirector.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError("Could not retrieve user information from adaptor service for " + username, ex);
+                RollbarLocator.RollbarInstance.Error(ex);
             }
 
             return userInfo;
@@ -75,7 +73,7 @@ namespace logindirector.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError("Error communicating with adaptor service at " + routeUri, ex);
+                RollbarLocator.RollbarInstance.Error(ex);
             }
 
             return responseContent;

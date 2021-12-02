@@ -3,7 +3,7 @@ using logindirector.Models.AdaptorService;
 
 namespace logindirector.Services
 {
-    // TODO: Refactor this into a generic interface for all services, similar to IBusinessLogicClient principle?
+    // Interface class for AdaptorClientServices
     public interface IAdaptorClientServices
     {
         Task<AdaptorUserModel> GetUserInformation(string username);

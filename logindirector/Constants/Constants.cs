@@ -13,5 +13,9 @@
         public static string Session_UserKey = "UserModel";
 
         public static string CentralCache_Key = "UserSessions";
+
+        public static string Tenders_UserStatus_ActionRequired = "UserPromptRequired";
+        public static string Tenders_UserStatus_AlreadyMerged = "UserMerged";
+        public static string Tenders_UserStatus_Error = "UnexpectedResponse";
     }
 }

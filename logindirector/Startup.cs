@@ -5,11 +5,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authentication.OAuth;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 using System.Security.Claims;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using Rollbar;
+using Rollbar.NetCore.AspNet;
 using logindirector.Services;
 using logindirector.Helpers;
 
@@ -17,16 +20,22 @@ namespace logindirector
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
             Configuration = configuration;
+            CurrentEnvironment = env;
         }
 
         public IConfiguration Configuration { get; }
+        private IWebHostEnvironment CurrentEnvironment { get; set; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // Enable Rollbar logging
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            ConfigureRollbarSingleton();
+
             // Enable application caching
             services.AddMemoryCache();
 
@@ -112,8 +121,30 @@ namespace logindirector
                         context.Principal.AddIdentity(appIdentity);
 
                         return Task.CompletedTask;
+                    },
+                    OnAccessDenied = context =>
+                    {
+                        RollbarLocator.RollbarInstance.Error("Access Denied by .NET OAuth middleware");
+
+                        context.HandleResponse();
+                        context.Response.Redirect(Configuration.GetValue<string>("UnauthorisedDisplayPath"));
+                        return Task.FromResult(0);
+                    },
+                    OnRemoteFailure = context =>
+                    {
+                        RollbarLocator.RollbarInstance.Error("Failure within SSO Service - user probably doesn't have the correct role to use Login Director");
+
+                        context.HandleResponse();
+                        context.Response.Redirect(Configuration.GetValue<string>("UnauthorisedDisplayPath"));
+                        return Task.FromResult(0);
                     }
                 };
+            });
+
+            services.AddRollbarLogger(loggerOptions =>
+            {
+                loggerOptions.Filter =
+                  (loggerName, loglevel) => loglevel >= LogLevel.Trace;
             });
 
             services.AddControllersWithViews();
@@ -153,6 +184,15 @@ namespace logindirector
                     name: "default",
                     pattern: "{controller=Request}/{action=Index}/{id?}");
             });
+        }
+
+        // Configures the Rollbar singleton notifier
+        private void ConfigureRollbarSingleton()
+        {
+            string rollbarAccessToken = Configuration.GetValue<string>("Rollbar:AccessToken");
+            string rollbarEnvironment = CurrentEnvironment.EnvironmentName;
+
+            RollbarLocator.RollbarInstance.Configure(new RollbarConfig(rollbarAccessToken) { Environment = rollbarEnvironment });
         }
     }
 }

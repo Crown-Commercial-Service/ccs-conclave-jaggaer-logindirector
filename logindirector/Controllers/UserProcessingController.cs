@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
+using Rollbar;
 using logindirector.Models.AdaptorService;
 using logindirector.Services;
 using logindirector.Helpers;
@@ -19,14 +19,12 @@ namespace logindirector.Controllers
 {
     public class UserProcessingController : Controller
     {
-        private readonly ILogger<UserProcessingController> _logger;
         public IAdaptorClientServices _adaptorClientServices;
         public IHelpers _userHelpers;
         public IMemoryCache _memoryCache;
 
-        public UserProcessingController(ILogger<UserProcessingController> logger, IAdaptorClientServices adaptorClientServices, IHelpers userHelpers, IMemoryCache memoryCache)
+        public UserProcessingController(IAdaptorClientServices adaptorClientServices, IHelpers userHelpers, IMemoryCache memoryCache)
         {
-            _logger = logger;
             _adaptorClientServices = adaptorClientServices;
             _userHelpers = userHelpers;
             _memoryCache = memoryCache;
@@ -61,7 +59,7 @@ namespace logindirector.Controllers
                 else
                 {
                     // User is not permitted to use the Login Director - log error, and present error
-                    _logger.LogError("Attempted access by unauthorised SSO user - " + userEmail);
+                    RollbarLocator.RollbarInstance.Error("Attempted access by unauthorised SSO user - " + userEmail);
 
                     // TODO: Change this to a dedicated error page display
                     return View("~/Views/Errors/Generic.cshtml");

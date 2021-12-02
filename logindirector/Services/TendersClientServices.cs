@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+using Rollbar;
 using logindirector.Constants;
 using logindirector.Models.TendersApi;
 
@@ -14,12 +14,10 @@ namespace logindirector.Services
     // Service Client for the Tenders API service - where Jaegger operations are performed against
     public class TendersClientServices : ITendersClientServices
     {
-        private readonly ILogger<TendersClientServices> _logger;
         public IConfiguration Configuration { get; }
 
-        public TendersClientServices(ILogger<TendersClientServices> logger, IConfiguration configuration)
+        public TendersClientServices(IConfiguration configuration)
         {
-            _logger = logger;
             Configuration = configuration;
         }
 
@@ -59,7 +57,7 @@ namespace logindirector.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError("Could not retrieve user information from Tenders API for " + username, ex);
+                RollbarLocator.RollbarInstance.Error(ex);
             }
 
             return model;
@@ -91,7 +89,7 @@ namespace logindirector.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError("Error communicating with Tenders API at " + routeUri, ex);
+                RollbarLocator.RollbarInstance.Error(ex);
             }
 
             return model;

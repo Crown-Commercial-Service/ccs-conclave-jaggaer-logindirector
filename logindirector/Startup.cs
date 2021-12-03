@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using Rollbar;
 using Rollbar.NetCore.AspNet;
+using Steeltoe.Extensions.Configuration.CloudFoundry;
 using logindirector.Services;
 using logindirector.Helpers;
 
@@ -22,16 +23,20 @@ namespace logindirector
     {
         public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
-            Configuration = configuration;
-            CurrentEnvironment = env;
+            _configuration = configuration;
+            _currentEnvironment = env;
         }
 
-        public IConfiguration Configuration { get; }
-        private IWebHostEnvironment CurrentEnvironment { get; set; }
+        public IConfiguration _configuration { get; }
+        private IWebHostEnvironment _currentEnvironment { get; set; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // Configure AWS Secrets
+            services.ConfigureCloudFoundryOptions(_configuration);
+            services.AddDefaultAWSOptions(_configuration.GetAWSOptions());
+
             // Enable Rollbar logging
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             ConfigureRollbarSingleton();
@@ -72,7 +77,7 @@ namespace logindirector
             .AddCookie("CookieAuth", options =>
             {
                 // First check should be against the cookies for an active session.  Make sure cookies expire after 30 mins rather than hanging round forever
-                options.ExpireTimeSpan = System.TimeSpan.FromMinutes(30);
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
 
                 // Do not allow the 30 minute timer to reset on requests - since we're not checking with the SSO Service each time, we want a user to re-authenticate after 30 mins
                 options.SlidingExpiration = false;
@@ -80,10 +85,10 @@ namespace logindirector
             .AddOAuth("SsoService", options =>
             {
                 // Second, check against the external SSO Service using OAuth
-                string ssoDomain = Configuration.GetValue<string>("SsoService:SsoDomain");
+                string ssoDomain = _configuration.GetValue<string>("SsoService:SsoDomain");
 
                 // Configure the Authorize Url
-                options.AuthorizationEndpoint = ssoDomain + Configuration.GetValue<string>("SsoService:RoutePaths:AuthorizePath");
+                options.AuthorizationEndpoint = ssoDomain + _configuration.GetValue<string>("SsoService:RoutePaths:AuthorizePath");
 
                 // Set the service scopes of our OpenIdConnect Auth requests
                 options.Scope.Add("openid");
@@ -91,17 +96,17 @@ namespace logindirector
                 options.Scope.Add("email");
 
                 // Configure what we want the callback URL to be - will be auto intercepted and processed by the system
-                options.CallbackPath = new PathString(Configuration.GetValue<string>("SsoService:RoutePaths:CallbackPath"));
+                options.CallbackPath = new PathString(_configuration.GetValue<string>("SsoService:RoutePaths:CallbackPath"));
 
                 // Set the Client ID and Client Secret required for authorization operations
-                options.ClientId = Configuration.GetValue<string>("SsoService:ClientId");
-                options.ClientSecret = Configuration.GetValue<string>("SsoService:ClientSecret");
+                options.ClientId = _configuration.GetValue<string>("SsoService:ClientId");
+                options.ClientSecret = _configuration.GetValue<string>("SsoService:ClientSecret");
 
                 // Configure the Token Request Url
-                options.TokenEndpoint = ssoDomain + Configuration.GetValue<string>("SsoService:RoutePaths:TokenPath");
+                options.TokenEndpoint = ssoDomain + _configuration.GetValue<string>("SsoService:RoutePaths:TokenPath");
 
                 // Configure the Access Denied Path
-                options.AccessDeniedPath = Configuration.GetValue<string>("UnauthorisedDisplayPath");
+                options.AccessDeniedPath = _configuration.GetValue<string>("UnauthorisedDisplayPath");
 
                 // We don't access the adaptor service here - we can't get to external API clients here.  But we do need to decode and store the user email so that we can access it later
                 options.Events = new OAuthEvents
@@ -131,7 +136,7 @@ namespace logindirector
                         RollbarLocator.RollbarInstance.Error("Access Denied by .NET OAuth middleware");
 
                         context.HandleResponse();
-                        context.Response.Redirect(Configuration.GetValue<string>("UnauthorisedDisplayPath"));
+                        context.Response.Redirect(_configuration.GetValue<string>("UnauthorisedDisplayPath"));
                         return Task.FromResult(0);
                     },
                     OnRemoteFailure = context =>
@@ -139,7 +144,7 @@ namespace logindirector
                         RollbarLocator.RollbarInstance.Error("Failure within SSO Service - user probably doesn't have the correct role to use Login Director");
 
                         context.HandleResponse();
-                        context.Response.Redirect(Configuration.GetValue<string>("UnauthorisedDisplayPath"));
+                        context.Response.Redirect(_configuration.GetValue<string>("UnauthorisedDisplayPath"));
                         return Task.FromResult(0);
                     }
                 };
@@ -166,7 +171,7 @@ namespace logindirector
             }
             else
             {
-                app.UseExceptionHandler(Configuration.GetValue<string>("UnauthorisedDisplayPath"));
+                app.UseExceptionHandler(_configuration.GetValue<string>("UnauthorisedDisplayPath"));
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
@@ -192,8 +197,8 @@ namespace logindirector
         // Configures the Rollbar singleton notifier
         private void ConfigureRollbarSingleton()
         {
-            string rollbarAccessToken = Configuration.GetValue<string>("Rollbar:AccessToken");
-            string rollbarEnvironment = CurrentEnvironment.EnvironmentName;
+            string rollbarAccessToken = _configuration.GetValue<string>("Rollbar:AccessToken");
+            string rollbarEnvironment = _currentEnvironment.EnvironmentName;
 
             RollbarLocator.RollbarInstance.Configure(new RollbarConfig(rollbarAccessToken) { Environment = rollbarEnvironment });
         }

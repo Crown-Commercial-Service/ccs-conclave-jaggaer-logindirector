@@ -1,11 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Steeltoe.Extensions.Configuration.CloudFoundry;
 
 namespace logindirector
 {
@@ -18,6 +15,13 @@ namespace logindirector
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .AddCloudFoundryConfiguration()
+                .ConfigureAppConfiguration((hostingContext, config) =>
+                {
+                    string envName = hostingContext.HostingEnvironment.EnvironmentName.ToString().ToLower();
+                    config.AddSystemsManager($"/{envName}", TimeSpan.FromMinutes(5));
+
+                })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();

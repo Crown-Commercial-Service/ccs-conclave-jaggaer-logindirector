@@ -13,11 +13,11 @@ namespace logindirector.Services
     // Service Client for the SSO Adaptor service - where we fetch user and department data from
     public class AdaptorClientServices : IAdaptorClientServices
     {
-        public IConfiguration Configuration { get; }
+        public IConfiguration _configuration { get; }
 
         public AdaptorClientServices(IConfiguration configuration)
         {
-            Configuration = configuration;
+            _configuration = configuration;
         }
 
         // Retrieves the user information associated with the specified username from the adaptor service
@@ -28,7 +28,7 @@ namespace logindirector.Services
             try
             {
                 // Fetch the information we need from the User Information route
-                string userInfoRouteUri = Configuration.GetValue<string>("SsoService:SsoDomain") + Configuration.GetValue<string>("SsoService:RoutePaths:AdaptorPath");
+                string userInfoRouteUri = _configuration.GetValue<string>("SsoService:SsoDomain") + _configuration.GetValue<string>("SsoService:RoutePaths:AdaptorPath");
 
                 string responseContent = await PerformAdaptorRequest(userInfoRouteUri + "?user-name=" + HttpUtility.HtmlEncode(username));
 
@@ -53,8 +53,8 @@ namespace logindirector.Services
 
             try
             {
-                string adaptorKey = Configuration.GetValue<string>("SsoService:AdaptorKey"),
-                       clientKey = Configuration.GetValue<string>("SsoService:ClientId");
+                string adaptorKey = _configuration.GetValue<string>("SsoService:AdaptorKey"),
+                       clientKey = _configuration.GetValue<string>("SsoService:ClientId");
 
                 // Establish a GET request to the specified route
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, routeUri);

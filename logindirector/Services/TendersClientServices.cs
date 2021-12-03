@@ -14,11 +14,11 @@ namespace logindirector.Services
     // Service Client for the Tenders API service - where Jaegger operations are performed against
     public class TendersClientServices : ITendersClientServices
     {
-        public IConfiguration Configuration { get; }
+        public IConfiguration _configuration { get; }
 
         public TendersClientServices(IConfiguration configuration)
         {
-            Configuration = configuration;
+            _configuration = configuration;
         }
 
         // Retrieves the status of a Jaegger user matching the authenticated user
@@ -29,7 +29,7 @@ namespace logindirector.Services
             try
             {
                 // Fetch the information we need from the User route
-                string userRouteUri = Configuration.GetValue<string>("TendersApi:ApiDomain") + Configuration.GetValue<string>("TendersApi:RoutePaths:UserPath");
+                string userRouteUri = _configuration.GetValue<string>("TendersApi:ApiDomain") + _configuration.GetValue<string>("TendersApi:RoutePaths:UserPath");
 
                 GenericResponseModel responseModel = await PerformTendersRequest(userRouteUri + HttpUtility.HtmlEncode(username), accessToken);
 

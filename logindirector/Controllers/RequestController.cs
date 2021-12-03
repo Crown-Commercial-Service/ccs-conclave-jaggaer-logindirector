@@ -17,12 +17,12 @@ namespace logindirector.Controllers
     public class RequestController : Controller
     {
         public IMemoryCache _memoryCache;
-        public IConfiguration Configuration { get; }
+        public IConfiguration _configuration { get; }
 
         public RequestController(IMemoryCache memoryCache, IConfiguration configuration)
         {
             _memoryCache = memoryCache;
-            Configuration = configuration;
+            _configuration = configuration;
         }
 
         // Catch all route for all incoming requests - order set to 999 to ensure fixed routes supercede it
@@ -103,7 +103,7 @@ namespace logindirector.Controllers
         {
             ErrorViewModel model = new ErrorViewModel
             {
-                DashboardUrl = Configuration.GetValue<string>("DashboardPath")
+                DashboardUrl = _configuration.GetValue<string>("DashboardPath")
             };
 
             return View("~/Views/Errors/Unauthorised.cshtml", model);

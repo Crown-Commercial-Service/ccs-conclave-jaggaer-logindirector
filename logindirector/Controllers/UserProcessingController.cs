@@ -34,6 +34,7 @@ namespace logindirector.Controllers
         }
 
         // Route to process all users logging into the system - account interactions in Jaegger / CaT, and store the data we need for later
+        [HttpGet]
         [Route("/director/process-user", Order = 1)]
         [Authorize]
         public IActionResult ProcessUser()
@@ -88,6 +89,27 @@ namespace logindirector.Controllers
 
             // If we've got to here, the user isn't properly authenticated or the Tenders API gave us an error response, so display a generic error
             return View("~/Views/Errors/Generic.cshtml");
+        }
+
+        // Route to process user selection at the Merge Prompt
+        [HttpPost]
+        [Route("/director/process-user", Order = 1)]
+        [Authorize]
+        public IActionResult ProcessUserMergeSelection(string accountDecision)
+        {
+            if (accountDecision == "merge")
+            {
+                // User wants to merge their account
+                // TODO: Real action here when flow determined (redirect to Jaegger login probably?)
+            }
+            else
+            {
+                // User wants to create a new account
+                // TODO: Real action here in other case - probably forward the action to another route to handle this
+            }
+
+            // TODO: Delete this when actual action in place
+            return View("~/Views/Home/ProcessRequest.cshtml");
         }
 
         // Adds an entry for an authenticated user into the central session cache

@@ -34,8 +34,8 @@ namespace logindirector
         public void ConfigureServices(IServiceCollection services)
         {
             // Configure AWS Secrets
-            services.ConfigureCloudFoundryOptions(_configuration);
-            services.AddDefaultAWSOptions(_configuration.GetAWSOptions());
+            //services.ConfigureCloudFoundryOptions(_configuration);
+            //services.AddDefaultAWSOptions(_configuration.GetAWSOptions());
 
             // Enable Rollbar logging
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();

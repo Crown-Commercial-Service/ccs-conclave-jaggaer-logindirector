@@ -18,8 +18,8 @@ namespace logindirector
                 .AddCloudFoundryConfiguration()
                 .ConfigureAppConfiguration((hostingContext, config) =>
                 {
-                    //string envName = hostingContext.HostingEnvironment.EnvironmentName.ToString().ToLower();
-                    //config.AddSystemsManager($"/{envName}", TimeSpan.FromMinutes(5));
+                    string envName = hostingContext.HostingEnvironment.EnvironmentName.ToString().ToLower();
+                    config.AddSystemsManager($"/{envName}", TimeSpan.FromMinutes(5));
 
                 })
                 .ConfigureWebHostDefaults(webBuilder =>

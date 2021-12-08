@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using System.Net.Http;
 using logindirector.Models.TendersApi;
 
 namespace logindirector.Services
@@ -8,6 +9,8 @@ namespace logindirector.Services
     {
         Task<UserStatusModel> GetUserStatus(string username, string accessToken);
 
-        Task<GenericResponseModel> PerformTendersRequest(string routeUri, string accessToken);
+        Task<UserCreationModel> CreateJaeggerUser(string username, string accessToken);
+
+        Task<GenericResponseModel> PerformTendersRequest(string routeUri, string accessToken, HttpMethod method);
     }
 }

@@ -24,7 +24,6 @@ namespace logindirector
 
                 .ConfigureAppConfiguration((hostingContext, config) =>
                 {
-                    string envName = hostingContext.HostingEnvironment.EnvironmentName.ToString().ToLower();
                     var isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == Environments.Development;
                     if (!isDevelopment)
                     {
@@ -39,7 +38,7 @@ namespace logindirector
                         Environment.SetEnvironmentVariable("AWS_REGION", cf_aws_region);
                     }
 
-                    config.AddSystemsManager($"/{"development"}", TimeSpan.FromMinutes(5));
+                    config.AddSystemsManager($"/", TimeSpan.FromMinutes(5));
 
                 })
                 .ConfigureWebHostDefaults(webBuilder =>

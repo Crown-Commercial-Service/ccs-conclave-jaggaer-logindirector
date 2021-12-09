@@ -2,7 +2,7 @@ applications:
   - name: dev-logindirector
     instances: 1
     memory: 512M
-    buildpacks: https://github.com/cloudfoundry/dotnet-core-buildpack.git
+    buildpack: https://github.com/cloudfoundry/dotnet-core-buildpack.git
     stack: cflinuxfs3
     routes:
     - route: dev-logindirector.london.cloudapps.digital

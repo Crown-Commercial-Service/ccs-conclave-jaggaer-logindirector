@@ -11,8 +11,6 @@ namespace logindirector
 {
     public class Program
     {
-        private static object _configuration;
-
         public static void Main(string[] args)
         {
             CreateHostBuilder(args).Build().Run();

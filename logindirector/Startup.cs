@@ -17,6 +17,7 @@ using Steeltoe.Extensions.Configuration.CloudFoundry;
 using logindirector.Services;
 using logindirector.Helpers;
 using Amazon.SecurityToken;
+using System.Linq;
 
 namespace logindirector
 {

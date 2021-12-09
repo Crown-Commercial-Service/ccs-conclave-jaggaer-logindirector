@@ -26,19 +26,18 @@ namespace logindirector
                 {
                     string envName = hostingContext.HostingEnvironment.EnvironmentName.ToString().ToLower();
                     var isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == Environments.Development;
-                   
-                    var configg = config.Build();
-                    var cloudServiceConfig = configg.GetSection("vcap").Get<CloudFoundryServicesOptions>();
-                    var cf_aws_access_key_id = cloudServiceConfig.Services["user-provided"].First(s => s.Name == "aws-ssm").Credentials["aws_access_key_id"].Value;
-                    var cf_aws_secret_access_key = cloudServiceConfig.Services["user-provided"].First(s => s.Name == "aws-ssm").Credentials["aws_secret_access_key"].Value;
-                    var cf_aws_region = cloudServiceConfig.Services["user-provided"].First(s => s.Name == "aws-ssm").Credentials["region"].Value;
 
-                    Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", cf_aws_access_key_id);
-                    Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", cf_aws_secret_access_key);
-                    Environment.SetEnvironmentVariable("AWS_REGION", cf_aws_region);
+                        var configg = config.Build();
+                        var cloudServiceConfig = configg.GetSection("vcap").Get<CloudFoundryServicesOptions>();
+                        var cf_aws_access_key_id = cloudServiceConfig.Services["user-provided"].First(s => s.Name == "aws-ssm").Credentials["aws_access_key_id"].Value;
+                        var cf_aws_secret_access_key = cloudServiceConfig.Services["user-provided"].First(s => s.Name == "aws-ssm").Credentials["aws_secret_access_key"].Value;
+                        var cf_aws_region = cloudServiceConfig.Services["user-provided"].First(s => s.Name == "aws-ssm").Credentials["region"].Value;
 
-                    config.AddSystemsManager($"/{envName}", TimeSpan.FromMinutes(5));
+                        Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", cf_aws_access_key_id);
+                        Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", cf_aws_secret_access_key);
+                        Environment.SetEnvironmentVariable("AWS_REGION", cf_aws_region);
 
+                    config.AddSystemsManager($"/{"development"}", TimeSpan.FromMinutes(5));
 
                 })
                 .ConfigureWebHostDefaults(webBuilder =>

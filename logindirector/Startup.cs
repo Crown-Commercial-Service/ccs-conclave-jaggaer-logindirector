@@ -17,7 +17,6 @@ using Steeltoe.Extensions.Configuration.CloudFoundry;
 using logindirector.Services;
 using logindirector.Helpers;
 using Amazon.SecurityToken;
-using System.Linq;
 
 namespace logindirector
 {
@@ -38,7 +37,6 @@ namespace logindirector
             services.AddOptions();
             services.ConfigureCloudFoundryOptions(_configuration);
 
-           // var credentials = new EnvironmentVariablesAWSCredentials();
             services.AddDefaultAWSOptions(_configuration.GetAWSOptions());
             services.AddAWSService<IAmazonSecurityTokenService>();
 
@@ -169,6 +167,12 @@ namespace logindirector
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.Use((context, next) =>
+            {
+                context.Request.Scheme = "https";
+                return next();
+            });
+
             if (env.IsDevelopment())
             {
                 app.UseMiniProfiler();

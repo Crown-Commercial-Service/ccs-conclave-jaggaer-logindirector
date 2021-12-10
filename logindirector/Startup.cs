@@ -16,6 +16,7 @@ using Rollbar.NetCore.AspNet;
 using Steeltoe.Extensions.Configuration.CloudFoundry;
 using logindirector.Services;
 using logindirector.Helpers;
+using Amazon.SecurityToken;
 
 namespace logindirector
 {
@@ -33,9 +34,11 @@ namespace logindirector
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // Configure AWS Secrets
+            services.AddOptions();
             services.ConfigureCloudFoundryOptions(_configuration);
+
             services.AddDefaultAWSOptions(_configuration.GetAWSOptions());
+            services.AddAWSService<IAmazonSecurityTokenService>();
 
             // Enable Rollbar logging
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
@@ -164,6 +167,12 @@ namespace logindirector
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.Use((context, next) =>
+            {
+                context.Request.Scheme = "https";
+                return next();
+            });
+
             if (env.IsDevelopment())
             {
                 app.UseMiniProfiler();

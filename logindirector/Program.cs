@@ -23,7 +23,8 @@ namespace logindirector
 
                 .ConfigureAppConfiguration((hostingContext, config) =>
                 {
-                    var isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == Environments.Development;
+                    bool isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == Environments.Development;
+
                     if (!isDevelopment)
                     {
                         IConfigurationRoot configg = config.Build();

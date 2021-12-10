@@ -1,0 +1,18 @@
+﻿@model ErrorViewModel
+
+@{
+    ViewData["Title"] = "Account Merging Failed";
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <h1 class="govuk-heading-xl page-title page-title--tight">Public Procurement Gateway</h1>
+        <p class="govuk-body">Unable to merge with existing account in eSourcing.</p>
+        <p class="govuk-body">Please try again later.  If the problem persists then please contact CSC Support.</p>
+        <br />
+        @if (Model != null && !String.IsNullOrWhiteSpace(Model.DashboardUrl))
+        {
+            <p class="govuk-body"><a href="@Model.DashboardUrl" class="govuk-button">Go back to your dashboard ></a></p>
+        }
+    </div>
+</div>

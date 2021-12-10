@@ -28,17 +28,17 @@ namespace logindirector.Services
 
             try
             {
-                // Fetch the information we need from the User route
+                // Fetch the information we need from the User GET route
                 string userRouteUri = _configuration.GetValue<string>("TendersApi:ApiDomain") + _configuration.GetValue<string>("TendersApi:RoutePaths:UserPath");
 
-                GenericResponseModel responseModel = await PerformTendersRequest(userRouteUri + HttpUtility.HtmlEncode(username), accessToken);
+                GenericResponseModel responseModel = await PerformTendersRequest(userRouteUri + HttpUtility.HtmlEncode(username), accessToken, HttpMethod.Get);
 
                 if (responseModel != null)
                 {
                     // We now need to map our response to a useful model to return
                     model = new UserStatusModel();
 
-                    if (responseModel.StatusCode == HttpStatusCode.NotFound)
+                    if (responseModel.StatusCode == HttpStatusCode.NotFound || responseModel.StatusCode == HttpStatusCode.Conflict)
                     {
                         // The user either doesn't exist in Jaegger, or their account is unmerged
                         model.UserStatus = AppConstants.Tenders_UserStatus_ActionRequired;
@@ -63,15 +63,57 @@ namespace logindirector.Services
             return model;
         }
 
+        // Requests Jaegger to create a new Jaegger user for the authenticated user
+        public async Task<UserCreationModel> CreateJaeggerUser(string username, string accessToken)
+        {
+            UserCreationModel model = null;
+
+            try
+            {
+                // Perform our request against the User PUT route
+                string userRouteUri = _configuration.GetValue<string>("TendersApi:ApiDomain") + _configuration.GetValue<string>("TendersApi:RoutePaths:UserPath");
+
+                GenericResponseModel responseModel = await PerformTendersRequest(userRouteUri + HttpUtility.HtmlEncode(username), accessToken, HttpMethod.Put);
+
+                if (responseModel != null)
+                {
+                    // Now map our response to a model to return
+                    model = new UserCreationModel();
+
+                    if (responseModel.StatusCode == HttpStatusCode.OK || responseModel.StatusCode == HttpStatusCode.Created)
+                    {
+                        // The operation has succeeded
+                        model.CreationStatus = AppConstants.Tenders_UserCreation_Success;
+                    }
+                    else if (responseModel.StatusCode == HttpStatusCode.Conflict)
+                    {
+                        // User cannot be created due to issues with the account
+                        model.CreationStatus = AppConstants.Tenders_UserCreation_Failure;
+                    }
+                    else
+                    {
+                        // There's been a more general issue with the operation (authentication not matching requested user, for example)
+                        model.CreationStatus = AppConstants.Tenders_UserCreation_Error;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                RollbarLocator.RollbarInstance.Error(ex);
+            }
+
+            return model;
+        }
+
         // Core method that performs a request to the Tenders API using parameters passed to it
-        public async Task<GenericResponseModel> PerformTendersRequest(string routeUri, string accessToken)
+        public async Task<GenericResponseModel> PerformTendersRequest(string routeUri, string accessToken, HttpMethod method)
         {
             GenericResponseModel model = null;
 
             try
             {
-                // Establish a GET request to the specified route
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, routeUri);
+                // Establish a request to the specified route
+                HttpRequestMessage request = new HttpRequestMessage(method, routeUri);
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
                 HttpClientHandler handler = new HttpClientHandler();

@@ -105,11 +105,32 @@ namespace logindirector.Controllers
             else
             {
                 // User wants to create a new account
-                // TODO: Real action here in other case - probably forward the action to another route to handle this
+                string userEmail = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value;
+                string accessToken = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Authentication)?.Value;
+
+                if (!string.IsNullOrWhiteSpace(userEmail) && !string.IsNullOrWhiteSpace(accessToken))
+                {
+                    UserCreationModel userCreationModel = _tendersClientServices.CreateJaeggerUser(userEmail, accessToken).Result;
+
+                    if (userCreationModel != null)
+                    {
+                        // Now we have a user creation response, work out what to do with the user next
+                        if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_Success)
+                        {
+                            // User account has been created - now we can proceed to action their initial request
+                            return RedirectToAction("ActionRequest", "Request");
+                        }
+                        else if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_Failure)
+                        {
+                            // There's been an issue creating the user's account.  Therefore, display a failure page related to a creation failure
+                            return View("~/Views/Errors/CreateError.cshtml");
+                        }
+                    }
+                }
             }
 
-            // TODO: Delete this when actual action in place
-            return View("~/Views/Home/ProcessRequest.cshtml");
+            // If we've got to here, the user isn't properly authenticated or the Tenders API gave us a generic error response, so display a generic error
+            return View("~/Views/Errors/Generic.cshtml");
         }
 
         // Adds an entry for an authenticated user into the central session cache

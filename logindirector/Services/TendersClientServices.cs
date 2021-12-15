@@ -38,7 +38,7 @@ namespace logindirector.Services
                     // We now need to map our response to a useful model to return
                     model = new UserStatusModel();
 
-                    if (responseModel.StatusCode == HttpStatusCode.NotFound || responseModel.StatusCode == HttpStatusCode.Conflict)
+                    if (responseModel.StatusCode == HttpStatusCode.NotFound)
                     {
                         // The user either doesn't exist in Jaegger, or their account is unmerged
                         model.UserStatus = AppConstants.Tenders_UserStatus_ActionRequired;
@@ -50,7 +50,7 @@ namespace logindirector.Services
                     }
                     else
                     {
-                        // This is an unexpected error response from Tenders that we can't handle
+                        // This is an unexpected error response from Tenders that we can't handle (includes 409 responses which denote role mismatches)
                         model.UserStatus = AppConstants.Tenders_UserStatus_Error;
                     }
                 }

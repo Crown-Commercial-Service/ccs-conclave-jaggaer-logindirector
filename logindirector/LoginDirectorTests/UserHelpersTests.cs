@@ -1,0 +1,56 @@
+using logindirector.Constants;
+using logindirector.Helpers;
+using logindirector.Models.AdaptorService;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace LoginDirectorTests
+{
+    [TestClass]
+    public class UserHelpersTests
+    {
+        internal UserHelpers userHelpers;
+        internal AdaptorUserModel userModel;
+
+        [TestInitialize]
+        public void Startup()
+        {
+            userHelpers = new UserHelpers();
+            userModel = new AdaptorUserModel
+            {
+                coreRoles = new System.Collections.Generic.List<AdaptorUserRoleModel>(),
+                additionalRoles = new System.Collections.Generic.List<string>()
+            };
+        }
+
+        [TestMethod]
+        public void User_With_Valid_Core_Role_Should_Return_True()
+        {
+            // Setup a valid core role for our fake AdaptorUserModel
+            AdaptorUserRoleModel customRoleModel = new AdaptorUserRoleModel
+            {
+                serviceClientName = AppConstants.Adaptor_ClientRoleAssignment
+            };
+            userModel.coreRoles.Add(customRoleModel);
+
+            // Now test our fake object against the method
+            Assert.AreEqual(userHelpers.HasValidUserRoles(userModel), true);
+        }
+
+        [TestMethod]
+        public void User_With_Valid_Additional_Role_Should_Return_True()
+        {
+            // Setup a valid additional role for our fake AdaptorUserModel
+            userModel.additionalRoles.Add(AppConstants.RoleKey_JaeggerSupplier);
+
+            // Now test our fake object against the method
+            Assert.AreEqual(userHelpers.HasValidUserRoles(userModel), true);
+        }
+
+        [TestMethod]
+        public void User_Without_Valid_Role_Should_Return_False()
+        {
+            // Test our fake object against this methiod with no changes
+            Assert.AreEqual(userHelpers.HasValidUserRoles(userModel), false);
+        }
+    }
+}

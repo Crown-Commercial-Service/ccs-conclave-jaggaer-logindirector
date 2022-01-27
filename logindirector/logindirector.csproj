@@ -4,6 +4,11 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
+  <PropertyGroup>
+      <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+      <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
   <ItemGroup>
     <Folder Include="Services\" />
     <Folder Include="Models\AdaptorService\" />
@@ -28,5 +33,6 @@
     <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.1.98" />
     <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="3.7.11.4" />
     <PackageReference Include="Steeltoe.Extensions.Configuration.CloudFoundryCore" Version="3.1.2" />
+    <PackageReference Include="MSTest.TestFramework" Version="2.2.8" />
   </ItemGroup>
 </Project>

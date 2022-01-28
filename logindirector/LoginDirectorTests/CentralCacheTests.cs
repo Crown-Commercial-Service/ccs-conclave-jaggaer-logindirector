@@ -82,11 +82,9 @@ namespace LoginDirectorTests
 
         internal void Setup_Test_ClaimsPrincipal(string emailAddress)
         {
-            string testEmail = "test@testmail.com";
-
             List<Claim> claims = new List<Claim>()
             {
-                new Claim(ClaimTypes.Email, testEmail)
+                new Claim(ClaimTypes.Email, emailAddress)
             };
             ClaimsIdentity identity = new ClaimsIdentity(claims, "TestAuthType");
             ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(identity);
@@ -109,5 +107,8 @@ namespace LoginDirectorTests
 
             requestController._memoryCache.Set(AppConstants.CentralCache_Key, sessionsList);
         }
+
+        // if null user is requested, nothing should be added
+        // if valid user is requested, entry should be added that matches
     }
 }

@@ -136,7 +136,7 @@ namespace logindirector.Controllers
         // Adds an entry for an authenticated user into the central session cache
         internal void AddUserToCentralSessionCache(AdaptorUserModel userModel)
         {
-            if (userModel != null)
+            if (userModel != null && !String.IsNullOrWhiteSpace(userModel.emailAddress))
             {
                 // A single entry in the cache needs to contain the user's email, and an entry timestamp
                 List<UserSessionModel> sessionsList;

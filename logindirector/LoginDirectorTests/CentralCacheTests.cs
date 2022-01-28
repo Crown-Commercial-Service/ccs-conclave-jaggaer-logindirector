@@ -4,6 +4,7 @@ using System.Security.Claims;
 using logindirector.Constants;
 using logindirector.Controllers;
 using logindirector.Models;
+using logindirector.Models.AdaptorService;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
@@ -17,6 +18,7 @@ namespace LoginDirectorTests
     public class CentralCacheTests
     {
         internal RequestController requestController;
+        internal UserProcessingController userProcessingController;
 
         [TestInitialize]
         public void Startup()
@@ -30,6 +32,7 @@ namespace LoginDirectorTests
             IConfigurationRoot configuration = new ConfigurationBuilder().Build();
 
             requestController = new RequestController(memoryCache, configuration);
+            userProcessingController = new UserProcessingController(null, null, null, memoryCache);
         }
 
         [TestMethod]
@@ -80,6 +83,60 @@ namespace LoginDirectorTests
             Assert.AreEqual(requestController.DoesUserHaveValidSession(), false);
         }
 
+        [TestMethod]
+        public void Addition_To_Cache_Request_For_Null_User_Should_Return_False()
+        {
+            // Run the test with a null user object
+            userProcessingController.AddUserToCentralSessionCache(null);
+
+            List<UserSessionModel> sessionsList = new List<UserSessionModel>();
+            string cacheKey = AppConstants.CentralCache_Key;
+
+            if (userProcessingController._memoryCache.TryGetValue(cacheKey, out sessionsList))
+            {
+                Assert.IsTrue(sessionsList.Count == 0);
+            }
+
+        }
+
+        [TestMethod]
+        public void Addition_To_Cache_Request_For_User_Without_Email_Should_Return_False()
+        {
+            // Run the test with a user object that has no email address assigned
+            AdaptorUserModel userModel = new AdaptorUserModel
+            {
+                emailAddress = ""
+            };
+            userProcessingController.AddUserToCentralSessionCache(userModel);
+
+            List<UserSessionModel> sessionsList = new List<UserSessionModel>();
+            string cacheKey = AppConstants.CentralCache_Key;
+
+            if (userProcessingController._memoryCache.TryGetValue(cacheKey, out sessionsList))
+            {
+                Assert.IsTrue(sessionsList.Count == 0);
+            }
+        }
+
+        [TestMethod]
+        public void Addition_To_Cache_Request_For_Valid_User_Should_Return_True()
+        {
+            // Run the test with a user object that has an email address assigned
+            AdaptorUserModel userModel = new AdaptorUserModel
+            {
+                emailAddress = "test@testmail.com"
+            };
+            userProcessingController.AddUserToCentralSessionCache(userModel);
+
+            List<UserSessionModel> sessionsList = new List<UserSessionModel>();
+            string cacheKey = AppConstants.CentralCache_Key;
+
+            if (userProcessingController._memoryCache.TryGetValue(cacheKey, out sessionsList))
+            {
+                Assert.IsTrue(sessionsList.Count == 1);
+            }
+        }
+
         internal void Setup_Test_ClaimsPrincipal(string emailAddress)
         {
             List<Claim> claims = new List<Claim>()
@@ -107,8 +164,5 @@ namespace LoginDirectorTests
 
             requestController._memoryCache.Set(AppConstants.CentralCache_Key, sessionsList);
         }
-
-        // if null user is requested, nothing should be added
-        // if valid user is requested, entry should be added that matches
     }
 }

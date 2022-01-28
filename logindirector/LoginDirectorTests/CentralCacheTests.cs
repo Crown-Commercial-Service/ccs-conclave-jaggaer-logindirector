@@ -19,6 +19,7 @@ namespace LoginDirectorTests
     {
         internal RequestController requestController;
         internal UserProcessingController userProcessingController;
+        string commonTestEmail = "test@testmail.com";
 
         [TestInitialize]
         public void Startup()
@@ -46,11 +47,10 @@ namespace LoginDirectorTests
         public void User_With_Valid_Matching_Entry_In_Cache_Should_Return_True()
         {
             // Create an User object which the test can use
-            string testEmail = "test@testmail.com";
-            Setup_Test_ClaimsPrincipal(testEmail);
+            Setup_Test_ClaimsPrincipal(commonTestEmail);
 
             // Now add an entry into the central cache which started 2 mins ago and should match
-            Setup_Test_Cache_Entry(-2, testEmail);
+            Setup_Test_Cache_Entry(-2, commonTestEmail);
 
             // Finally, run the test
             Assert.AreEqual(requestController.DoesUserHaveValidSession(), true);
@@ -60,11 +60,10 @@ namespace LoginDirectorTests
         public void User_With_Expired_Matching_Entry_In_Cache_Should_Return_False()
         {
             // Create an User object which the test can use
-            string testEmail = "test@testmail.com";
-            Setup_Test_ClaimsPrincipal(testEmail);
+            Setup_Test_ClaimsPrincipal(commonTestEmail);
 
             // Now add an entry into the central cache which started 45 mins ago and should match
-            Setup_Test_Cache_Entry(-45, testEmail);
+            Setup_Test_Cache_Entry(-45, commonTestEmail);
 
             // Finally, run the test
             Assert.AreEqual(requestController.DoesUserHaveValidSession(), false);
@@ -74,7 +73,7 @@ namespace LoginDirectorTests
         public void User_Without_Match_In_Cache_Should_Return_False()
         {
             // Create an User object which the test can use
-            Setup_Test_ClaimsPrincipal("test@testmail.com");
+            Setup_Test_ClaimsPrincipal(commonTestEmail);
 
             // Now add an entry into the central cache which started 2 mins ago but does NOT match
             Setup_Test_Cache_Entry(-2, "testing@testmail.com");
@@ -124,7 +123,7 @@ namespace LoginDirectorTests
             // Run the test with a user object that has an email address assigned
             AdaptorUserModel userModel = new AdaptorUserModel
             {
-                emailAddress = "test@testmail.com"
+                emailAddress = commonTestEmail
             };
             userProcessingController.AddUserToCentralSessionCache(userModel);
 

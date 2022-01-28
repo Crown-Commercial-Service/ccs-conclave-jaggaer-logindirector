@@ -10,8 +10,10 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using logindirector.Constants;
 using logindirector.Models;
+using System.Runtime.CompilerServices;
 
 // Controller to handle all incoming and outgoing requests to and from the application
+[assembly: InternalsVisibleTo("LoginDirectorTests")]
 namespace logindirector.Controllers
 {
     public class RequestController : Controller

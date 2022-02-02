@@ -1,2 +1,2 @@
 [config]
-project = ${{ github.workspace }}/logindirector/logindirector.csproj
+project = ccs-conclave-jaggaer-logindirector/logindirector/logindirector.csproj

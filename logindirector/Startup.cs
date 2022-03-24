@@ -209,7 +209,7 @@ namespace logindirector
             string rollbarAccessToken = _configuration.GetValue<string>("Rollbar:AccessToken");
             string rollbarEnvironment = _currentEnvironment.EnvironmentName;
 
-            RollbarLocator.RollbarInstance.Configure(new RollbarConfig(rollbarAccessToken) { Environment = rollbarEnvironment });
+            RollbarLocator.RollbarInstance.Configure(new RollbarLoggerConfig(rollbarAccessToken, rollbarEnvironment));
         }
     }
 }

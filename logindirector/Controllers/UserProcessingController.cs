@@ -14,6 +14,7 @@ using logindirector.Services;
 using logindirector.Helpers;
 using logindirector.Constants;
 using logindirector.Models;
+using Microsoft.Extensions.Configuration;
 
 // Controller to handle all user processing actions done by the application, before outgoing requests are applied
 namespace logindirector.Controllers
@@ -24,13 +25,15 @@ namespace logindirector.Controllers
         public ITendersClientServices _tendersClientServices;
         public IHelpers _userHelpers;
         public IMemoryCache _memoryCache;
+        public IConfiguration _configuration { get; }
 
-        public UserProcessingController(IAdaptorClientServices adaptorClientServices, ITendersClientServices tendersClientServices, IHelpers userHelpers, IMemoryCache memoryCache)
+        public UserProcessingController(IAdaptorClientServices adaptorClientServices, ITendersClientServices tendersClientServices, IHelpers userHelpers, IMemoryCache memoryCache, IConfiguration configuration)
         {
             _adaptorClientServices = adaptorClientServices;
             _tendersClientServices = tendersClientServices;
             _userHelpers = userHelpers;
             _memoryCache = memoryCache;
+            _configuration = configuration;
         }
 
         // Route to process all users logging into the system - account interactions in Jaegger / CaT, and store the data we need for later
@@ -131,6 +134,32 @@ namespace logindirector.Controllers
 
             // If we've got to here, the user isn't properly authenticated or the Tenders API gave us a generic error response, so display a generic error
             return View("~/Views/Errors/Generic.cshtml");
+        }
+
+        // Route to receive users back from Jaegger once their account has been merged
+        [HttpGet]
+        [Route("/director/account-linked", Order = 1)]
+        [Authorize]
+        public IActionResult ContinueProcessingMergedUser()
+        {
+            // Firstly, since the user is coming back from an external service make sure their session with us still exists - if it doesn't, we can't continue
+            string userEmail = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value;
+            string accessToken = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Authentication)?.Value;
+
+            // TODO: Should this check be changed to their request details once we have those in session?
+            if (!string.IsNullOrWhiteSpace(userEmail) && !string.IsNullOrWhiteSpace(accessToken))
+            {
+                // User session seems to still exist.  User can now be sent on to process their original request
+                return RedirectToAction("ActionRequest", "Request");
+            }
+
+            // If we've gotten to here the user session no longer appears to be in a correct state (likely timed out and lost details of the original request) - display a session expired notice
+            ErrorViewModel model = new ErrorViewModel
+            {
+                DashboardUrl = _configuration.GetValue<string>("DashboardPath")
+            };
+
+            return View("~/Views/Errors/SessionExpired.cshtml", model);
         }
 
         // Adds an entry for an authenticated user into the central session cache

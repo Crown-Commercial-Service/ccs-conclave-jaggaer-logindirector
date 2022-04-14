@@ -11,6 +11,7 @@
         public static string RoleKey_CatUser = "CAT_USER_LOGIN_DIRECTOR";
 
         public static string Session_UserKey = "UserModel";
+        public static string Session_RequestDetailsKey = "RequestDetails";
 
         public static string CentralCache_Key = "UserSessions";
 

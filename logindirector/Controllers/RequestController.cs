@@ -122,8 +122,7 @@ namespace logindirector.Controllers
                 List<string> supportedSources = new List<string>
                 {
                     _configuration.GetValue<string>("SupportedSources:JaeggerSource"),
-                    _configuration.GetValue<string>("SupportedSources:CatSource"),
-                    _configuration.GetValue<string>("SupportedSources:SelfSource")
+                    _configuration.GetValue<string>("SupportedSources:CatSource")
                 };
 
                 if (supportedSources.Contains(requestSource))

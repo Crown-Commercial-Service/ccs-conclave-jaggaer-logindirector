@@ -14,6 +14,7 @@ using logindirector.Services;
 using logindirector.Helpers;
 using logindirector.Constants;
 using logindirector.Models;
+using Microsoft.Extensions.Configuration;
 
 // Controller to handle all user processing actions done by the application, before outgoing requests are applied
 namespace logindirector.Controllers
@@ -24,13 +25,15 @@ namespace logindirector.Controllers
         public ITendersClientServices _tendersClientServices;
         public IHelpers _userHelpers;
         public IMemoryCache _memoryCache;
+        public IConfiguration _configuration { get; }
 
-        public UserProcessingController(IAdaptorClientServices adaptorClientServices, ITendersClientServices tendersClientServices, IHelpers userHelpers, IMemoryCache memoryCache)
+        public UserProcessingController(IAdaptorClientServices adaptorClientServices, ITendersClientServices tendersClientServices, IHelpers userHelpers, IMemoryCache memoryCache, IConfiguration configuration)
         {
             _adaptorClientServices = adaptorClientServices;
             _tendersClientServices = tendersClientServices;
             _userHelpers = userHelpers;
             _memoryCache = memoryCache;
+            _configuration = configuration;
         }
 
         // Route to process all users logging into the system - account interactions in Jaegger / CaT, and store the data we need for later
@@ -67,8 +70,10 @@ namespace logindirector.Controllers
                             // Now we have a user status response, work out what to do with the user
                             if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_ActionRequired)
                             {
-                                // The user needs to either merge or create a Jaegger account - display the merge prompt
-                                return View("~/Views/Merging/MergePrompt.cshtml");
+                                // The user needs to either merge or create a Jaegger / CaT account - display the merge prompt
+                                ServiceViewModel model = GetServiceViewModelForRequest();
+
+                                return View("~/Views/Merging/MergePrompt.cshtml", model);
                             }
                             else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_AlreadyMerged)
                             {
@@ -165,6 +170,36 @@ namespace logindirector.Controllers
                 // Set the newly amended list back into the cache
                 _memoryCache.Set(cacheKey, sessionsList);
             }
+        }
+
+        // Uses the request data stored in session to build a ServiceViewModel for use later in views
+        internal ServiceViewModel GetServiceViewModelForRequest()
+        {
+            ServiceViewModel model = new ServiceViewModel();
+
+            // Get the request data from session
+            string requestSessionData = HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey);
+
+            if (!String.IsNullOrWhiteSpace(requestSessionData))
+            {
+                RequestSessionModel storedRequestModel = JsonConvert.DeserializeObject<RequestSessionModel>(requestSessionData);
+
+                if (storedRequestModel != null && !String.IsNullOrWhiteSpace(storedRequestModel.domain))
+                {
+                    if (storedRequestModel.domain == _configuration.GetValue<string>("SupportedSources:JaeggerSource"))
+                    {
+                        // Looks like a Jaegger request
+                        model.ServiceDisplayName = AppConstants.Display_JaeggerServiceName;
+                    }
+                    else
+                    {
+                        // Must be a CaT request
+                        model.ServiceDisplayName = AppConstants.Display_CatServiceName;
+                    }
+                }
+            }
+
+            return model;
         }
     }
 }

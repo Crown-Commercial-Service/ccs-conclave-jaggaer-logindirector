@@ -22,5 +22,8 @@
         public static string Tenders_UserCreation_Success = "UserCreated";
         public static string Tenders_UserCreation_Failure = "UserCreationFailed";
         public static string Tenders_UserCreation_Error = "UnexpectedFailure";
+
+        public static string Display_JaeggerServiceName = "eSourcing";
+        public static string Display_CatServiceName = "Contract Award Service";
     }
 }

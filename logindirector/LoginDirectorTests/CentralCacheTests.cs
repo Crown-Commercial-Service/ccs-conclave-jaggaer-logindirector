@@ -33,7 +33,7 @@ namespace LoginDirectorTests
             IConfigurationRoot configuration = new ConfigurationBuilder().Build();
 
             requestController = new RequestController(memoryCache, configuration);
-            userProcessingController = new UserProcessingController(null, null, null, memoryCache);
+            userProcessingController = new UserProcessingController(null, null, null, memoryCache, configuration);
         }
 
         [TestMethod]

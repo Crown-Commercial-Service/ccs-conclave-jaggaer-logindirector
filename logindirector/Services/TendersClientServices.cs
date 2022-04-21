@@ -43,6 +43,16 @@ namespace logindirector.Services
                         // The user either doesn't exist in Jaegger, or their account is unmerged
                         model.UserStatus = AppConstants.Tenders_UserStatus_ActionRequired;
                     }
+                    else if (responseModel.StatusCode == HttpStatusCode.Forbidden)
+                    {
+                        // There's either a user mismatch at the Tenders end or the user doesn't have access to the service
+                        model.UserStatus = AppConstants.Tenders_UserStatus_Unauthorised;
+                    }
+                    else if (responseModel.StatusCode == HttpStatusCode.Conflict)
+                    {
+                        // There's a role mismatch between what PPG says the user should be and what Tenders says the user should be
+                        model.UserStatus = AppConstants.Tenders_UserStatus_Conflict;
+                    }
                     else if (responseModel.StatusCode == HttpStatusCode.OK)
                     {
                         // The user exists in Jaegger and their account has already been merged
@@ -50,7 +60,7 @@ namespace logindirector.Services
                     }
                     else
                     {
-                        // This is an unexpected error response from Tenders that we can't handle (includes 409 responses which denote role mismatches)
+                        // This is an unexpected error response from Tenders that we can't handle
                         model.UserStatus = AppConstants.Tenders_UserStatus_Error;
                     }
                 }

@@ -18,7 +18,7 @@ namespace logindirector
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-            .UseCloudHosting(2021)
+            .UseCloudHosting(5000,2021)
             .AddCloudFoundryConfiguration()
 
                 .ConfigureAppConfiguration((hostingContext, config) =>

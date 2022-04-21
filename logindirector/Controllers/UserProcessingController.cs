@@ -75,6 +75,18 @@ namespace logindirector.Controllers
 
                                 return View("~/Views/Merging/MergePrompt.cshtml", model);
                             }
+                            else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_Unauthorised)
+                            {
+                                // The user is not authorised to use the service - display the unauthorised message
+                                ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+                                return View("~/Views/Errors/Unauthorised.cshtml", model);
+                            }
+                            else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_Conflict)
+                            {
+                                // There is a role mismatch for the user between PPG and Jaegger / CaT.  Display the role mismatch error message
+                                ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+                                return View("~/Views/Errors/RoleConflict.cshtml", model);
+                            }
                             else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_AlreadyMerged)
                             {
                                 // User is already merged, so we're good here - send the user to have their initial request processed
@@ -88,12 +100,14 @@ namespace logindirector.Controllers
                     // User is not permitted to use the Login Director - log error, and present error
                     RollbarLocator.RollbarInstance.Error("Attempted access by unauthorised SSO user - " + userEmail);
 
-                    return View("~/Views/Errors/Unauthorised.cshtml");
+                    ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+                    return View("~/Views/Errors/Unauthorised.cshtml", model);
                 }
             }
 
             // If we've got to here, the user isn't properly authenticated or the Tenders API gave us an error response, so display a generic error
-            return View("~/Views/Errors/Generic.cshtml");
+            ErrorViewModel errorModel = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+            return View("~/Views/Errors/Generic.cshtml", errorModel);
         }
 
         // Route to process user selection at the Merge Prompt
@@ -106,6 +120,7 @@ namespace logindirector.Controllers
             {
                 // User wants to merge their account
                 // TODO: Real action here when flow determined (redirect to Jaegger login probably?)
+                // TODO: ErrorVM and display here when this is implemented?
             }
             else
             {
@@ -128,14 +143,16 @@ namespace logindirector.Controllers
                         else if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_Failure)
                         {
                             // There's been an issue creating the user's account.  Therefore, display a failure page related to a creation failure
-                            return View("~/Views/Errors/CreateError.cshtml");
+                            ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+                            return View("~/Views/Errors/CreateError.cshtml", model);
                         }
                     }
                 }
             }
 
             // If we've got to here, the user isn't properly authenticated or the Tenders API gave us a generic error response, so display a generic error
-            return View("~/Views/Errors/Generic.cshtml");
+            ErrorViewModel errorModel = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+            return View("~/Views/Errors/Generic.cshtml", errorModel);
         }
 
         // Adds an entry for an authenticated user into the central session cache

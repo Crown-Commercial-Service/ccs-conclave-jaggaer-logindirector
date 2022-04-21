@@ -1,12 +1,23 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using logindirector.Constants;
+using logindirector.Models;
 using logindirector.Models.AdaptorService;
+using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 
 namespace logindirector.Helpers
 {
     public class UserHelpers : IHelpers
     {
+        public IConfiguration _configuration { get; }
+
+        public UserHelpers(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
         public bool HasValidUserRoles(AdaptorUserModel userModel)
         {
             // Check whether the user has a valid role for this application
@@ -35,6 +46,38 @@ namespace logindirector.Helpers
 
             // No valid roles found for this user - return false
             return false;
+        }
+
+        public ErrorViewModel BuildErrorModelForUser(string sessionUserRequestJson)
+        {
+            // An error has occurred processing the user's request and we need an ErrorViewModel to represent that in various views.  Spool one up
+            ErrorViewModel model = new ErrorViewModel
+            {
+                DashboardUrl = _configuration.GetValue<string>("DashboardPath")
+            };
+
+            if (!String.IsNullOrWhiteSpace(sessionUserRequestJson))
+            {
+                RequestSessionModel storedRequestModel = JsonConvert.DeserializeObject<RequestSessionModel>(sessionUserRequestJson);
+
+                if (storedRequestModel != null && !String.IsNullOrWhiteSpace(storedRequestModel.domain))
+                {
+                    model.Service = new ServiceViewModel();
+
+                    if (storedRequestModel.domain == _configuration.GetValue<string>("SupportedSources:JaeggerSource"))
+                    {
+                        // Looks like a Jaegger request
+                        model.Service.ServiceDisplayName = AppConstants.Display_JaeggerServiceName;
+                    }
+                    else
+                    {
+                        // Must be a CaT request
+                        model.Service.ServiceDisplayName = AppConstants.Display_CatServiceName;
+                    }
+                }
+            }
+
+            return model;
         }
     }
 }

@@ -14,10 +14,8 @@
     <Folder Include="Services\" />
     <Folder Include="Models\AdaptorService\" />
     <Folder Include="Constants\" />
-    <Folder Include="Helpers\" />
     <Folder Include="wwwroot\Assets\" />
     <Folder Include="wwwroot\Assets\styles\" />
-    <Folder Include="Views\Errors\" />
     <Folder Include="Models\TendersApi\" />
     <Folder Include="Views\Merging\" />
   </ItemGroup>

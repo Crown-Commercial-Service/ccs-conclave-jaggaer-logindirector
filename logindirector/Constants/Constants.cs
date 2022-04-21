@@ -18,6 +18,8 @@
         public static string Tenders_UserStatus_ActionRequired = "UserPromptRequired";
         public static string Tenders_UserStatus_AlreadyMerged = "UserMerged";
         public static string Tenders_UserStatus_Error = "UnexpectedResponse";
+        public static string Tenders_UserStatus_Unauthorised = "Unauthorised";
+        public static string Tenders_UserStatus_Conflict = "RoleMismatch";
 
         public static string Tenders_UserCreation_Success = "UserCreated";
         public static string Tenders_UserCreation_Failure = "UserCreationFailed";

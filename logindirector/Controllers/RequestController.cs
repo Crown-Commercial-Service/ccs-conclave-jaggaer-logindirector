@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using logindirector.Constants;
 using logindirector.Models;
 using System.Runtime.CompilerServices;
+using logindirector.Helpers;
 
 // Controller to handle all incoming and outgoing requests to and from the application
 [assembly: InternalsVisibleTo("LoginDirectorTests")]
@@ -21,11 +22,13 @@ namespace logindirector.Controllers
     {
         public IMemoryCache _memoryCache;
         public IConfiguration _configuration { get; }
+        public IHelpers _userHelpers;
 
-        public RequestController(IMemoryCache memoryCache, IConfiguration configuration)
+        public RequestController(IMemoryCache memoryCache, IConfiguration configuration, IHelpers userHelpers)
         {
             _memoryCache = memoryCache;
             _configuration = configuration;
+            _userHelpers = userHelpers;
         }
 
         // Catch all route for all incoming requests - order set to 999 to ensure fixed routes supercede it
@@ -157,23 +160,18 @@ namespace logindirector.Controllers
         [Route("/director/unauthorised", Order = 1)]
         public IActionResult Unauthorised()
         {
-            ErrorViewModel model = new ErrorViewModel
-            {
-                DashboardUrl = _configuration.GetValue<string>("DashboardPath")
-            };
+            ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
 
             return View("~/Views/Errors/Unauthorised.cshtml", model);
         }
 
-
-
-
-
-        // TODO: Change this to a proper error setup later
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+            model.RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+
+            return View("~/Views/Errors/Generic.cshtml", model);
         }
     }
 }

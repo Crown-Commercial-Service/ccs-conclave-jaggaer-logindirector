@@ -9,5 +9,7 @@ namespace logindirector.Models
         public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
 
         public string DashboardUrl { get; set; }
+
+        public ServiceViewModel Service { get; set; }
     }
 }

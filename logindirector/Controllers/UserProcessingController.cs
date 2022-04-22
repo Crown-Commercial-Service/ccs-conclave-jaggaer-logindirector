@@ -132,6 +132,7 @@ namespace logindirector.Controllers
                 {
                     UserCreationModel userCreationModel = _tendersClientServices.CreateJaeggerUser(userEmail, accessToken).Result;
 
+                    // TODO: Assess this.  I think we'll need to expand the state handling here to cover other responses once fully and finally defined at the Tenders end
                     if (userCreationModel != null)
                     {
                         // Now we have a user creation response, work out what to do with the user next
@@ -165,20 +166,26 @@ namespace logindirector.Controllers
             string userEmail = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value;
             string accessToken = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Authentication)?.Value;
 
-            // TODO: Should this check be changed to their request details once we have those in session?
             if (!string.IsNullOrWhiteSpace(userEmail) && !string.IsNullOrWhiteSpace(accessToken))
             {
-                // User session seems to still exist.  User can now be sent on to process their original request
-                return RedirectToAction("ActionRequest", "Request");
+                // User is still in session - make sure we have their request details too though, else we've nothing to action
+                string requestSessionData = HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey);
+
+                if (!string.IsNullOrWhiteSpace(requestSessionData))
+                {
+                    RequestSessionModel storedRequestModel = JsonConvert.DeserializeObject<RequestSessionModel>(requestSessionData);
+
+                    // We can check against any value in the model to confirm we still have the request details.  Just use the desired path here
+                    if (storedRequestModel != null && !string.IsNullOrWhiteSpace(storedRequestModel.requestedPath))
+                    {
+                        // User session seems to still exist.  User can now be sent on to process their original request
+                        return RedirectToAction("ActionRequest", "Request");
+                    }
+                }
             }
 
             // If we've gotten to here the user session no longer appears to be in a correct state (likely timed out and lost details of the original request) - display a session expired notice
-            ErrorViewModel model = new ErrorViewModel
-            {
-                DashboardUrl = _configuration.GetValue<string>("DashboardPath")
-            };
-            // TODO: ErrorVM adjust this
-
+            ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
             return View("~/Views/Errors/SessionExpired.cshtml", model);
         }
 
@@ -224,7 +231,7 @@ namespace logindirector.Controllers
             // Get the request data from session
             string requestSessionData = HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey);
 
-            if (!String.IsNullOrWhiteSpace(requestSessionData))
+            if (!string.IsNullOrWhiteSpace(requestSessionData))
             {
                 RequestSessionModel storedRequestModel = JsonConvert.DeserializeObject<RequestSessionModel>(requestSessionData);
 

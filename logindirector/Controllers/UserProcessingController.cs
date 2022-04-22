@@ -177,6 +177,7 @@ namespace logindirector.Controllers
             {
                 DashboardUrl = _configuration.GetValue<string>("DashboardPath")
             };
+            // TODO: ErrorVM adjust this
 
             return View("~/Views/Errors/SessionExpired.cshtml", model);
         }

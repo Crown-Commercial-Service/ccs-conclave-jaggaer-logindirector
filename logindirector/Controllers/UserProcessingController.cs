@@ -118,9 +118,9 @@ namespace logindirector.Controllers
         {
             if (accountDecision == "merge")
             {
-                // User wants to merge their account
-                // TODO: Real action here when flow determined (redirect to Jaegger login probably?)
-                // TODO: ErrorVM and display here when this is implemented?
+                // User wants to merge their existing account - therefore, we need to send them off to Jaegger to perform one final authentication
+                string externalAuthenticationUrl = _configuration.GetValue<string>("ExternalAuthenticationPath");
+                return Redirect(externalAuthenticationUrl);
             }
             else
             {
@@ -132,6 +132,7 @@ namespace logindirector.Controllers
                 {
                     UserCreationModel userCreationModel = _tendersClientServices.CreateJaeggerUser(userEmail, accessToken).Result;
 
+                    // TODO: Assess this.  I think we'll need to expand the state handling here to cover other responses once fully and finally defined at the Tenders end
                     if (userCreationModel != null)
                     {
                         // Now we have a user creation response, work out what to do with the user next
@@ -153,6 +154,39 @@ namespace logindirector.Controllers
             // If we've got to here, the user isn't properly authenticated or the Tenders API gave us a generic error response, so display a generic error
             ErrorViewModel errorModel = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
             return View("~/Views/Errors/Generic.cshtml", errorModel);
+        }
+
+        // Route to receive users back from Jaegger once their account has been merged
+        [HttpGet]
+        [Route("/director/account-linked", Order = 1)]
+        [Authorize]
+        public IActionResult ContinueProcessingMergedUser()
+        {
+            // Firstly, since the user is coming back from an external service make sure their session with us still exists - if it doesn't, we can't continue
+            string userEmail = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value;
+            string accessToken = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Authentication)?.Value;
+
+            if (!string.IsNullOrWhiteSpace(userEmail) && !string.IsNullOrWhiteSpace(accessToken))
+            {
+                // User is still in session - make sure we have their request details too though, else we've nothing to action
+                string requestSessionData = HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey);
+
+                if (!string.IsNullOrWhiteSpace(requestSessionData))
+                {
+                    RequestSessionModel storedRequestModel = JsonConvert.DeserializeObject<RequestSessionModel>(requestSessionData);
+
+                    // We can check against any value in the model to confirm we still have the request details.  Just use the desired path here
+                    if (storedRequestModel != null && !string.IsNullOrWhiteSpace(storedRequestModel.requestedPath))
+                    {
+                        // User session seems to still exist.  User can now be sent on to process their original request
+                        return RedirectToAction("ActionRequest", "Request");
+                    }
+                }
+            }
+
+            // If we've gotten to here the user session no longer appears to be in a correct state (likely timed out and lost details of the original request) - display a session expired notice
+            ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+            return View("~/Views/Errors/SessionExpired.cshtml", model);
         }
 
         // Adds an entry for an authenticated user into the central session cache
@@ -197,7 +231,7 @@ namespace logindirector.Controllers
             // Get the request data from session
             string requestSessionData = HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey);
 
-            if (!String.IsNullOrWhiteSpace(requestSessionData))
+            if (!string.IsNullOrWhiteSpace(requestSessionData))
             {
                 RequestSessionModel storedRequestModel = JsonConvert.DeserializeObject<RequestSessionModel>(requestSessionData);
 

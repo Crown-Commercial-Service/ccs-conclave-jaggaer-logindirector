@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using logindirector.Constants;
 using logindirector.Controllers;
+using logindirector.Helpers;
 using logindirector.Models;
 using logindirector.Models.AdaptorService;
 using Microsoft.AspNetCore.Http;
@@ -31,8 +32,9 @@ namespace LoginDirectorTests
             IMemoryCache memoryCache = serviceProvider.GetService<IMemoryCache>();
 
             IConfigurationRoot configuration = new ConfigurationBuilder().Build();
+            UserHelpers helpers = new UserHelpers(configuration);
 
-            requestController = new RequestController(memoryCache, configuration);
+            requestController = new RequestController(memoryCache, configuration, helpers);
             userProcessingController = new UserProcessingController(null, null, null, memoryCache, configuration);
         }
 

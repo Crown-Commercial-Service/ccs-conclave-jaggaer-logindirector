@@ -11,15 +11,21 @@
         public static string RoleKey_CatUser = "CAT_USER_LOGIN_DIRECTOR";
 
         public static string Session_UserKey = "UserModel";
+        public static string Session_RequestDetailsKey = "RequestDetails";
 
         public static string CentralCache_Key = "UserSessions";
 
         public static string Tenders_UserStatus_ActionRequired = "UserPromptRequired";
         public static string Tenders_UserStatus_AlreadyMerged = "UserMerged";
         public static string Tenders_UserStatus_Error = "UnexpectedResponse";
+        public static string Tenders_UserStatus_Unauthorised = "Unauthorised";
+        public static string Tenders_UserStatus_Conflict = "RoleMismatch";
 
         public static string Tenders_UserCreation_Success = "UserCreated";
         public static string Tenders_UserCreation_Failure = "UserCreationFailed";
         public static string Tenders_UserCreation_Error = "UnexpectedFailure";
+
+        public static string Display_JaeggerServiceName = "eSourcing";
+        public static string Display_CatServiceName = "Contract Award Service";
     }
 }

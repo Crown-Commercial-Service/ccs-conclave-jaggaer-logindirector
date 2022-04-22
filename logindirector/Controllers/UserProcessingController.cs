@@ -70,8 +70,22 @@ namespace logindirector.Controllers
                             // Now we have a user status response, work out what to do with the user
                             if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_ActionRequired)
                             {
-                                // The user needs to either merge or create a Jaegger account - display the merge prompt
-                                return View("~/Views/Merging/MergePrompt.cshtml");
+                                // The user needs to either merge or create a Jaegger / CaT account - display the merge prompt
+                                ServiceViewModel model = GetServiceViewModelForRequest();
+
+                                return View("~/Views/Merging/MergePrompt.cshtml", model);
+                            }
+                            else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_Unauthorised)
+                            {
+                                // The user is not authorised to use the service - display the unauthorised message
+                                ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+                                return View("~/Views/Errors/Unauthorised.cshtml", model);
+                            }
+                            else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_Conflict)
+                            {
+                                // There is a role mismatch for the user between PPG and Jaegger / CaT.  Display the role mismatch error message
+                                ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+                                return View("~/Views/Errors/RoleConflict.cshtml", model);
                             }
                             else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_AlreadyMerged)
                             {
@@ -86,12 +100,14 @@ namespace logindirector.Controllers
                     // User is not permitted to use the Login Director - log error, and present error
                     RollbarLocator.RollbarInstance.Error("Attempted access by unauthorised SSO user - " + userEmail);
 
-                    return View("~/Views/Errors/Unauthorised.cshtml");
+                    ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+                    return View("~/Views/Errors/Unauthorised.cshtml", model);
                 }
             }
 
             // If we've got to here, the user isn't properly authenticated or the Tenders API gave us an error response, so display a generic error
-            return View("~/Views/Errors/Generic.cshtml");
+            ErrorViewModel errorModel = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+            return View("~/Views/Errors/Generic.cshtml", errorModel);
         }
 
         // Route to process user selection at the Merge Prompt
@@ -127,14 +143,16 @@ namespace logindirector.Controllers
                         else if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_Failure)
                         {
                             // There's been an issue creating the user's account.  Therefore, display a failure page related to a creation failure
-                            return View("~/Views/Errors/CreateError.cshtml");
+                            ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+                            return View("~/Views/Errors/CreateError.cshtml", model);
                         }
                     }
                 }
             }
 
             // If we've got to here, the user isn't properly authenticated or the Tenders API gave us a generic error response, so display a generic error
-            return View("~/Views/Errors/Generic.cshtml");
+            ErrorViewModel errorModel = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+            return View("~/Views/Errors/Generic.cshtml", errorModel);
         }
 
         // Route to receive users back from Jaegger once their account has been merged
@@ -195,6 +213,36 @@ namespace logindirector.Controllers
                 // Set the newly amended list back into the cache
                 _memoryCache.Set(cacheKey, sessionsList);
             }
+        }
+
+        // Uses the request data stored in session to build a ServiceViewModel for use later in views
+        internal ServiceViewModel GetServiceViewModelForRequest()
+        {
+            ServiceViewModel model = new ServiceViewModel();
+
+            // Get the request data from session
+            string requestSessionData = HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey);
+
+            if (!String.IsNullOrWhiteSpace(requestSessionData))
+            {
+                RequestSessionModel storedRequestModel = JsonConvert.DeserializeObject<RequestSessionModel>(requestSessionData);
+
+                if (storedRequestModel != null && !String.IsNullOrWhiteSpace(storedRequestModel.domain))
+                {
+                    if (storedRequestModel.domain == _configuration.GetValue<string>("SupportedSources:JaeggerSource"))
+                    {
+                        // Looks like a Jaegger request
+                        model.ServiceDisplayName = AppConstants.Display_JaeggerServiceName;
+                    }
+                    else
+                    {
+                        // Must be a CaT request
+                        model.ServiceDisplayName = AppConstants.Display_CatServiceName;
+                    }
+                }
+            }
+
+            return model;
         }
     }
 }

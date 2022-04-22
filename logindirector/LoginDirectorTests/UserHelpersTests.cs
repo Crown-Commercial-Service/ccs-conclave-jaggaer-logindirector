@@ -3,6 +3,7 @@ using logindirector.Helpers;
 using logindirector.Models.AdaptorService;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.Extensions.Configuration;
 
 namespace LoginDirectorTests
 {
@@ -15,7 +16,8 @@ namespace LoginDirectorTests
         [TestInitialize]
         public void Startup()
         {
-            userHelpers = new UserHelpers();
+            IConfigurationRoot configuration = new ConfigurationBuilder().Build();
+            userHelpers = new UserHelpers(configuration);
             userModel = new AdaptorUserModel
             {
                 coreRoles = new List<AdaptorUserRoleModel>(),

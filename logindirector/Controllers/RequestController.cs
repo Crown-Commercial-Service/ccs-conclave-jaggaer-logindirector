@@ -70,9 +70,33 @@ namespace logindirector.Controllers
             // First, check to see that the user's session is valid in the central cache
             if (DoesUserHaveValidSession())
             {
-                // User appears to be valid, so now we can process their request
-                // TODO (in other case): Delete view and do work here instead
-                return View("~/Views/Home/ProcessRequest.cshtml");
+                // User appears to be valid, so now we can process their request from the stored request object
+                string requestJson = HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey);
+
+                if (!string.IsNullOrWhiteSpace(requestJson))
+                {
+                    RequestSessionModel requestModel = JsonConvert.DeserializeObject<RequestSessionModel>(requestJson);
+
+                    if (requestModel != null && !string.IsNullOrWhiteSpace(requestModel.httpFormat) && !string.IsNullOrWhiteSpace(requestModel.protocol) && !string.IsNullOrWhiteSpace(requestModel.domain) && !string.IsNullOrWhiteSpace(requestModel.requestedPath))
+                    {
+                        // We've got the user's request details from session.  Now action them
+                        string requestedRoute = requestModel.protocol + "://" + requestModel.domain + requestModel.requestedPath;
+
+                        if (requestModel.httpFormat == "GET")
+                        {
+                            // As the user initiated a GET request, just redirect there directly
+                            return Redirect(requestedRoute);
+                        }
+                        else
+                        {
+                            // TODO: The user initiated a POST request.  How to do this is with Nick (obviously, this is not a redirect question)
+                        }
+                    }
+                }
+
+                // If we've gotten this far there's been some kind of issue fetching the request details from session.  Display Session Expiry message
+                ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+                return View("~/Views/Errors/SessionExpired.cshtml", model);
             }
             else
             {

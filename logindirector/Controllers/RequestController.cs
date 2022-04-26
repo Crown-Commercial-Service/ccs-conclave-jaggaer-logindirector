@@ -39,20 +39,41 @@ namespace logindirector.Controllers
             if (isUserFromSupportedSource())
             {
                 // Request is supported - we can proceed to process it.  Begin by storing the details of their request for later
-                storeRequestDetailsInSession();
+                RequestSessionModel requestModel = getRequestModel();
 
-                // We need to check to see if the user has already been logged in via the Login Director earlier
-                string userSessionData = HttpContext.Session.GetString(AppConstants.Session_UserKey);
-
-                if (!string.IsNullOrWhiteSpace(userSessionData))
+                if (requestModel != null)
                 {
-                    // There is user data in session, so the user has already been logged in.  Send them to the Request Processing endpoint (we'll validate session there)
-                    return RedirectToAction("ActionRequest", "Request");
+                    if (requestModel.httpFormat.ToUpper() == "POST")
+                    {
+                        // This is a POST request - don't do anything else, just forward the request on as is
+                        string requestedRoute = requestModel.protocol + "://" + requestModel.domain + requestModel.requestedPath;
+                        return RedirectPreserveMethod(requestedRoute);
+                    }
+                    else
+                    {
+                        // This is a GET request - continue with application flow
+                        storeRequestDetailsInSession(requestModel);
+
+                        // We need to check to see if the user has already been logged in via the Login Director earlier
+                        string userSessionData = HttpContext.Session.GetString(AppConstants.Session_UserKey);
+
+                        if (!string.IsNullOrWhiteSpace(userSessionData))
+                        {
+                            // There is user data in session, so the user has already been logged in.  Send them to the Request Processing endpoint (we'll validate session there)
+                            return RedirectToAction("ActionRequest", "Request");
+                        }
+                        else
+                        {
+                            // There's no user data in session.  This is the user's first trip to Login Director this session, so send them to the Process User endpoint
+                            return RedirectToAction("ProcessUser", "UserProcessing");
+                        }
+                    }
                 }
                 else
                 {
-                    // There's no user data in session.  This is the user's first trip to Login Director this session, so send them to the Process User endpoint
-                    return RedirectToAction("ProcessUser", "UserProcessing");
+                    // There was an error fetching the request details - display our Generic error view
+                    ErrorViewModel errorModel = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+                    return View("~/Views/Errors/Generic.cshtml", errorModel);
                 }
             }
             else
@@ -77,20 +98,11 @@ namespace logindirector.Controllers
                 {
                     RequestSessionModel requestModel = JsonConvert.DeserializeObject<RequestSessionModel>(requestJson);
 
-                    if (requestModel != null && !string.IsNullOrWhiteSpace(requestModel.httpFormat) && !string.IsNullOrWhiteSpace(requestModel.protocol) && !string.IsNullOrWhiteSpace(requestModel.domain) && !string.IsNullOrWhiteSpace(requestModel.requestedPath))
+                    if (requestModel != null)
                     {
-                        // We've got the user's request details from session.  Now action them
+                        // We've got the user's request details from session.  Now action them as a GET redirect (POSTs were handled earlier)
                         string requestedRoute = requestModel.protocol + "://" + requestModel.domain + requestModel.requestedPath;
-
-                        if (requestModel.httpFormat == "GET")
-                        {
-                            // As the user initiated a GET request, just redirect there directly
-                            return Redirect(requestedRoute);
-                        }
-                        else
-                        {
-                            // TODO: The user initiated a POST request.  How to do this is with Nick (obviously, this is not a redirect question)
-                        }
+                        return Redirect(requestedRoute);
                     }
                 }
 
@@ -162,22 +174,29 @@ namespace logindirector.Controllers
             return isSupported;
         }
 
-        internal void storeRequestDetailsInSession()
+        internal void storeRequestDetailsInSession(RequestSessionModel model)
         {
             // Store the details of the user's request in session so that we can action it later once the application flow is complete
-            if (Request != null)
+            HttpContext.Session.SetString(AppConstants.Session_RequestDetailsKey, JsonConvert.SerializeObject(model));
+        }
+
+        internal RequestSessionModel getRequestModel()
+        {
+            RequestSessionModel model = null;
+
+            // Build a model of the user's request
+            if (Request != null && !string.IsNullOrWhiteSpace(Request.Host.Host) && !string.IsNullOrWhiteSpace(Request.Scheme) && !string.IsNullOrWhiteSpace(Request.Path) && !string.IsNullOrWhiteSpace(Request.Method))
             {
-                // TODO: We'll probably need to expand this object later when we're ready to start actioning requests (POST data maybe?)
-                RequestSessionModel requestModel = new RequestSessionModel
+                model = new RequestSessionModel
                 {
                     domain = Request.Host.Host,
                     protocol = Request.Scheme,
                     requestedPath = Request.Path,
                     httpFormat = Request.Method
                 };
-
-                HttpContext.Session.SetString(AppConstants.Session_RequestDetailsKey, JsonConvert.SerializeObject(requestModel));
             }
+
+            return model;
         }
 
         // Fixed unauthorised route - we need this setting up as fixed display too, to serve the middleware

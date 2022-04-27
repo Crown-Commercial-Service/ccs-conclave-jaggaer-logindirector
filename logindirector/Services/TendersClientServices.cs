@@ -92,17 +92,27 @@ namespace logindirector.Services
 
                     if (responseModel.StatusCode == HttpStatusCode.OK || responseModel.StatusCode == HttpStatusCode.Created)
                     {
-                        // The operation has succeeded
+                        // The operation has succeeded and the user was either created or updated
                         model.CreationStatus = AppConstants.Tenders_UserCreation_Success;
+                    }
+                    else if (responseModel.StatusCode == HttpStatusCode.Forbidden)
+                    {
+                        // The user doesn't have a buyer or supplier role in PPG
+                        model.CreationStatus = AppConstants.Tenders_UserCreation_MissingRole;
                     }
                     else if (responseModel.StatusCode == HttpStatusCode.Conflict)
                     {
-                        // User cannot be created due to issues with the account
-                        model.CreationStatus = AppConstants.Tenders_UserCreation_Failure;
+                        // There's a role mismatch between what PPG says the user should be and what Tenders says the user should be
+                        model.CreationStatus = AppConstants.Tenders_UserCreation_Conflict;
+                    }
+                    else if (responseModel.StatusCode == (HttpStatusCode)418)
+                    {
+                        // The user has both buyer and supplier roles in PPG - helpdesk intervention required to resolve
+                        model.CreationStatus = AppConstants.Tenders_UserCreation_HelpdeskRequired;
                     }
                     else
                     {
-                        // There's been a more general issue with the operation (authentication not matching requested user, for example)
+                        // This is an unexpected general error response from Tenders
                         model.CreationStatus = AppConstants.Tenders_UserCreation_Error;
                     }
                 }

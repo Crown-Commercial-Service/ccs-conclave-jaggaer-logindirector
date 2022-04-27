@@ -132,7 +132,6 @@ namespace logindirector.Controllers
                 {
                     UserCreationModel userCreationModel = _tendersClientServices.CreateJaeggerUser(userEmail, accessToken).Result;
 
-                    // TODO: Assess this.  I think we'll need to expand the state handling here to cover other responses once fully and finally defined at the Tenders end
                     if (userCreationModel != null)
                     {
                         // Now we have a user creation response, work out what to do with the user next
@@ -141,19 +140,31 @@ namespace logindirector.Controllers
                             // User account has been created - now we can proceed to action their initial request
                             return RedirectToAction("ActionRequest", "Request");
                         }
-                        else if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_Failure)
+                        else if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_Conflict)
                         {
-                            // There's been an issue creating the user's account.  Therefore, display a failure page related to a creation failure
+                            // There is a role mismatch for the user between PPG and Jaegger / CaT.  Display the role mismatch error message
                             ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
-                            return View("~/Views/Errors/CreateError.cshtml", model);
+                            return View("~/Views/Errors/RoleConflict.cshtml", model);
+                        }
+                        else if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_MissingRole)
+                        {
+                            // The user is missing a Jaegger / CaT role in PPG.  Display the unauthorised message
+                            ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+                            return View("~/Views/Errors/Unauthorised.cshtml", model);
+                        }
+                        else if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_HelpdeskRequired)
+                        {
+                            // The user's PPG setup is incorrect (both roles assigned).  Display a message directing the user to the helpdesk
+                            ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+                            return View("~/Views/Errors/BothRolesAssigned.cshtml", model);
                         }
                     }
                 }
             }
 
-            // If we've got to here, the user isn't properly authenticated or the Tenders API gave us a generic error response, so display a generic error
+            // If we've got to here, the user isn't properly authenticated or the Tenders API gave us a generic error response, so display a generic creation error
             ErrorViewModel errorModel = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
-            return View("~/Views/Errors/Generic.cshtml", errorModel);
+            return View("~/Views/Errors/CreateError.cshtml", errorModel);
         }
 
         // Route to receive users back from Jaegger once their account has been merged

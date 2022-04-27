@@ -22,7 +22,9 @@
         public static string Tenders_UserStatus_Conflict = "RoleMismatch";
 
         public static string Tenders_UserCreation_Success = "UserCreated";
-        public static string Tenders_UserCreation_Failure = "UserCreationFailed";
+        public static string Tenders_UserCreation_MissingRole = "RoleMissing";
+        public static string Tenders_UserCreation_Conflict = "RoleMismatch";
+        public static string Tenders_UserCreation_HelpdeskRequired = "HelpdeskNeeded";
         public static string Tenders_UserCreation_Error = "UnexpectedFailure";
 
         public static string Display_JaeggerServiceName = "eSourcing";

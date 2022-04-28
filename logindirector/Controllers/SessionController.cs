@@ -1,6 +1,8 @@
 ﻿using logindirector.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using System.Linq;
+using System.Security.Claims;
 
 namespace logindirector.Controllers
 {
@@ -14,6 +16,7 @@ namespace logindirector.Controllers
             _configuration = configuration;
         }
 
+        [Route("/director/rpiframe", Order = 1)]
         public IActionResult BackchannelRpIframe()
         {
             BackchannelModel model = new BackchannelModel
@@ -21,8 +24,8 @@ namespace logindirector.Controllers
                 ClientId = _configuration.GetValue<string>("SsoService:ClientId"),
                 RedirectUrl = Request.Host.Host + "/director/process-user",
                 SecurityApiUrl = _configuration.GetValue<string>("SsoService:SsoDomain"),
-                SessionState = "" // TODO: Populate
-            };
+                SessionState = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Hash)?.Value
+        };
 
             return PartialView("~/Views/Backchannel/RpIframe.cshtml", model);
         }

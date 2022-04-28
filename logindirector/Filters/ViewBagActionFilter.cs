@@ -20,8 +20,9 @@ namespace logindirector.Filters
             if (context.Controller is Controller)
             {
                 Controller controller = context.Controller as Controller;
+                string requestSource = "https://" + context.HttpContext.Request.Host.Host + context.HttpContext.Request.Path;
 
-                string opIframeUrl = _configuration.GetValue<string>("SsoService:SsoDomain") + _configuration.GetValue<string>("SsoService:RoutePaths:BackchannelPath");
+                string opIframeUrl = _configuration.GetValue<string>("SsoService:SsoDomain") + _configuration.GetValue<string>("SsoService:RoutePaths:BackchannelPath") + requestSource;
                 controller.ViewData.Add("OpIframeUrl", opIframeUrl);
             }
 

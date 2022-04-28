@@ -159,7 +159,9 @@ namespace logindirector
                   (loggerName, loglevel) => loglevel >= LogLevel.Trace;
             });
 
-            services.AddControllersWithViews();
+            services.AddControllersWithViews(options => {
+                options.Filters.Add<Filters.ViewBagActionFilter>();
+            });
             services.AddMiniProfiler(options => options.RouteBasePath = "/profiler");
 
         }

@@ -17,6 +17,7 @@ using Steeltoe.Extensions.Configuration.CloudFoundry;
 using logindirector.Services;
 using logindirector.Helpers;
 using Amazon.SecurityToken;
+using System.Linq;
 
 namespace logindirector
 {
@@ -158,6 +159,14 @@ namespace logindirector
             {
                 new Claim(ClaimTypes.Email, tokenValues.Subject)
             };
+
+            // Save the "sid" value to our Claims as the SID value
+            Claim sessionIdClaim = tokenValues.Claims.FirstOrDefault(p => p.Type == "sid");
+
+            if (sessionIdClaim != null && !string.IsNullOrWhiteSpace(sessionIdClaim.Value))
+            {
+                userClaims.Add(new Claim(ClaimTypes.Sid, sessionIdClaim.Value));
+            }
 
             // We also need to fetch "session_start" from the raw token response
             if (context.TokenResponse != null && context.TokenResponse.Response != null)

@@ -205,7 +205,7 @@ namespace logindirector.Controllers
         {
             if (userModel != null && !String.IsNullOrWhiteSpace(userModel.emailAddress))
             {
-                // A single entry in the cache needs to contain the user's email, and an entry timestamp
+                // A single entry in the cache needs to contain the user's email, an entry timestamp, and their session ID
                 List<UserSessionModel> sessionsList;
                 string cacheKey = AppConstants.CentralCache_Key;
 
@@ -220,11 +220,14 @@ namespace logindirector.Controllers
                     sessionsList = new List<UserSessionModel>();
                 }
 
+                string userSid = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Sid)?.Value;
+
                 // Now add a new entry for ourselves
                 UserSessionModel userEntry = new UserSessionModel
                 {
                     userEmail = userModel.emailAddress,
-                    sessionStart = DateTime.Now
+                    sessionStart = DateTime.Now,
+                    sessionId = userSid
                 };
 
                 sessionsList.Add(userEntry);

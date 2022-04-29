@@ -155,7 +155,8 @@ namespace LoginDirectorTests
             UserSessionModel userEntry = new UserSessionModel
             {
                 userEmail = emailAddress,
-                sessionStart = DateTime.Now.AddMinutes(sessionAge)
+                sessionStart = DateTime.Now.AddMinutes(sessionAge),
+                sessionId = "123456789"
             };
 
             List<UserSessionModel> sessionsList = new List<UserSessionModel>

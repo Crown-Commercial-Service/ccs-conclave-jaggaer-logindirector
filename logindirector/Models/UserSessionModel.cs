@@ -8,5 +8,7 @@ namespace logindirector.Models
         public string userEmail { get; set; }
 
         public DateTime sessionStart { get; set; }
+
+        public string sessionId { get; set; }
     }
 }

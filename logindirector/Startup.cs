@@ -115,7 +115,46 @@ namespace logindirector
                 // We don't access the adaptor service here - we can't get to external API clients here.  But we do need to decode and store the user email so that we can access it later
                 options.Events = new OAuthEvents
                 {
-                    OnCreatingTicket = async context => { await CreateAuthTicket(context); },
+                    OnCreatingTicket = context => 
+                    { 
+                        // Use a Jwt Decoder to decode the access token, and fetch the "sub" value
+                        JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
+                        JwtSecurityToken tokenValues = handler.ReadJwtToken(context.AccessToken);
+
+                        // Save the "sub" value to our Claims as the Email value
+                        List<Claim> userClaims = new List<Claim>
+                        {
+                            new Claim(ClaimTypes.Email, tokenValues.Subject)
+                        };
+
+                        // Save the "sid" value to our Claims as the SID value
+                        Claim sessionIdClaim = tokenValues.Claims.FirstOrDefault(p => p.Type == "sid");
+
+                        if (sessionIdClaim != null && !string.IsNullOrWhiteSpace(sessionIdClaim.Value))
+                        {
+                            userClaims.Add(new Claim(ClaimTypes.Sid, sessionIdClaim.Value));
+                        }
+
+                        // We also need to fetch "session_start" from the raw token response
+                        if (context.TokenResponse != null && context.TokenResponse.Response != null)
+                        {
+                            string sessionState = context.TokenResponse.Response.RootElement.GetProperty("session_state").ToString();
+
+                            if (!string.IsNullOrWhiteSpace(sessionState))
+                            {
+                                // Save the session state to our Claims in the Hash value
+                                userClaims.Add(new Claim(ClaimTypes.Hash, sessionState));
+                            }
+                        }
+
+                        // Save the token to our Claims in the Authentication value
+                        userClaims.Add(new Claim(ClaimTypes.Authentication, context.AccessToken));
+
+                        ClaimsIdentity appIdentity = new ClaimsIdentity(userClaims);
+                        context.Principal.AddIdentity(appIdentity);
+
+                        return Task.CompletedTask;
+                    },
                     OnAccessDenied = context =>
                     {
                         RollbarLocator.RollbarInstance.Error("Access Denied by .NET OAuth middleware");
@@ -146,45 +185,6 @@ namespace logindirector
             });
             services.AddMiniProfiler(options => options.RouteBasePath = "/profiler");
 
-        }
-
-        private static async Task CreateAuthTicket(OAuthCreatingTicketContext context)
-        {
-            // Use a Jwt Decoder to decode the access token, and fetch the "sub" value
-            JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
-            JwtSecurityToken tokenValues = handler.ReadJwtToken(context.AccessToken);
-
-            // Save the "sub" value to our Claims as the Email value
-            List<Claim> userClaims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Email, tokenValues.Subject)
-            };
-
-            // Save the "sid" value to our Claims as the SID value
-            Claim sessionIdClaim = tokenValues.Claims.FirstOrDefault(p => p.Type == "sid");
-
-            if (sessionIdClaim != null && !string.IsNullOrWhiteSpace(sessionIdClaim.Value))
-            {
-                userClaims.Add(new Claim(ClaimTypes.Sid, sessionIdClaim.Value));
-            }
-
-            // We also need to fetch "session_start" from the raw token response
-            if (context.TokenResponse != null && context.TokenResponse.Response != null)
-            {
-                string sessionState = context.TokenResponse.Response.RootElement.GetProperty("session_state").ToString();
-
-                if (!string.IsNullOrWhiteSpace(sessionState))
-                {
-                    // Save the session state to our Claims in the Hash value
-                    userClaims.Add(new Claim(ClaimTypes.Hash, sessionState));
-                }
-            }
-
-            // Save the token to our Claims in the Authentication value
-            userClaims.Add(new Claim(ClaimTypes.Authentication, context.AccessToken));
-
-            ClaimsIdentity appIdentity = new ClaimsIdentity(userClaims);
-            context.Principal.AddIdentity(appIdentity);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

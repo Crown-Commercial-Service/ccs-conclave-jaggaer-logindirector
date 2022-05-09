@@ -31,8 +31,9 @@ namespace logindirector.Controllers
             _userHelpers = userHelpers;
         }
 
-        // Catch all route for all incoming requests - order set to 999 to ensure fixed routes supercede it
-        [Route("/", Order = 999)]
+        // Catch all route for all incoming requests EXCEPT the callback path - order set to 999 to ensure fixed routes supercede it
+        [Route("/", Order = 1)]
+        [Route("{*url:regex(^(?!oauth\\authorise).*$)}", Order = 999)]
         public IActionResult Index()
         {
             // Before we do anything, make sure the request has come from an approved source

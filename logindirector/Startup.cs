@@ -128,6 +128,17 @@ namespace logindirector
                     {
                         RollbarLocator.RollbarInstance.Error("Failure within SSO Service - user probably doesn't have the correct role to use Login Director");
 
+                        // Log more detail of the errors / responses in this situation
+                        if (context.Failure != null)
+                        {
+                            RollbarLocator.RollbarInstance.Error(context.Failure);
+                        }
+
+                        if (context.Result != null)
+                        {
+                            RollbarLocator.RollbarInstance.Error(context.Result);
+                        }
+
                         context.HandleResponse();
                         context.Response.Redirect(_configuration.GetValue<string>("UnauthorisedDisplayPath"));
                         return Task.FromResult(0);

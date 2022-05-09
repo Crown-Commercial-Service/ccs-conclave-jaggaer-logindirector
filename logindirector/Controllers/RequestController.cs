@@ -152,6 +152,9 @@ namespace logindirector.Controllers
 
         internal bool isUserFromSupportedSource()
         {
+            // TEMPORARY - Need to see how it functions on native domain, where it previously worked
+            return true;
+
             // Default response should always be that the request is not from a supported source, unless proven otherwise
             bool isSupported = false;
 

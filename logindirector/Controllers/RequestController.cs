@@ -32,7 +32,7 @@ namespace logindirector.Controllers
         }
 
         // Catch all route for all incoming requests - order set to 999 to ensure fixed routes supercede it
-        [Route("{*url}", Order = 999)]
+        [Route("/", Order = 999)]
         public IActionResult Index()
         {
             // Before we do anything, make sure the request has come from an approved source

@@ -88,6 +88,9 @@ namespace logindirector
             })
             .AddOAuth("SsoService", options =>
             {
+                options.SignInScheme = "CookieAuth";
+                options.SaveTokens = true;
+
                 // Second, check against the external SSO Service using OAuth
                 string ssoDomain = _configuration.GetValue<string>("SsoService:SsoDomain");
 
@@ -115,7 +118,7 @@ namespace logindirector
                 // We don't access the adaptor service here - we can't get to external API clients here.  But we do need to decode and store the user email so that we can access it later
                 options.Events = new OAuthEvents
                 {
-                    OnCreatingTicket = async context => { await CreateAuthTicket(context); },
+                    OnCreatingTicket = context => CreateAuthTicket(context),
                     OnAccessDenied = context =>
                     {
                         RollbarLocator.RollbarInstance.Error("Access Denied by .NET OAuth middleware");
@@ -126,7 +129,7 @@ namespace logindirector
                     },
                     OnRemoteFailure = context =>
                     {
-                        RollbarLocator.RollbarInstance.Error("Failure within SSO Service - user probably doesn't have the correct role to use Login Director");
+                        RollbarLocator.RollbarInstance.Error("Failure in SSO server handshake");
 
                         // Log more detail of the errors / responses in this situation
                         if (context.Failure != null)
@@ -159,7 +162,7 @@ namespace logindirector
 
         }
 
-        private static async Task CreateAuthTicket(OAuthCreatingTicketContext context)
+        private static Task CreateAuthTicket(OAuthCreatingTicketContext context)
         {
             // Use a Jwt Decoder to decode the access token, and fetch the "sub" value
             JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
@@ -196,6 +199,8 @@ namespace logindirector
 
             ClaimsIdentity appIdentity = new ClaimsIdentity(userClaims);
             context.Principal.AddIdentity(appIdentity);
+
+            return Task.CompletedTask;
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

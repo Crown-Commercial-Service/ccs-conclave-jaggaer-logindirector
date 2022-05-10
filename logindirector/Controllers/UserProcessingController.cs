@@ -42,16 +42,22 @@ namespace logindirector.Controllers
         [Authorize]
         public IActionResult ProcessUser()
         {
+            RollbarLocator.RollbarInstance.Error("Supposedly authenticated in process user"); // TEMP
+
             // First of all, make sure we have the user email in claims and then use it to fetch a user model from the Adaptor service
             string userEmail = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value;
 
             if (!string.IsNullOrWhiteSpace(userEmail))
             {
+                RollbarLocator.RollbarInstance.Error("Authenticated with email in process user"); // TEMP
+
                 // User appears to be successfully authenticated with SSO service - so fetch their user data from the adaptor service
                 AdaptorUserModel userModel = _adaptorClientServices.GetUserInformation(userEmail).Result;
 
                 if (userModel != null && _userHelpers.HasValidUserRoles(userModel))
                 {
+                    RollbarLocator.RollbarInstance.Error("Authenticated with adaptor response in process user"); // TEMP
+
                     // Serialise the model as JSON and store it in the session
                     HttpContext.Session.SetString(AppConstants.Session_UserKey, JsonConvert.SerializeObject(userModel));
 
@@ -63,10 +69,14 @@ namespace logindirector.Controllers
 
                     if (!string.IsNullOrWhiteSpace(accessToken))
                     {
+                        RollbarLocator.RollbarInstance.Error("Authenticated with access token in process user"); // TEMP
+
                         UserStatusModel userStatusModel = _tendersClientServices.GetUserStatus(userEmail, accessToken).Result;
 
                         if (userStatusModel != null)
                         {
+                            RollbarLocator.RollbarInstance.Error("Should be processing a Tenders response in process user"); // TEMP
+
                             // Now we have a user status response, work out what to do with the user
                             if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_ActionRequired)
                             {
@@ -92,6 +102,10 @@ namespace logindirector.Controllers
                                 // User is already merged, so we're good here - send the user to have their initial request processed
                                 return RedirectToAction("ActionRequest", "Request");
                             }
+                            else
+                            {
+                                RollbarLocator.RollbarInstance.Error("Tenders state not being correctly handled.  Should fall to generic error"); // TEMP
+                            }
                         }
                     }
                 }
@@ -104,6 +118,8 @@ namespace logindirector.Controllers
                     return View("~/Views/Errors/Unauthorised.cshtml", model);
                 }
             }
+
+            RollbarLocator.RollbarInstance.Error("Generic error in process user"); // TEMP
 
             // If we've got to here, the user isn't properly authenticated or the Tenders API gave us an error response, so display a generic error
             ErrorViewModel errorModel = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));

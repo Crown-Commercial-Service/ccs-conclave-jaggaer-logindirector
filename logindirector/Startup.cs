@@ -164,8 +164,6 @@ namespace logindirector
 
         private static async Task CreateAuthTicket(OAuthCreatingTicketContext context)
         {
-            RollbarLocator.RollbarInstance.Error("Got to create ticket");
-
             // Use a Jwt Decoder to decode the access token, and fetch the "sub" value
             JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
             JwtSecurityToken tokenValues = handler.ReadJwtToken(context.AccessToken);
@@ -201,8 +199,6 @@ namespace logindirector
 
             ClaimsIdentity appIdentity = new ClaimsIdentity(userClaims);
             context.Principal.AddIdentity(appIdentity);
-
-            RollbarLocator.RollbarInstance.Error("Finishing create ticket");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

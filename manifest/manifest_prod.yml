@@ -4,4 +4,5 @@ applications:
     memory: 512M
     buildpack: https://github.com/cloudfoundry/dotnet-core-buildpack.git
     stack: cflinuxfs3
-    random-route: true
+    routes:
+    - route: logindirector.crowncommercial.gov.uk

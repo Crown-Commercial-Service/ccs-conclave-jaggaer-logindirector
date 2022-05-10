@@ -143,7 +143,7 @@ jobs:
         with:
           api: ${{ secrets.CF_API }}
           org: ${{ secrets.CF_ORG }}
-          space: ${{ secrets.CF_SPACE_DEVELOPMENT  }}
+          space: ${{ secrets.CF_SPACE_PRODUCTION  }}
           username: ${{ secrets.CF_USERNAME }}
           password: ${{ secrets.CF_PASSWORD }}
           manifest: manifest/manifest_prod.yml

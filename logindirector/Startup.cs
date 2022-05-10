@@ -49,10 +49,10 @@ namespace logindirector
             services.AddMemoryCache();
 
             // Set cookies to always be secure
-            //services.Configure<CookiePolicyOptions>(options =>
-            //{
-            //    options.Secure = CookieSecurePolicy.Always;
-            //});
+            services.Configure<CookiePolicyOptions>(options =>
+            {
+                options.Secure = CookieSecurePolicy.Always;
+            });
 
             // Register any custom services we have
             services.AddScoped<IAdaptorClientServices, AdaptorClientServices>();
@@ -208,11 +208,11 @@ namespace logindirector
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            //app.Use((context, next) =>
-            //{
-            //    context.Request.Scheme = "https";
-            //    return next();
-            //});
+            app.Use((context, next) =>
+            {
+                context.Request.Scheme = "https";
+                return next();
+            });
 
             if (env.IsDevelopment())
             {
@@ -223,9 +223,9 @@ namespace logindirector
             {
                 app.UseExceptionHandler(_configuration.GetValue<string>("UnauthorisedDisplayPath"));
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                //app.UseHsts();
+                app.UseHsts();
             }
-            //app.UseHttpsRedirection();
+            app.UseHttpsRedirection();
             app.UseStaticFiles();
 
             app.UseRouting();

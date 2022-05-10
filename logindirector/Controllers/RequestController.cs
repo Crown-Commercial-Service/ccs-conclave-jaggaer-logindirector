@@ -35,13 +35,6 @@ namespace logindirector.Controllers
         [Route("{*url}", Order = 999)]
         public IActionResult Index()
         {
-            // TEMP - Set test session and cookie values
-            CookieOptions option = new CookieOptions();
-            Response.Cookies.Append("SampleCookieValue", "Remembered from cookie", option);
-            HttpContext.Session.SetString("SampleSessionValue", "Remembered from session");
-
-
-
             // Before we do anything, make sure the request has come from an approved source
             if (isUserFromSupportedSource())
             {
@@ -222,21 +215,6 @@ namespace logindirector.Controllers
             model.RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
 
             return View("~/Views/Errors/Generic.cshtml", model);
-        }
-
-
-
-        // TEMP - Session and Cookie memory test
-        [Route("/director/test", Order = 1)]
-        public IActionResult Test()
-        {
-            ErrorViewModel model = new ErrorViewModel
-            {
-                RequestId = HttpContext.Session.GetString("SampleSessionValue"),
-                DashboardUrl = Request.Cookies["SampleCookieValue"]
-            };
-
-            return View("~/Views/SessionTest.cshtml", model);
         }
     }
 }

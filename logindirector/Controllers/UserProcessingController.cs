@@ -71,8 +71,6 @@ namespace logindirector.Controllers
                             // Now we have a user status response, work out what to do with the user
                             if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_ActionRequired)
                             {
-                                RollbarLocator.RollbarInstance.Error("Tenders Action Required"); // TEMP
-
                                 // The user needs to either merge or create a Jaegger / CaT account - display the merge prompt
                                 ServiceViewModel model = GetServiceViewModelForRequest();
 
@@ -80,30 +78,20 @@ namespace logindirector.Controllers
                             }
                             else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_Unauthorised)
                             {
-                                RollbarLocator.RollbarInstance.Error("Tenders unauthorised"); // TEMP
-
                                 // The user is not authorised to use the service - display the unauthorised message
                                 ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
                                 return View("~/Views/Errors/Unauthorised.cshtml", model);
                             }
                             else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_Conflict)
                             {
-                                RollbarLocator.RollbarInstance.Error("Tenders conflict"); // TEMP
-
                                 // There is a role mismatch for the user between PPG and Jaegger / CaT.  Display the role mismatch error message
                                 ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
                                 return View("~/Views/Errors/RoleConflict.cshtml", model);
                             }
                             else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_AlreadyMerged)
                             {
-                                RollbarLocator.RollbarInstance.Error("Tenders action"); // TEMP
-
                                 // User is already merged, so we're good here - send the user to have their initial request processed
                                 return RedirectToAction("ActionRequest", "Request");
-                            }
-                            else
-                            {
-                                RollbarLocator.RollbarInstance.Error("Tenders state not being correctly handled.  Should fall to generic error"); // TEMP
                             }
                         }
                     }
@@ -117,8 +105,6 @@ namespace logindirector.Controllers
                     return View("~/Views/Errors/Unauthorised.cshtml", model);
                 }
             }
-
-            RollbarLocator.RollbarInstance.Error("Generic error in process user"); // TEMP
 
             // If we've got to here, the user isn't properly authenticated or the Tenders API gave us an error response, so display a generic error
             ErrorViewModel errorModel = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));

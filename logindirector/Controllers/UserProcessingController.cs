@@ -15,6 +15,7 @@ using logindirector.Helpers;
 using logindirector.Constants;
 using logindirector.Models;
 using Microsoft.Extensions.Configuration;
+using System.Threading.Tasks;
 
 // Controller to handle all user processing actions done by the application, before outgoing requests are applied
 namespace logindirector.Controllers
@@ -40,7 +41,7 @@ namespace logindirector.Controllers
         [HttpGet]
         [Route("/director/process-user", Order = 1)]
         [Authorize]
-        public IActionResult ProcessUser()
+        public async Task<IActionResult> ProcessUserAsync()
         {
             RollbarLocator.RollbarInstance.Error("Supposedly authenticated in process user"); // TEMP
 
@@ -52,7 +53,7 @@ namespace logindirector.Controllers
                 RollbarLocator.RollbarInstance.Error("Authenticated with email in process user"); // TEMP
 
                 // User appears to be successfully authenticated with SSO service - so fetch their user data from the adaptor service
-                AdaptorUserModel userModel = _adaptorClientServices.GetUserInformation(userEmail).Result;
+                AdaptorUserModel userModel = await _adaptorClientServices.GetUserInformation(userEmail);
 
                 if (userModel != null && _userHelpers.HasValidUserRoles(userModel))
                 {
@@ -71,7 +72,7 @@ namespace logindirector.Controllers
                     {
                         RollbarLocator.RollbarInstance.Error("Authenticated with access token in process user"); // TEMP
 
-                        UserStatusModel userStatusModel = _tendersClientServices.GetUserStatus(userEmail, accessToken).Result;
+                        UserStatusModel userStatusModel = await _tendersClientServices.GetUserStatus(userEmail, accessToken);
 
                         if (userStatusModel != null)
                         {
@@ -130,7 +131,7 @@ namespace logindirector.Controllers
         [HttpPost]
         [Route("/director/process-user", Order = 1)]
         [Authorize]
-        public IActionResult ProcessUserMergeSelection(string accountDecision)
+        public async Task<IActionResult> ProcessUserMergeSelectionAsync(string accountDecision)
         {
             if (accountDecision == "merge")
             {
@@ -146,7 +147,7 @@ namespace logindirector.Controllers
 
                 if (!string.IsNullOrWhiteSpace(userEmail) && !string.IsNullOrWhiteSpace(accessToken))
                 {
-                    UserCreationModel userCreationModel = _tendersClientServices.CreateJaeggerUser(userEmail, accessToken).Result;
+                    UserCreationModel userCreationModel = await _tendersClientServices.CreateJaeggerUser(userEmail, accessToken);
 
                     if (userCreationModel != null)
                     {

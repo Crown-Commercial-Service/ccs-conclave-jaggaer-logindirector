@@ -118,7 +118,7 @@ namespace logindirector
                 // We don't access the adaptor service here - we can't get to external API clients here.  But we do need to decode and store the user email so that we can access it later
                 options.Events = new OAuthEvents
                 {
-                    OnCreatingTicket = context => CreateAuthTicket(context),
+                    OnCreatingTicket = async context => { await CreateAuthTicket(context); },
                     OnAccessDenied = context =>
                     {
                         RollbarLocator.RollbarInstance.Error("Access Denied by .NET OAuth middleware");
@@ -162,7 +162,7 @@ namespace logindirector
 
         }
 
-        private static Task CreateAuthTicket(OAuthCreatingTicketContext context)
+        private static async Task CreateAuthTicket(OAuthCreatingTicketContext context)
         {
             // Use a Jwt Decoder to decode the access token, and fetch the "sub" value
             JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
@@ -199,8 +199,6 @@ namespace logindirector
 
             ClaimsIdentity appIdentity = new ClaimsIdentity(userClaims);
             context.Principal.AddIdentity(appIdentity);
-
-            return Task.CompletedTask;
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

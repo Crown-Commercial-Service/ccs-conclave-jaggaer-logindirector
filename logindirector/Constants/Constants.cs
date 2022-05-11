@@ -12,6 +12,7 @@
 
         public static string Session_UserKey = "UserModel";
         public static string Session_RequestDetailsKey = "RequestDetails";
+        public static string Session_ProcessingRequiredKey = "UserProcessingRequired";
 
         public static string CentralCache_Key = "UserSessions";
 

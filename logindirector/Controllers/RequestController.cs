@@ -54,13 +54,24 @@ namespace logindirector.Controllers
                         // This is a GET request - continue with application flow
                         storeRequestDetailsInSession(requestModel);
 
-                        // We need to check to see if the user has already been logged in via the Login Director earlier
-                        string userSessionData = HttpContext.Session.GetString(AppConstants.Session_UserKey);
+                        // We need to check to see if the user has already been logged in via the Login Director earlier, and whether they've made their processing decision
+                        string userSessionData = HttpContext.Session.GetString(AppConstants.Session_UserKey),
+                            userProcessingStr = HttpContext.Session.GetString(AppConstants.Session_ProcessingRequiredKey);
 
-                        if (!string.IsNullOrWhiteSpace(userSessionData))
+                        if (!string.IsNullOrWhiteSpace(userSessionData) && !string.IsNullOrWhiteSpace(userProcessingStr))
                         {
-                            // There is user data in session, so the user has already been logged in.  Send them to the Request Processing endpoint (we'll validate session there)
-                            return RedirectToAction("ActionRequest", "Request");
+                            bool processingRequired = Convert.ToBoolean(userProcessingStr);
+
+                            if (processingRequired)
+                            {
+                                // User has not yet completed their processing - send them back to the Process User endpoint
+                                return RedirectToAction("ProcessUser", "UserProcessing");
+                            }
+                            else
+                            {
+                                // User has already been fully processed - send them to the Request Processing endpoint (we'll validate session there)
+                                return RedirectToAction("ActionRequest", "Request");
+                            }
                         }
                         else
                         {
@@ -91,6 +102,9 @@ namespace logindirector.Controllers
             // First, check to see that the user's session is valid in the central cache
             if (DoesUserHaveValidSession())
             {
+                // Update our session value to indicate that the user has now been processed within this session
+                HttpContext.Session.SetString(AppConstants.Session_ProcessingRequiredKey, "false");
+
                 // User appears to be valid, so now we can process their request from the stored request object
                 string requestJson = HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey);
 

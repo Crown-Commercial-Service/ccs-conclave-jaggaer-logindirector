@@ -43,6 +43,9 @@ namespace logindirector.Controllers
         [Authorize]
         public async Task<IActionResult> ProcessUserAsync()
         {
+            // Set a session value to indicate that the user is as yet unprocessed
+            HttpContext.Session.SetString(AppConstants.Session_ProcessingRequiredKey, "true");
+
             // First of all, make sure we have the user email in claims and then use it to fetch a user model from the Adaptor service
             string userEmail = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value;
 
@@ -221,17 +224,23 @@ namespace logindirector.Controllers
                     sessionsList = new List<UserSessionModel>();
                 }
 
-                string userSid = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Sid)?.Value;
+                // Now the list has been updated, if there's no existing entry for the current user, we need to add a new entry
+                UserSessionModel existingModel = sessionsList.FirstOrDefault(p => p.userEmail == userModel.emailAddress);
 
-                // Now add a new entry for ourselves
-                UserSessionModel userEntry = new UserSessionModel
+                if (existingModel == null)
                 {
-                    userEmail = userModel.emailAddress,
-                    sessionStart = DateTime.Now,
-                    sessionId = userSid
-                };
+                    string userSid = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Sid)?.Value;
 
-                sessionsList.Add(userEntry);
+                    // Now add a new entry for ourselves
+                    UserSessionModel userEntry = new UserSessionModel
+                    {
+                        userEmail = userModel.emailAddress,
+                        sessionStart = DateTime.Now,
+                        sessionId = userSid
+                    };
+
+                    sessionsList.Add(userEntry);
+                }
 
                 // Set the newly amended list back into the cache
                 _memoryCache.Set(cacheKey, sessionsList);

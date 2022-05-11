@@ -12,23 +12,26 @@
             <p class="govuk-body">You can merge your @Model.ServiceDisplayName and Public Procurement Gateway accounts. This won't cause you to lose any of your procurement history. When you merge your accounts you will be asked to sign in with your @Model.ServiceDisplayName login details the first time, after that you will be logged in directly.</p>
             <p class="govuk-body">If you don't already have a @Model.ServiceDisplayName account you can create one now and it will be linked to your Public Procurement Gateway account automatically.</p>
             <br />
-            <form method="POST" action="/director/process-user">
-                <div class="govuk-form-group">
-                    <fieldset class="govuk-fieldset">
+            <form id="merge-selection-form" method="POST" action="/director/process-user">
+                <div id="merge-selection-group" class="govuk-form-group">
+                    <fieldset class="govuk-fieldset" aria-describedby="merge-prompt-error">
                         <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
                             <h2 class="govuk-fieldset__heading">
                                 Select an option:
                             </h2>
                         </legend>
-                        <div class="govuk-radios">
+                        <p id="merge-prompt-error" class="govuk-error-message govuk-visually-hidden">
+                            <span class="govuk-visually-hidden">Error:</span> Please select one of these options
+                        </p>
+                        <div class="govuk-radios" data-module="govuk-radios">
                             <div class="govuk-radios__item">
-                                <input class="govuk-radios__input" id="account-merge" name="accountDecision" type="radio" value="merge" required>
+                                <input class="govuk-radios__input" id="account-merge" name="accountDecision" type="radio" value="merge">
                                 <label class="govuk-label govuk-radios__label" for="account-merge">
                                     Merge your existing @Model.ServiceDisplayName and Public Procurement Gateway accounts
                                 </label>
                             </div>
                             <div class="govuk-radios__item">
-                                <input class="govuk-radios__input" id="account-create" name="accountDecision" type="radio" value="create" required>
+                                <input class="govuk-radios__input" id="account-create" name="accountDecision" type="radio" value="create">
                                 <label class="govuk-label govuk-radios__label" for="account-create">
                                     Create a new @Model.ServiceDisplayName account that links to your Public Procurement Gateway account
                                 </label>

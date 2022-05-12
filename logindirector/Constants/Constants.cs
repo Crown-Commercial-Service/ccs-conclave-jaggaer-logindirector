@@ -27,6 +27,7 @@
         public static string Tenders_UserCreation_Conflict = "RoleMismatch";
         public static string Tenders_UserCreation_HelpdeskRequired = "HelpdeskNeeded";
         public static string Tenders_UserCreation_Error = "UnexpectedFailure";
+        public static string Tenders_UserCreation_AlreadyExists = "UserAlreadyExists";
 
         public static string Display_JaeggerServiceName = "eSourcing";
         public static string Display_CatServiceName = "Contract Award Service";

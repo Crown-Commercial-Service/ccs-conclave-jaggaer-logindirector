@@ -144,23 +144,30 @@ namespace logindirector.Controllers
                             // User account has been created - now we can proceed to action their initial request
                             return RedirectToAction("ActionRequest", "Request");
                         }
-                        else if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_Conflict)
+                        else
                         {
-                            // There is a role mismatch for the user between PPG and Jaegger / CaT.  Display the role mismatch error message
                             ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
-                            return View("~/Views/Errors/RoleConflict.cshtml", model);
-                        }
-                        else if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_MissingRole)
-                        {
-                            // The user is missing a Jaegger / CaT role in PPG.  Display the unauthorised message
-                            ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
-                            return View("~/Views/Errors/Unauthorised.cshtml", model);
-                        }
-                        else if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_HelpdeskRequired)
-                        {
-                            // The user's PPG setup is incorrect (both roles assigned).  Display a message directing the user to the helpdesk
-                            ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
-                            return View("~/Views/Errors/BothRolesAssigned.cshtml", model);
+
+                            if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_Conflict)
+                            {
+                                // There is a role mismatch for the user between PPG and Jaegger / CaT.  Display the role mismatch error message
+                                return View("~/Views/Errors/RoleConflict.cshtml", model);
+                            }
+                            else if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_MissingRole)
+                            {
+                                // The user is missing a Jaegger / CaT role in PPG.  Display the unauthorised message
+                                return View("~/Views/Errors/Unauthorised.cshtml", model);
+                            }
+                            else if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_HelpdeskRequired)
+                            {
+                                // The user's PPG setup is incorrect (both roles assigned).  Display a message directing the user to the helpdesk
+                                return View("~/Views/Errors/BothRolesAssigned.cshtml", model);
+                            }
+                            else if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_AlreadyExists)
+                            {
+                                // The user already exists in Jaegger / CaT.  Display the existing account message
+                                return View("~/Views/Errors/ExistingAccount.cshtml", model);
+                            }
                         }
                     }
                 }

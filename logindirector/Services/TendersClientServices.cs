@@ -110,6 +110,11 @@ namespace logindirector.Services
                         // The user has both buyer and supplier roles in PPG - helpdesk intervention required to resolve
                         model.CreationStatus = AppConstants.Tenders_UserCreation_HelpdeskRequired;
                     }
+                    else if (responseModel.StatusCode == HttpStatusCode.InternalServerError)
+                    {
+                        // An account already exists for this user within Jaegger
+                        model.CreationStatus = AppConstants.Tenders_UserCreation_AlreadyExists;
+                    }
                     else
                     {
                         // This is an unexpected general error response from Tenders

@@ -64,7 +64,7 @@ namespace logindirector.Helpers
                 {
                     model.Service = new ServiceViewModel();
 
-                    if (storedRequestModel.domain == _configuration.GetValue<string>("SupportedSources:JaeggerSource"))
+                    if (storedRequestModel.domain == _configuration.GetValue<string>("ExitDomains:JaeggerDomain"))
                     {
                         // Looks like a Jaegger request
                         model.Service.ServiceDisplayName = AppConstants.Display_JaeggerServiceName;

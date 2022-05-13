@@ -203,11 +203,22 @@ namespace logindirector.Controllers
             {
                 model = new RequestSessionModel
                 {
-                    domain = Request.Host.Host,
                     protocol = Request.Scheme,
                     requestedPath = Request.Path,
                     httpFormat = Request.Method
                 };
+
+                // The domain needs to be set to be the correct exit domain based on the domain the user came in via
+                if (Request.Host.Host.ToLower() == _configuration.GetValue<string>("SupportedSources:JaeggerSource"))
+                {
+                    // Jaegger domain request
+                    model.domain = _configuration.GetValue<string>("ExitDomains:JaeggerDomain");
+                }
+                else
+                {
+                    // We already know it's an approved source request at this point, and there are only two approved sources, so this must be from the CaT domain
+                    model.domain = _configuration.GetValue<string>("ExitDomains:CatDomain");
+                }
             }
 
             return model;

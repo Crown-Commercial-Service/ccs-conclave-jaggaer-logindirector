@@ -268,7 +268,7 @@ namespace logindirector.Controllers
 
                 if (storedRequestModel != null && !String.IsNullOrWhiteSpace(storedRequestModel.domain))
                 {
-                    if (storedRequestModel.domain == _configuration.GetValue<string>("SupportedSources:JaeggerSource"))
+                    if (storedRequestModel.domain == _configuration.GetValue<string>("ExitDomains:JaeggerDomain"))
                     {
                         // Looks like a Jaegger request
                         model.ServiceDisplayName = AppConstants.Display_JaeggerServiceName;

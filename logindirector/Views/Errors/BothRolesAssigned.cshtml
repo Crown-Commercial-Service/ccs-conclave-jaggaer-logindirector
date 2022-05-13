@@ -1,7 +1,7 @@
 ﻿@model ErrorViewModel
 
 @{
-    ViewData["Title"] = "Access Denied";
+    ViewData["Title"] = "Invalid Role Setup";
 }
 
 <div class="govuk-grid-row">
@@ -9,9 +9,9 @@
         <h1 class="govuk-heading-xl page-title page-title--tight">Public Procurement Gateway</h1>
         @if (Model.Service != null && !String.IsNullOrWhiteSpace(Model.Service.ServiceDisplayName))
         {
-            <p class="govuk-body">You do not have the correct permissions to access @Model.Service.ServiceDisplayName at this time.</p>
+            <p class="govuk-body">You appear to have both Buyer and Supplier roles for @Model.Service.ServiceDisplayName assigned in PPG.</p>
         }
-        <p class="govuk-body">Please try again later.  If the problem persists then please contact CCS Support.</p>
+        <p class="govuk-body">Your Buyer user has been created.  Please contact CCS support in order for them to create your Supplier user.</p>
         <br />
         @if (Model != null && !String.IsNullOrWhiteSpace(Model.DashboardUrl))
         {

@@ -10482,3 +10482,10 @@ img {
 .banner-hidden {
     display: none;
 }
+
+.backchannelIframe {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border: 0;
+}

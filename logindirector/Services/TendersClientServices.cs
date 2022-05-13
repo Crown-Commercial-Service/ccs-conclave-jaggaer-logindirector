@@ -43,6 +43,16 @@ namespace logindirector.Services
                         // The user either doesn't exist in Jaegger, or their account is unmerged
                         model.UserStatus = AppConstants.Tenders_UserStatus_ActionRequired;
                     }
+                    else if (responseModel.StatusCode == HttpStatusCode.Forbidden)
+                    {
+                        // There's either a user mismatch at the Tenders end or the user doesn't have access to the service
+                        model.UserStatus = AppConstants.Tenders_UserStatus_Unauthorised;
+                    }
+                    else if (responseModel.StatusCode == HttpStatusCode.Conflict)
+                    {
+                        // There's a role mismatch between what PPG says the user should be and what Tenders says the user should be
+                        model.UserStatus = AppConstants.Tenders_UserStatus_Conflict;
+                    }
                     else if (responseModel.StatusCode == HttpStatusCode.OK)
                     {
                         // The user exists in Jaegger and their account has already been merged
@@ -50,7 +60,7 @@ namespace logindirector.Services
                     }
                     else
                     {
-                        // This is an unexpected error response from Tenders that we can't handle (includes 409 responses which denote role mismatches)
+                        // This is an unexpected error response from Tenders that we can't handle
                         model.UserStatus = AppConstants.Tenders_UserStatus_Error;
                     }
                 }
@@ -82,17 +92,32 @@ namespace logindirector.Services
 
                     if (responseModel.StatusCode == HttpStatusCode.OK || responseModel.StatusCode == HttpStatusCode.Created)
                     {
-                        // The operation has succeeded
+                        // The operation has succeeded and the user was either created or updated
                         model.CreationStatus = AppConstants.Tenders_UserCreation_Success;
+                    }
+                    else if (responseModel.StatusCode == HttpStatusCode.Forbidden)
+                    {
+                        // The user doesn't have a buyer or supplier role in PPG
+                        model.CreationStatus = AppConstants.Tenders_UserCreation_MissingRole;
                     }
                     else if (responseModel.StatusCode == HttpStatusCode.Conflict)
                     {
-                        // User cannot be created due to issues with the account
-                        model.CreationStatus = AppConstants.Tenders_UserCreation_Failure;
+                        // There's a role mismatch between what PPG says the user should be and what Tenders says the user should be
+                        model.CreationStatus = AppConstants.Tenders_UserCreation_Conflict;
+                    }
+                    else if (responseModel.StatusCode == (HttpStatusCode)418)
+                    {
+                        // The user has both buyer and supplier roles in PPG - helpdesk intervention required to resolve
+                        model.CreationStatus = AppConstants.Tenders_UserCreation_HelpdeskRequired;
+                    }
+                    else if (responseModel.StatusCode == HttpStatusCode.InternalServerError)
+                    {
+                        // An account already exists for this user within Jaegger
+                        model.CreationStatus = AppConstants.Tenders_UserCreation_AlreadyExists;
                     }
                     else
                     {
-                        // There's been a more general issue with the operation (authentication not matching requested user, for example)
+                        // This is an unexpected general error response from Tenders
                         model.CreationStatus = AppConstants.Tenders_UserCreation_Error;
                     }
                 }

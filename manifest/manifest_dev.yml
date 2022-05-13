@@ -5,4 +5,4 @@ applications:
     buildpack: https://github.com/cloudfoundry/dotnet-core-buildpack.git
     stack: cflinuxfs3
     routes:
-    - route: dev-logindirector.london.cloudapps.digital
+    - route: dev.logindirector.crowncommercial.gov.uk

@@ -146,7 +146,7 @@ namespace logindirector.Controllers
                 if (_memoryCache.TryGetValue(cacheKey, out sessionsList))
                 {
                     // We've got the cache - filter out any expired entries then check for our entry
-                    sessionsList = sessionsList.Where(p => p.sessionStart > DateTime.Now.AddMinutes(-30)).ToList();
+                    sessionsList = sessionsList.Where(p => p.sessionStart > DateTime.Now.AddMinutes(-15)).ToList();
                     _memoryCache.Set(cacheKey, sessionsList);
 
                     UserSessionModel userCacheEntry = sessionsList.FirstOrDefault(p => p.userEmail == userEmail);

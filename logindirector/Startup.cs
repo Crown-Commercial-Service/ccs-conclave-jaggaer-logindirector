@@ -80,10 +80,10 @@ namespace logindirector
             })
             .AddCookie("CookieAuth", options =>
             {
-                // First check should be against the cookies for an active session.  Make sure cookies expire after 30 mins rather than hanging round forever
-                options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+                // First check should be against the cookies for an active session.  Make sure cookies expire after 15 mins rather than hanging round forever
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(15);
 
-                // Do not allow the 30 minute timer to reset on requests - since we're not checking with the SSO Service each time, we want a user to re-authenticate after 30 mins
+                // Do not allow the 15 minute timer to reset on requests - since we're not checking with the SSO Service each time, we want a user to re-authenticate after 15 mins
                 options.SlidingExpiration = false;
             })
             .AddOAuth("SsoService", options =>

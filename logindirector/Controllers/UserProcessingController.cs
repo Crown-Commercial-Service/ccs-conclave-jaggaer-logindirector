@@ -223,7 +223,7 @@ namespace logindirector.Controllers
                 if (_memoryCache.TryGetValue(cacheKey, out sessionsList))
                 {
                     // The cache already has entries - filter out any expired ones
-                    sessionsList = sessionsList.Where(p => p.sessionStart > DateTime.Now.AddMinutes(-30)).ToList();
+                    sessionsList = sessionsList.Where(p => p.sessionStart > DateTime.Now.AddMinutes(-15)).ToList();
                 }
                 else
                 {

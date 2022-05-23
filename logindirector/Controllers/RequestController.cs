@@ -128,8 +128,8 @@ namespace logindirector.Controllers
 
                     if (requestModel != null)
                     {
-                        // We've got the user's request details from session.  Now action them as a GET redirect (POSTs were handled earlier)
-                        string requestedRoute = requestModel.protocol + "://" + requestModel.domain + requestModel.requestedPath;
+                        // User is now ready to go back to the application - we send them to our ExternalAuthenticationPath (later this will change to action original request)
+                        string requestedRoute = _configuration.GetValue<string>("ExternalAuthenticationPath");
                         return Redirect(requestedRoute);
                     }
                 }

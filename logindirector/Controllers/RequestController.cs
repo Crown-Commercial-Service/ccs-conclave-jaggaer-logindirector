@@ -13,6 +13,8 @@ using logindirector.Constants;
 using logindirector.Models;
 using System.Runtime.CompilerServices;
 using logindirector.Helpers;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
 
 // Controller to handle all incoming and outgoing requests to and from the application
 [assembly: InternalsVisibleTo("LoginDirectorTests")]
@@ -40,6 +42,16 @@ namespace logindirector.Controllers
             {
                 // Request is supported - we can proceed to process it.  Begin by storing the details of their request for later
                 RequestSessionModel requestModel = getRequestModel();
+
+                // Also check if this is their first visit to us in this session or not - we need to remember this for later if it's not
+                if (User.Identity.IsAuthenticated)
+                {
+                    HttpContext.Session.SetString(AppConstants.Session_UserPreAuthenticated, "true");
+                }
+                else
+                {
+                    HttpContext.Session.Remove(AppConstants.Session_UserPreAuthenticated);
+                }
 
                 if (requestModel != null)
                 {
@@ -97,10 +109,12 @@ namespace logindirector.Controllers
         // Route to process and execute outgoing requests, once a user has been logged in and processed
         [Route("/director/action-request", Order = 1)]
         [Authorize]
-        public IActionResult ActionRequest()
+        public async Task<IActionResult> ActionRequest()
         {
             // First, check to see that the user's session is valid in the central cache
-            if (DoesUserHaveValidSession())
+            string userEmail = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value;
+
+            if (await _userHelpers.DoesUserHaveValidSession(HttpContext, userEmail))
             {
                 // Update our session value to indicate that the user has now been processed within this session
                 HttpContext.Session.SetString(AppConstants.Session_ProcessingRequiredKey, "false");
@@ -127,40 +141,8 @@ namespace logindirector.Controllers
             else
             {
                 // User does not appear to have a valid session in the central cache - clear them down and send them to re-authenticate at the Process User endpoint
-                HttpContext.Session.Clear();
-
                 return RedirectToAction("ProcessUser", "UserProcessing");
             }
-        }
-
-        internal bool DoesUserHaveValidSession()
-        {
-            // Grab the user email address from our claims, and then use it to lookup an entry in the central cache
-            string userEmail = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value;
-
-            if (!string.IsNullOrWhiteSpace(userEmail))
-            {
-                List<UserSessionModel> sessionsList = new List<UserSessionModel>();
-                string cacheKey = AppConstants.CentralCache_Key;
-
-                if (_memoryCache.TryGetValue(cacheKey, out sessionsList))
-                {
-                    // We've got the cache - filter out any expired entries then check for our entry
-                    sessionsList = sessionsList.Where(p => p.sessionStart > DateTime.Now.AddMinutes(-15)).ToList();
-                    _memoryCache.Set(cacheKey, sessionsList);
-
-                    UserSessionModel userCacheEntry = sessionsList.FirstOrDefault(p => p.userEmail == userEmail);
-
-                    if (userCacheEntry != null)
-                    {
-                        // User has a valid entry in the central cache - return true
-                        return true;
-                    }
-                }
-            }
-
-            // No valid user detected - return false
-            return false;
         }
 
         internal bool isUserFromSupportedSource()

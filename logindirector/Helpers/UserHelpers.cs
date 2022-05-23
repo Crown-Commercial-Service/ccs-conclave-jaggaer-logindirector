@@ -1,21 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using logindirector.Constants;
 using logindirector.Models;
 using logindirector.Models.AdaptorService;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace logindirector.Helpers
 {
     public class UserHelpers : IHelpers
     {
         public IConfiguration _configuration { get; }
+        public IMemoryCache _memoryCache;
 
-        public UserHelpers(IConfiguration configuration)
+        public UserHelpers(IConfiguration configuration, IMemoryCache memoryCache)
         {
             _configuration = configuration;
+            _memoryCache = memoryCache;
         }
 
         public bool HasValidUserRoles(AdaptorUserModel userModel)
@@ -78,6 +84,44 @@ namespace logindirector.Helpers
             }
 
             return model;
+        }
+
+        public async Task<bool> DoesUserHaveValidSession(HttpContext httpContext, string userEmail)
+        {
+            // Use the user email to lookup an entry in the central cache
+            if (!string.IsNullOrWhiteSpace(userEmail))
+            {
+                List<UserSessionModel> sessionsList = new List<UserSessionModel>();
+                string cacheKey = AppConstants.CentralCache_Key;
+
+                if (_memoryCache.TryGetValue(cacheKey, out sessionsList))
+                {
+                    // We've got the cache - filter out any expired entries then check for our entry
+                    sessionsList = sessionsList.Where(p => p.sessionStart > DateTime.Now.AddMinutes(-15)).ToList();
+                    _memoryCache.Set(cacheKey, sessionsList);
+
+                    UserSessionModel userCacheEntry = sessionsList.FirstOrDefault(p => p.userEmail == userEmail);
+
+                    if (userCacheEntry != null)
+                    {
+                        // User has a valid entry in the central cache - return true
+                        return true;
+                    }
+                }
+            }
+
+            // No valid user detected - expire their authentication if they have any, then return false
+            try
+            {
+                httpContext.Session.Clear();
+                await httpContext.SignOutAsync("CookieAuth");
+            }
+            catch (Exception ex)
+            {
+                // Fail silently
+            }
+
+            return false;
         }
     }
 }

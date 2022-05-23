@@ -43,75 +43,96 @@ namespace logindirector.Controllers
         [Authorize]
         public async Task<IActionResult> ProcessUserAsync()
         {
-            // Set a session value to indicate that the user is as yet unprocessed
-            HttpContext.Session.SetString(AppConstants.Session_ProcessingRequiredKey, "true");
-
-            // First of all, make sure we have the user email in claims and then use it to fetch a user model from the Adaptor service
+            // We need to make sure the user has a valid session before we do anything.  They do, UNLESS this isn't their first request this session and there's no central cache entry
+            bool validSession = true;
             string userEmail = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value;
 
-            if (!string.IsNullOrWhiteSpace(userEmail))
+            if (!string.IsNullOrWhiteSpace(HttpContext.Session.GetString(AppConstants.Session_UserPreAuthenticated)))
             {
-                // User appears to be successfully authenticated with SSO service - so fetch their user data from the adaptor service
-                AdaptorUserModel userModel = await _adaptorClientServices.GetUserInformation(userEmail);
-
-                if (userModel != null && _userHelpers.HasValidUserRoles(userModel))
+                // This isn't the user's first request this session, so check whether they still have a session in the central cache
+                if (!await _userHelpers.DoesUserHaveValidSession(HttpContext, userEmail))
                 {
-                    // Serialise the model as JSON and store it in the session
-                    HttpContext.Session.SetString(AppConstants.Session_UserKey, JsonConvert.SerializeObject(userModel));
-
-                    // Then add a record for this user to the central session cache
-                    AddUserToCentralSessionCache(userModel);
-
-                    // Now access the Tenders API to work out whether this user needs a account merge/creation or just forwarding
-                    string accessToken = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Authentication)?.Value;
-
-                    if (!string.IsNullOrWhiteSpace(accessToken))
-                    {
-                        UserStatusModel userStatusModel = await _tendersClientServices.GetUserStatus(userEmail, accessToken);
-
-                        if (userStatusModel != null)
-                        {
-                            // Now we have a user status response, work out what to do with the user
-                            if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_ActionRequired)
-                            {
-                                // The user needs to either merge or create a Jaegger / CaT account - display the merge prompt
-                                ServiceViewModel model = GetServiceViewModelForRequest();
-
-                                return View("~/Views/Merging/MergePrompt.cshtml", model);
-                            }
-                            else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_Unauthorised)
-                            {
-                                // The user is not authorised to use the service - display the unauthorised message
-                                ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
-                                return View("~/Views/Errors/Unauthorised.cshtml", model);
-                            }
-                            else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_Conflict)
-                            {
-                                // There is a role mismatch for the user between PPG and Jaegger / CaT.  Display the role mismatch error message
-                                ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
-                                return View("~/Views/Errors/RoleConflict.cshtml", model);
-                            }
-                            else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_AlreadyMerged)
-                            {
-                                // User is already merged, so we're good here - send the user to have their initial request processed
-                                return RedirectToAction("ActionRequest", "Request");
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    // User is not permitted to use the Login Director - log error, and present error
-                    RollbarLocator.RollbarInstance.Error("Attempted access by unauthorised SSO user - " + userEmail);
-
-                    ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
-                    return View("~/Views/Errors/Unauthorised.cshtml", model);
+                    // User does not have a valid session in the central cache.  Backchannel logout related - take note of this
+                    validSession = false;
                 }
             }
 
-            // If we've got to here, the user isn't properly authenticated or the Tenders API gave us an error response, so display a generic error
-            ErrorViewModel errorModel = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
-            return View("~/Views/Errors/Generic.cshtml", errorModel);
+            if (validSession)
+            {
+                // Set a session value to indicate that the user is as yet unprocessed
+                HttpContext.Session.SetString(AppConstants.Session_ProcessingRequiredKey, "true");
+
+                // First of all, make sure we have the user email in claims and then use it to fetch a user model from the Adaptor service
+                if (!string.IsNullOrWhiteSpace(userEmail))
+                {
+                    // User appears to be successfully authenticated with SSO service - so fetch their user data from the adaptor service
+                    AdaptorUserModel userModel = await _adaptorClientServices.GetUserInformation(userEmail);
+
+                    if (userModel != null && _userHelpers.HasValidUserRoles(userModel))
+                    {
+                        // Serialise the model as JSON and store it in the session
+                        HttpContext.Session.SetString(AppConstants.Session_UserKey, JsonConvert.SerializeObject(userModel));
+
+                        // Then add a record for this user to the central session cache
+                        AddUserToCentralSessionCache(userModel);
+
+                        // Now access the Tenders API to work out whether this user needs a account merge/creation or just forwarding
+                        string accessToken = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Authentication)?.Value;
+
+                        if (!string.IsNullOrWhiteSpace(accessToken))
+                        {
+                            UserStatusModel userStatusModel = await _tendersClientServices.GetUserStatus(userEmail, accessToken);
+
+                            if (userStatusModel != null)
+                            {
+                                // Now we have a user status response, work out what to do with the user
+                                if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_ActionRequired)
+                                {
+                                    // The user needs to either merge or create a Jaegger / CaT account - display the merge prompt
+                                    ServiceViewModel model = GetServiceViewModelForRequest();
+
+                                    return View("~/Views/Merging/MergePrompt.cshtml", model);
+                                }
+                                else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_Unauthorised)
+                                {
+                                    // The user is not authorised to use the service - display the unauthorised message
+                                    ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+                                    return View("~/Views/Errors/Unauthorised.cshtml", model);
+                                }
+                                else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_Conflict)
+                                {
+                                    // There is a role mismatch for the user between PPG and Jaegger / CaT.  Display the role mismatch error message
+                                    ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+                                    return View("~/Views/Errors/RoleConflict.cshtml", model);
+                                }
+                                else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_AlreadyMerged)
+                                {
+                                    // User is already merged, so we're good here - send the user to have their initial request processed
+                                    return RedirectToAction("ActionRequest", "Request");
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // User is not permitted to use the Login Director - log error, and present error
+                        RollbarLocator.RollbarInstance.Error("Attempted access by unauthorised SSO user - " + userEmail);
+
+                        ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+                        return View("~/Views/Errors/Unauthorised.cshtml", model);
+                    }
+                }
+
+                // If we've got to here, the user isn't properly authenticated or the Tenders API gave us an error response, so display a generic error
+                ErrorViewModel errorModel = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+                return View("~/Views/Errors/Generic.cshtml", errorModel);
+            }
+            else
+            {
+                // User doesn't have a valid session, likely meaning they were backchannel logout'd.  Display session expiry
+                ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+                return View("~/Views/Errors/SessionExpired.cshtml", model);
+            }
         }
 
         // Route to process user selection at the Merge Prompt

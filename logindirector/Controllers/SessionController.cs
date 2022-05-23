@@ -73,6 +73,7 @@ namespace logindirector.Controllers
             }
 
             // If we've got this far, we've had an issue with what's been passed to us.  Return a Bad Request response and do nothing
+            RollbarLocator.RollbarInstance.Error("Backchannel Logout error - unhandled error");
             return StatusCode(400);
         }
 

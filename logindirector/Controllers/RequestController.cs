@@ -57,8 +57,20 @@ namespace logindirector.Controllers
                 {
                     if (requestModel.httpFormat.ToUpper() == "POST")
                     {
+                        string requestedRoute;
+
                         // This is a POST request - don't do anything else, just forward the request on as is
-                        string requestedRoute = requestModel.protocol + "://" + requestModel.domain + requestModel.requestedPath;
+                        if (requestModel.domain == _configuration.GetValue<string>("ExitDomains:JaeggerDomain"))
+                        {
+                            // Jaegger requests for now are just forwarded to the core domain value
+                            requestedRoute = requestModel.protocol + "://" + requestModel.domain;
+                        }
+                        else
+                        {
+                            // CAS requests are forwarded to the requested endpoint
+                            requestedRoute = requestModel.protocol + "://" + requestModel.domain + requestModel.requestedPath;
+                        }
+
                         return RedirectPreserveMethod(requestedRoute);
                     }
                     else
@@ -128,8 +140,20 @@ namespace logindirector.Controllers
 
                     if (requestModel != null)
                     {
-                        // User is now ready to go back to the application - we send them to our ExternalAuthenticationPath (later this will change to action original request)
-                        string requestedRoute = _configuration.GetValue<string>("ExternalAuthenticationPath");
+                        // We've got the user's request details from session.  Now action them as a GET redirect (POSTs were handled earlier)
+                        string requestedRoute;
+
+                        if (requestModel.domain == _configuration.GetValue<string>("ExitDomains:JaeggerDomain"))
+                        {
+                            // Jaegger requests are always sent direct to a specific endpoint
+                            requestedRoute = requestModel.protocol + "://" + requestModel.domain;
+                        }
+                        else
+                        {
+                            // CAS requests go to where the user requested
+                            requestedRoute = requestModel.protocol + "://" + requestModel.domain + requestModel.requestedPath;
+                        }
+
                         return Redirect(requestedRoute);
                     }
                 }

@@ -11,6 +11,6 @@ namespace logindirector.Helpers
 
         ErrorViewModel BuildErrorModelForUser(string sessionUserRequestJson);
 
-        Task<bool> DoesUserHaveValidSession(HttpContext httpContext, string userEmail);
+        Task<bool> DoesUserHaveValidSession(HttpContext httpContext, string userSid);
     }
 }

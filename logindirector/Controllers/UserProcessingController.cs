@@ -45,12 +45,13 @@ namespace logindirector.Controllers
         {
             // We need to make sure the user has a valid session before we do anything.  They do, UNLESS this isn't their first request this session and there's no central cache entry
             bool validSession = true;
-            string userEmail = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value;
+            string userEmail = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value,
+                userSid = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Sid)?.Value;
 
             if (!string.IsNullOrWhiteSpace(HttpContext.Session.GetString(AppConstants.Session_UserPreAuthenticated)))
             {
                 // This isn't the user's first request this session, so check whether they still have a session in the central cache
-                if (!await _userHelpers.DoesUserHaveValidSession(HttpContext, userEmail))
+                if (!await _userHelpers.DoesUserHaveValidSession(HttpContext, userSid))
                 {
                     // User does not have a valid session in the central cache.  Backchannel logout related - take note of this
                     validSession = false;

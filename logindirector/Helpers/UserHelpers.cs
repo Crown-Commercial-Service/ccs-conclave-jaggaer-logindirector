@@ -86,10 +86,10 @@ namespace logindirector.Helpers
             return model;
         }
 
-        public async Task<bool> DoesUserHaveValidSession(HttpContext httpContext, string userEmail)
+        public async Task<bool> DoesUserHaveValidSession(HttpContext httpContext, string userSid)
         {
-            // Use the user email to lookup an entry in the central cache
-            if (!string.IsNullOrWhiteSpace(userEmail))
+            // Use the user session ID to lookup an entry in the central cache
+            if (!string.IsNullOrWhiteSpace(userSid))
             {
                 List<UserSessionModel> sessionsList = new List<UserSessionModel>();
                 string cacheKey = AppConstants.CentralCache_Key;
@@ -100,7 +100,7 @@ namespace logindirector.Helpers
                     sessionsList = sessionsList.Where(p => p.sessionStart > DateTime.Now.AddMinutes(-15)).ToList();
                     _memoryCache.Set(cacheKey, sessionsList);
 
-                    UserSessionModel userCacheEntry = sessionsList.FirstOrDefault(p => p.userEmail == userEmail);
+                    UserSessionModel userCacheEntry = sessionsList.FirstOrDefault(p => p.sessionId == userSid);
 
                     if (userCacheEntry != null)
                     {
@@ -116,7 +116,7 @@ namespace logindirector.Helpers
                 httpContext.Session.Clear();
                 await httpContext.SignOutAsync("CookieAuth");
             }
-            catch (Exception ex)
+            catch
             {
                 // Fail silently
             }

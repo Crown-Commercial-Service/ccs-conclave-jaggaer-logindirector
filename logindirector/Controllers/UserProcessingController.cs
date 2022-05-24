@@ -48,8 +48,6 @@ namespace logindirector.Controllers
             string userEmail = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value,
                 userSid = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Sid)?.Value;
 
-            RollbarLocator.RollbarInstance.Error("User SID is " + userSid);
-
             if (!string.IsNullOrWhiteSpace(HttpContext.Session.GetString(AppConstants.Session_UserPreAuthenticated)))
             {
                 // This isn't the user's first request this session, so check whether they still have a session in the central cache

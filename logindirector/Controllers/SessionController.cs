@@ -38,18 +38,19 @@ namespace logindirector.Controllers
             return PartialView("~/Views/Backchannel/RpIframe.cshtml", model);
         }
 
+
         // Route to handle PPG backchannel logout requests
         [HttpPost]
         [Route("/logout", Order = 1)]
-        public IActionResult BackchannelLogout(string logoutToken)
+        public IActionResult BackchannelLogout(string logout_token)
         {
             // We've been passed a JWT token as part of this request, which contains the session ID.  We need to decode that, then use it to identify and close down the relevant session
-            if (!string.IsNullOrWhiteSpace(logoutToken))
+            if (!string.IsNullOrWhiteSpace(logout_token))
             {
                 try
                 {
                     JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
-                    JwtSecurityToken tokenValues = handler.ReadJwtToken(logoutToken);
+                    JwtSecurityToken tokenValues = handler.ReadJwtToken(logout_token);
 
                     if (tokenValues != null)
                     {
@@ -74,7 +75,7 @@ namespace logindirector.Controllers
 
             // If we've got this far, we've had an issue with what's been passed to us.  Return a Bad Request response and do nothing
             RollbarLocator.RollbarInstance.Error("Backchannel Logout error - unhandled error");
-            RollbarLocator.RollbarInstance.Error("Token - " + logoutToken); // TEMP: Log this so I can see what I'm being passed, and use it to debug
+            RollbarLocator.RollbarInstance.Error("Token - " + logout_token); // TEMP: Log this so I can see what I'm being passed, and use it to debug
             return StatusCode(400);
         }
 

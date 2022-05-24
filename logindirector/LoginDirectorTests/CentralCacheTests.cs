@@ -19,6 +19,7 @@ namespace LoginDirectorTests
     public class CentralCacheTests
     {
         internal RequestController requestController;
+        internal UserHelpers userHelpers;
         internal UserProcessingController userProcessingController;
         string commonTestEmail = "test@testmail.com";
 
@@ -32,9 +33,9 @@ namespace LoginDirectorTests
             IMemoryCache memoryCache = serviceProvider.GetService<IMemoryCache>();
 
             IConfigurationRoot configuration = new ConfigurationBuilder().Build();
-            UserHelpers helpers = new UserHelpers(configuration);
+            userHelpers = new UserHelpers(configuration, memoryCache);
 
-            requestController = new RequestController(memoryCache, configuration, helpers);
+            requestController = new RequestController(memoryCache, configuration, userHelpers);
             userProcessingController = new UserProcessingController(null, null, null, memoryCache, configuration);
         }
 
@@ -42,7 +43,7 @@ namespace LoginDirectorTests
         public void User_With_No_User_Object_Should_Return_False()
         {
             // By default in these tests there will be no User object in session.  So just run the test directly
-            Assert.AreEqual(requestController.DoesUserHaveValidSession(), false);
+            Assert.AreEqual(userHelpers.DoesUserHaveValidSession(new DefaultHttpContext(), commonTestEmail).Result, false);
         }
 
         [TestMethod]
@@ -55,7 +56,7 @@ namespace LoginDirectorTests
             Setup_Test_Cache_Entry(-2, commonTestEmail);
 
             // Finally, run the test
-            Assert.AreEqual(requestController.DoesUserHaveValidSession(), true);
+            Assert.AreEqual(userHelpers.DoesUserHaveValidSession(requestController.ControllerContext.HttpContext, commonTestEmail).Result, true);
         }
 
         [TestMethod]
@@ -68,7 +69,7 @@ namespace LoginDirectorTests
             Setup_Test_Cache_Entry(-45, commonTestEmail);
 
             // Finally, run the test
-            Assert.AreEqual(requestController.DoesUserHaveValidSession(), false);
+            Assert.AreEqual(userHelpers.DoesUserHaveValidSession(requestController.ControllerContext.HttpContext, commonTestEmail).Result, false);
         }
 
         [TestMethod]
@@ -81,7 +82,7 @@ namespace LoginDirectorTests
             Setup_Test_Cache_Entry(-2, "testing@testmail.com");
 
             // Finally, run the test
-            Assert.AreEqual(requestController.DoesUserHaveValidSession(), false);
+            Assert.AreEqual(userHelpers.DoesUserHaveValidSession(requestController.ControllerContext.HttpContext, commonTestEmail).Result, false);
         }
 
         [TestMethod]

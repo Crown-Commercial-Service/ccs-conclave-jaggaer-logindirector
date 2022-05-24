@@ -38,7 +38,7 @@ namespace logindirector.Services
                     // We now need to map our response to a useful model to return
                     model = new UserStatusModel();
 
-                    if (responseModel.StatusCode == HttpStatusCode.NotFound)
+                    if (responseModel.StatusCode == HttpStatusCode.NotFound && responseModel.ResponseValue.Contains("not found in Jaggaer"))
                     {
                         // The user either doesn't exist in Jaegger, or their account is unmerged
                         model.UserStatus = AppConstants.Tenders_UserStatus_ActionRequired;

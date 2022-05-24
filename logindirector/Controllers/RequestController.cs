@@ -124,9 +124,9 @@ namespace logindirector.Controllers
         public async Task<IActionResult> ActionRequest()
         {
             // First, check to see that the user's session is valid in the central cache
-            string userEmail = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value;
+            string userSid = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Sid)?.Value;
 
-            if (await _userHelpers.DoesUserHaveValidSession(HttpContext, userEmail))
+            if (await _userHelpers.DoesUserHaveValidSession(HttpContext, userSid))
             {
                 // Update our session value to indicate that the user has now been processed within this session
                 HttpContext.Session.SetString(AppConstants.Session_ProcessingRequiredKey, "false");

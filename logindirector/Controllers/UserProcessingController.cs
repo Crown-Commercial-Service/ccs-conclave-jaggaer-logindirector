@@ -145,7 +145,8 @@ namespace logindirector.Controllers
             if (accountDecision == "merge")
             {
                 // User wants to merge their existing account - therefore, we need to send them off to Jaegger to perform one final authentication
-                string externalAuthenticationUrl = _configuration.GetValue<string>("ExternalAuthenticationPath");
+                string handbackUrl = "https://" + Request.Host.Host + _configuration.GetValue<string>("HandbackPath"),
+                    externalAuthenticationUrl =  _configuration.GetValue<string>("ExternalAuthenticationPath") + handbackUrl;
                 return Redirect(externalAuthenticationUrl);
             }
             else

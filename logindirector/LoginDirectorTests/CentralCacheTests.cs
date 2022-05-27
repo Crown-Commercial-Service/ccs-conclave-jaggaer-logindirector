@@ -19,8 +19,11 @@ namespace LoginDirectorTests
     public class CentralCacheTests
     {
         internal RequestController requestController;
+        internal UserHelpers userHelpers;
         internal UserProcessingController userProcessingController;
+        internal SessionController sessionController;
         string commonTestEmail = "test@testmail.com";
+        string commonSid = "12345678";
 
         [TestInitialize]
         public void Startup()
@@ -32,17 +35,18 @@ namespace LoginDirectorTests
             IMemoryCache memoryCache = serviceProvider.GetService<IMemoryCache>();
 
             IConfigurationRoot configuration = new ConfigurationBuilder().Build();
-            UserHelpers helpers = new UserHelpers(configuration);
+            userHelpers = new UserHelpers(configuration, memoryCache);
 
-            requestController = new RequestController(memoryCache, configuration, helpers);
+            requestController = new RequestController(memoryCache, configuration, userHelpers);
             userProcessingController = new UserProcessingController(null, null, null, memoryCache, configuration);
+            sessionController = new SessionController(configuration, memoryCache);
         }
 
         [TestMethod]
         public void User_With_No_User_Object_Should_Return_False()
         {
             // By default in these tests there will be no User object in session.  So just run the test directly
-            Assert.AreEqual(requestController.DoesUserHaveValidSession(), false);
+            Assert.AreEqual(userHelpers.DoesUserHaveValidSession(new DefaultHttpContext(), commonSid).Result, false);
         }
 
         [TestMethod]
@@ -52,10 +56,10 @@ namespace LoginDirectorTests
             Setup_Test_ClaimsPrincipal(commonTestEmail);
 
             // Now add an entry into the central cache which started 2 mins ago and should match
-            Setup_Test_Cache_Entry(-2, commonTestEmail);
+            Setup_Test_Cache_Entry(-2, commonTestEmail, commonSid);
 
             // Finally, run the test
-            Assert.AreEqual(requestController.DoesUserHaveValidSession(), true);
+            Assert.AreEqual(userHelpers.DoesUserHaveValidSession(requestController.ControllerContext.HttpContext, commonSid).Result, true);
         }
 
         [TestMethod]
@@ -65,10 +69,10 @@ namespace LoginDirectorTests
             Setup_Test_ClaimsPrincipal(commonTestEmail);
 
             // Now add an entry into the central cache which started 45 mins ago and should match
-            Setup_Test_Cache_Entry(-45, commonTestEmail);
+            Setup_Test_Cache_Entry(-45, commonTestEmail, commonSid);
 
             // Finally, run the test
-            Assert.AreEqual(requestController.DoesUserHaveValidSession(), false);
+            Assert.AreEqual(userHelpers.DoesUserHaveValidSession(requestController.ControllerContext.HttpContext, commonSid).Result, false);
         }
 
         [TestMethod]
@@ -78,10 +82,10 @@ namespace LoginDirectorTests
             Setup_Test_ClaimsPrincipal(commonTestEmail);
 
             // Now add an entry into the central cache which started 2 mins ago but does NOT match
-            Setup_Test_Cache_Entry(-2, "testing@testmail.com");
+            Setup_Test_Cache_Entry(-2, "testing@testmail.com", "245582612");
 
             // Finally, run the test
-            Assert.AreEqual(requestController.DoesUserHaveValidSession(), false);
+            Assert.AreEqual(userHelpers.DoesUserHaveValidSession(requestController.ControllerContext.HttpContext, commonSid).Result, false);
         }
 
         [TestMethod]
@@ -138,11 +142,28 @@ namespace LoginDirectorTests
             }
         }
 
+        [TestMethod]
+        public void Backchannel_LoggedOut_User_Should_Not_Have_Valid_Request()
+        {
+            // Create an User object which the test can use
+            Setup_Test_ClaimsPrincipal(commonTestEmail);
+
+            // Now add an entry into the central cache which started 2 mins ago and should match
+            Setup_Test_Cache_Entry(-2, commonTestEmail, commonSid);
+
+            // Fire the backchannel logout's removing the user from the central cache
+            sessionController.RemoveUserFromCentralSessionCache(commonSid);
+
+            // Finally, run the test
+            Assert.AreEqual(userHelpers.DoesUserHaveValidSession(requestController.ControllerContext.HttpContext, commonSid).Result, false);
+        }
+
         internal void Setup_Test_ClaimsPrincipal(string emailAddress)
         {
             List<Claim> claims = new List<Claim>()
             {
-                new Claim(ClaimTypes.Email, emailAddress)
+                new Claim(ClaimTypes.Email, emailAddress),
+                new Claim(ClaimTypes.Sid, commonSid)
             };
             ClaimsIdentity identity = new ClaimsIdentity(claims, "TestAuthType");
             ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(identity);
@@ -150,13 +171,13 @@ namespace LoginDirectorTests
             requestController.ControllerContext.HttpContext = new DefaultHttpContext { User = claimsPrincipal };
         }
 
-        internal void Setup_Test_Cache_Entry(int sessionAge, string emailAddress)
+        internal void Setup_Test_Cache_Entry(int sessionAge, string emailAddress, string sessionId)
         {
             UserSessionModel userEntry = new UserSessionModel
             {
                 userEmail = emailAddress,
                 sessionStart = DateTime.Now.AddMinutes(sessionAge),
-                sessionId = "123456789"
+                sessionId = sessionId
             };
 
             List<UserSessionModel> sessionsList = new List<UserSessionModel>

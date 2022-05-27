@@ -4,6 +4,8 @@ using logindirector.Models.AdaptorService;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LoginDirectorTests
 {
@@ -16,8 +18,13 @@ namespace LoginDirectorTests
         [TestInitialize]
         public void Startup()
         {
+            IServiceCollection services = new ServiceCollection();
+            services.AddMemoryCache();
+            ServiceProvider serviceProvider = services.BuildServiceProvider();
+            IMemoryCache memoryCache = serviceProvider.GetService<IMemoryCache>();
+
             IConfigurationRoot configuration = new ConfigurationBuilder().Build();
-            userHelpers = new UserHelpers(configuration);
+            userHelpers = new UserHelpers(configuration, memoryCache);
             userModel = new AdaptorUserModel
             {
                 coreRoles = new List<AdaptorUserRoleModel>(),

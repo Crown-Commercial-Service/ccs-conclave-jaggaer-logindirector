@@ -46,7 +46,8 @@ namespace logindirector.Controllers
             // We need to make sure the user has a valid session before we do anything.  They do, UNLESS this isn't their first request this session and there's no central cache entry
             bool validSession = true;
             string userEmail = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value,
-                userSid = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Sid)?.Value;
+                userSid = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Sid)?.Value,
+                requestDetails = HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey);
 
             if (!string.IsNullOrWhiteSpace(HttpContext.Session.GetString(AppConstants.Session_UserPreAuthenticated)))
             {
@@ -58,7 +59,7 @@ namespace logindirector.Controllers
                 }
             }
 
-            if (validSession)
+            if (validSession && !String.IsNullOrWhiteSpace(requestDetails))
             {
                 // Set a session value to indicate that the user is as yet unprocessed
                 HttpContext.Session.SetString(AppConstants.Session_ProcessingRequiredKey, "true");

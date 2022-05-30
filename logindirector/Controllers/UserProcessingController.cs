@@ -98,6 +98,7 @@ namespace logindirector.Controllers
                                 else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_Unauthorised)
                                 {
                                     // The user is not authorised to use the service - display the unauthorised message
+                                    RollbarLocator.RollbarInstance.Error("Unauthorised response from Tenders display");
                                     ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
                                     return View("~/Views/Errors/Unauthorised.cshtml", model);
                                 }

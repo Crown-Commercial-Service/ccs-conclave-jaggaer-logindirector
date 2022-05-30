@@ -38,8 +38,6 @@ namespace logindirector.Services
                     // We now need to map our response to a useful model to return
                     model = new UserStatusModel();
 
-                    RollbarLocator.RollbarInstance.Error(userRouteUri + HttpUtility.HtmlEncode(username) + " --- " + responseModel.StatusCode.ToString());
-
                     if (responseModel.StatusCode == HttpStatusCode.NotFound && responseModel.ResponseValue.Contains("not found in Jaggaer"))
                     {
                         // The user either doesn't exist in Jaegger, or their account is unmerged

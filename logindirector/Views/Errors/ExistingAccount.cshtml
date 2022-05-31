@@ -1,0 +1,21 @@
+﻿@model ErrorViewModel
+
+@{
+    ViewData["Title"] = "Account Already Exists";
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <h1 class="govuk-heading-xl page-title page-title--tight">Public Procurement Gateway</h1>
+        @if (Model.Service != null && !String.IsNullOrWhiteSpace(Model.Service.ServiceDisplayName))
+        {
+            <p class="govuk-body">An account already exists within @Model.Service.ServiceDisplayName with the same account ID.</p>
+        }
+        <p class="govuk-body">Select merge option to merge accounts and maintain account procurement history.</p>
+        <br />
+        @if (Model != null && !String.IsNullOrWhiteSpace(Model.DashboardUrl))
+        {
+            <p class="govuk-body"><a href="@Model.DashboardUrl" class="govuk-button">Go back to your dashboard ></a></p>
+        }
+    </div>
+</div>

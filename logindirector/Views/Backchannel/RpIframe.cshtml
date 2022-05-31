@@ -1,0 +1,48 @@
+﻿@model BackchannelModel
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"
+                integrity="sha512-nOQuvD9nKirvxDdvQ9OMqe2dgapbPB7vYAMrzJihw5m+aNcf0dX53m6YxM4LgA9u8e9eg9QX+/+mPu8kCNpV2A=="
+                crossorigin="anonymous"></script>
+
+        <script language="JavaScript" type="text/javascript">
+            setTimer();
+            var stat = "unchanged";
+            function check_session() {
+                let win = window.parent.document.getElementById("opIFrame").contentWindow;
+                let client_id = "@Model.ClientId";
+                let session_state = "@Model.SessionState";
+                let mes = client_id + ' ' + session_state;
+                let postMsgURL = "@Model.SecurityApiUrl";
+                win.postMessage(mes, postMsgURL);
+            }
+
+            function setTimer() {
+                check_session();
+                timerID = setInterval("check_session()", 10 * 1000);
+            }
+
+            window.addEventListener("message", receiveMessage, false);
+
+            function receiveMessage(e) {
+                if (e.origin !== "@Model.SecurityApiUrl") { return; }
+                stat = e.data;
+                noticeToParentWindow(stat);
+            }
+
+            function noticeToParentWindow(stat) {
+                if (stat == "changed" || stat == "error") {
+                    let secApiURl = "@Model.SecurityApiUrl";
+                    let redirect_uri = @Model.RedirectUrl + '/authsuccess';
+                    let client_id = "@Model.ClientId";
+                    let secApi = secApiURl + '/security/authorize?client_id=' + client_id + '&redirect_uri=' + redirect_uri + '&response_type=code' + '&scope=email profile openid offline_access&prompt=none';
+                    window.parent.location.href = secApi;
+                    return false;
+                }
+            }
+        </script>
+    </head>
+    <body></body>
+</html>

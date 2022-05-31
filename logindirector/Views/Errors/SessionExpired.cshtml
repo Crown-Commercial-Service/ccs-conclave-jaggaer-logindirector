@@ -1,0 +1,18 @@
+﻿@model ErrorViewModel
+
+@{
+    ViewData["Title"] = "Session Expired";
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <h1 class="govuk-heading-xl page-title page-title--tight">Public Procurement Gateway</h1>
+        <p class="govuk-body">Session expired.</p>
+        <p class="govuk-body">Please try to perform your request again.  If the problem persists then please contact CCS Support.</p>
+        <br />
+        @if (Model != null && !String.IsNullOrWhiteSpace(Model.DashboardUrl))
+        {
+            <p class="govuk-body"><a href="@Model.DashboardUrl" class="govuk-button">Go back to your dashboard ></a></p>
+        }
+    </div>
+</div>

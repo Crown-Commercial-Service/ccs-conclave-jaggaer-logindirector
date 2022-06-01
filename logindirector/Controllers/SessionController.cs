@@ -50,7 +50,6 @@ namespace logindirector.Controllers
                 {
                     JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
                     JwtSecurityToken tokenValues = handler.ReadJwtToken(logout_token);
-                    RollbarLocator.RollbarInstance.Error(logout_token);
 
                     if (tokenValues != null)
                     {
@@ -60,7 +59,6 @@ namespace logindirector.Controllers
                         {
                             // We have the session ID, so now just find and expire them from the central cache
                             RemoveUserFromCentralSessionCache(sessionIdClaim.Value);
-                            RollbarLocator.RollbarInstance.Error("Backchannel OK response - value used is " + sessionIdClaim.Value);
 
                             // User should now be logged out, so return an OK response
                             return StatusCode(200);

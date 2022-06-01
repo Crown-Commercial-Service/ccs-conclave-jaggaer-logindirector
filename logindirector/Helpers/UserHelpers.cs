@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Caching.Memory;
+using Rollbar;
 
 namespace logindirector.Helpers
 {
@@ -113,12 +114,14 @@ namespace logindirector.Helpers
             // No valid user detected - expire their authentication if they have any, then return false
             try
             {
+                RollbarLocator.RollbarInstance.Error("Triggering user logout");
+
                 httpContext.Session.Clear();
                 await httpContext.SignOutAsync("CookieAuth");
             }
-            catch
+            catch (Exception ex)
             {
-                // Fail silently
+                RollbarLocator.RollbarInstance.Error(ex);
             }
 
             return false;

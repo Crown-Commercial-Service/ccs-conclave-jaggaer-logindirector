@@ -75,8 +75,9 @@ namespace logindirector.Controllers
                         // Serialise the model as JSON and store it in the session
                         HttpContext.Session.SetString(AppConstants.Session_UserKey, JsonConvert.SerializeObject(userModel));
 
-                        // Then add a record for this user to the central session cache
+                        // Then add a record for this user to the central session cache, and mark them as pre-authenticated
                         AddUserToCentralSessionCache(userModel);
+                        HttpContext.Session.SetString(AppConstants.Session_UserPreAuthenticated, "true");
 
                         // Now access the Tenders API to work out whether this user needs a account merge/creation or just forwarding
                         string accessToken = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Authentication)?.Value;

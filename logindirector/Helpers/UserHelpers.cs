@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Caching.Memory;
+using Rollbar;
 
 namespace logindirector.Helpers
 {
@@ -116,9 +117,10 @@ namespace logindirector.Helpers
                 httpContext.Session.Clear();
                 await httpContext.SignOutAsync("CookieAuth");
             }
-            catch
+            catch (Exception ex)
             {
-                // Fail silently
+                // Log error
+                RollbarLocator.RollbarInstance.Error(ex);
             }
 
             return false;

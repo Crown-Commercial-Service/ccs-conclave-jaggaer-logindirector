@@ -61,8 +61,14 @@ namespace logindirector.Services
                     else
                     {
                         // This is an unexpected error response from Tenders that we can't handle
+                        RollbarLocator.RollbarInstance.Info("Invalid Tenders Response - StatusCode: " + responseModel.StatusCode + " --- ResponseValue: " + responseModel.ResponseValue);
+
                         model.UserStatus = AppConstants.Tenders_UserStatus_Error;
                     }
+                }
+                else
+                {
+                    RollbarLocator.RollbarInstance.Error("Tenders API Request returned null response");
                 }
             }
             catch (Exception ex)

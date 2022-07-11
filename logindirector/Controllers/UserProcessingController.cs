@@ -49,6 +49,9 @@ namespace logindirector.Controllers
                 userSid = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Sid)?.Value,
                 requestDetails = HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey);
 
+            // TEMP logging for backchannel debug
+            RollbarLocator.RollbarInstance.Error("User SID from Auth is - " + userSid);
+
             if (!string.IsNullOrWhiteSpace(HttpContext.Session.GetString(AppConstants.Session_UserPreAuthenticated)))
             {
                 // This isn't the user's first request this session, so check whether they still have a session in the central cache
@@ -75,8 +78,9 @@ namespace logindirector.Controllers
                         // Serialise the model as JSON and store it in the session
                         HttpContext.Session.SetString(AppConstants.Session_UserKey, JsonConvert.SerializeObject(userModel));
 
-                        // Then add a record for this user to the central session cache
+                        // Then add a record for this user to the central session cache, and mark them as pre-authenticated
                         AddUserToCentralSessionCache(userModel);
+                        HttpContext.Session.SetString(AppConstants.Session_UserPreAuthenticated, "true");
 
                         // Now access the Tenders API to work out whether this user needs a account merge/creation or just forwarding
                         string accessToken = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Authentication)?.Value;
@@ -143,76 +147,90 @@ namespace logindirector.Controllers
         [Authorize]
         public async Task<IActionResult> ProcessUserMergeSelectionAsync(string accountDecision)
         {
-            if (accountDecision == "merge")
-            {
-                // User wants to merge their existing account - therefore, we need to send them off to Jaegger to perform one final authentication
-                string handbackUrl = "https://" + Request.Host.Host + _configuration.GetValue<string>("HandbackPath"),
-                    externalAuthenticationUrl =  _configuration.GetValue<string>("ExternalAuthenticationPath") + handbackUrl;
-                return Redirect(externalAuthenticationUrl);
-            }
-            else
-            {
-                // User wants to create a new account
-                string userEmail = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value;
-                string accessToken = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Authentication)?.Value;
+            // Before we do anything, we need to validate that the user still has an active session (i.e. there's not been a backchannel logout
+            string userSid = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Sid)?.Value;
 
-                if (!string.IsNullOrWhiteSpace(userEmail) && !string.IsNullOrWhiteSpace(accessToken))
+            if (!String.IsNullOrWhiteSpace(userSid) && await _userHelpers.DoesUserHaveValidSession(HttpContext, userSid))
+            {
+                // User has a valid session in the central cache.  Proceed with request
+                if (accountDecision == "merge")
                 {
-                    UserCreationModel userCreationModel = await _tendersClientServices.CreateJaeggerUser(userEmail, accessToken);
+                    // User wants to merge their existing account - therefore, we need to send them off to Jaegger to perform one final authentication
+                    string handbackUrl = "https://" + Request.Host.Host + _configuration.GetValue<string>("HandbackPath"),
+                        externalAuthenticationUrl = _configuration.GetValue<string>("ExternalAuthenticationPath") + handbackUrl;
+                    return Redirect(externalAuthenticationUrl);
+                }
+                else
+                {
+                    // User wants to create a new account
+                    string userEmail = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value;
+                    string accessToken = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Authentication)?.Value;
 
-                    if (userCreationModel != null)
+                    if (!string.IsNullOrWhiteSpace(userEmail) && !string.IsNullOrWhiteSpace(accessToken))
                     {
-                        // Now we have a user creation response, work out what to do with the user next
-                        if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_Success)
-                        {
-                            // User account has been created - now we can proceed to action their initial request
-                            return RedirectToAction("ActionRequest", "Request");
-                        }
-                        else
-                        {
-                            ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+                        UserCreationModel userCreationModel = await _tendersClientServices.CreateJaeggerUser(userEmail, accessToken);
 
-                            if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_Conflict)
+                        if (userCreationModel != null)
+                        {
+                            // Now we have a user creation response, work out what to do with the user next
+                            if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_Success)
                             {
-                                // There is a role mismatch for the user between PPG and Jaegger / CaT.  Display the role mismatch error message
-                                return View("~/Views/Errors/RoleConflict.cshtml", model);
+                                // User account has been created - now we can proceed to action their initial request
+                                return RedirectToAction("ActionRequest", "Request");
                             }
-                            else if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_MissingRole)
+                            else
                             {
-                                // The user is missing a Jaegger / CaT role in PPG.  Display the unauthorised message
-                                return View("~/Views/Errors/Unauthorised.cshtml", model);
-                            }
-                            else if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_HelpdeskRequired)
-                            {
-                                // The user's PPG setup is incorrect (both roles assigned).  Display a message directing the user to the helpdesk
-                                return View("~/Views/Errors/BothRolesAssigned.cshtml", model);
-                            }
-                            else if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_AlreadyExists)
-                            {
-                                // The user already exists in Jaegger / CaT.  Display the existing account message
-                                return View("~/Views/Errors/ExistingAccount.cshtml", model);
+                                ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+
+                                if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_Conflict)
+                                {
+                                    // There is a role mismatch for the user between PPG and Jaegger / CaT.  Display the role mismatch error message
+                                    return View("~/Views/Errors/RoleConflict.cshtml", model);
+                                }
+                                else if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_MissingRole)
+                                {
+                                    // The user is missing a Jaegger / CaT role in PPG.  Display the unauthorised message
+                                    return View("~/Views/Errors/Unauthorised.cshtml", model);
+                                }
+                                else if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_HelpdeskRequired)
+                                {
+                                    // The user's PPG setup is incorrect (both roles assigned).  Display a message directing the user to the helpdesk
+                                    return View("~/Views/Errors/BothRolesAssigned.cshtml", model);
+                                }
+                                else if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_AlreadyExists)
+                                {
+                                    // The user already exists in Jaegger / CaT.  Display the existing account message
+                                    return View("~/Views/Errors/ExistingAccount.cshtml", model);
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            // If we've got to here, the user isn't properly authenticated or the Tenders API gave us a generic error response, so display a generic creation error
-            ErrorViewModel errorModel = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
-            return View("~/Views/Errors/CreateError.cshtml", errorModel);
+                // If we've got to here, the user isn't properly authenticated or the Tenders API gave us a generic error response, so display a generic creation error
+                ErrorViewModel errorModel = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+                return View("~/Views/Errors/CreateError.cshtml", errorModel);
+            }
+            else
+            {
+                // User doesn't have a valid session, likely meaning they were backchannel logout'd.  Display session expiry
+                ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+                return View("~/Views/Errors/SessionExpired.cshtml", model);
+            }
         }
 
         // Route to receive users back from Jaegger once their account has been merged
         [HttpGet]
         [Route("/director/account-linked", Order = 1)]
         [Authorize]
-        public IActionResult ContinueProcessingMergedUser()
+        public async Task<IActionResult> ContinueProcessingMergedUserAsync()
         {
             // Firstly, since the user is coming back from an external service make sure their session with us still exists - if it doesn't, we can't continue
-            string userEmail = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value;
-            string accessToken = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Authentication)?.Value;
+            string userEmail = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value,
+                   accessToken = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Authentication)?.Value,
+                   userSid = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Sid)?.Value;
 
-            if (!string.IsNullOrWhiteSpace(userEmail) && !string.IsNullOrWhiteSpace(accessToken))
+            if (!string.IsNullOrWhiteSpace(userEmail) && !string.IsNullOrWhiteSpace(accessToken) && await _userHelpers.DoesUserHaveValidSession(HttpContext, userSid))
             {
                 // User is still in session - make sure we have their request details too though, else we've nothing to action
                 string requestSessionData = HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey);

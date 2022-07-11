@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.809.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "logindirector", "logindirector.csproj", "{E6D857B5-E1AE-4223-8D7B-AAB0C5B4D03A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoginDirectorTests", "LoginDirectorTests\LoginDirectorTests.csproj", "{B62E2AE3-0348-4AB3-AFDD-6A7EE157451B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoginDirectorTests", "LoginDirectorTests\LoginDirectorTests.csproj", "{A78FED79-99D1-4150-BA96-F933A88B7C4F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{E6D857B5-E1AE-4223-8D7B-AAB0C5B4D03A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E6D857B5-E1AE-4223-8D7B-AAB0C5B4D03A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E6D857B5-E1AE-4223-8D7B-AAB0C5B4D03A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B62E2AE3-0348-4AB3-AFDD-6A7EE157451B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B62E2AE3-0348-4AB3-AFDD-6A7EE157451B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B62E2AE3-0348-4AB3-AFDD-6A7EE157451B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B62E2AE3-0348-4AB3-AFDD-6A7EE157451B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A78FED79-99D1-4150-BA96-F933A88B7C4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A78FED79-99D1-4150-BA96-F933A88B7C4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A78FED79-99D1-4150-BA96-F933A88B7C4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A78FED79-99D1-4150-BA96-F933A88B7C4F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

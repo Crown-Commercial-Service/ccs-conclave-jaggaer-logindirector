@@ -86,8 +86,6 @@ namespace logindirector.Controllers
             if (_memoryCache.TryGetValue(cacheKey, out sessionsList))
             {
                 sessionsList = sessionsList.Where(p => p.sessionId != sessionId).ToList();
-
-                RollbarLocator.RollbarInstance.Error("Sessions count after logout - " + sessionsList.Count);
             }
 
             // We should now have a filtered list without entries with the specified session ID, so set it back into the cache

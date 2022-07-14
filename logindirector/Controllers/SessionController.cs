@@ -57,9 +57,6 @@ namespace logindirector.Controllers
 
                         if (sessionIdClaim != null && !string.IsNullOrWhiteSpace(sessionIdClaim.Value))
                         {
-                            // TEMP logging for backchannel debug
-                            RollbarLocator.RollbarInstance.Error("User SID from Backchannel is - " + sessionIdClaim.Value);
-
                             // We have the session ID, so now just find and expire them from the central cache
                             RemoveUserFromCentralSessionCache(sessionIdClaim.Value);
 
@@ -88,9 +85,6 @@ namespace logindirector.Controllers
 
             if (_memoryCache.TryGetValue(cacheKey, out sessionsList))
             {
-                // TEMP logging for backchannel debug
-                RollbarLocator.RollbarInstance.Error("triggering logout for SID - " + sessionId + " - Entries before - " + sessionsList.Count);
-
                 sessionsList = sessionsList.Where(p => p.sessionId != sessionId).ToList();
 
                 RollbarLocator.RollbarInstance.Error("Sessions count after logout - " + sessionsList.Count);

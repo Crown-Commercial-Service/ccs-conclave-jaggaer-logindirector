@@ -105,9 +105,6 @@ namespace logindirector.Helpers
 
                     if (userCacheEntry != null)
                     {
-                        // TEMP logging for backchannel debug
-                        RollbarLocator.RollbarInstance.Error("Entry found in cache for SID - " + userSid);
-
                         // User has a valid entry in the central cache - return true
                         return true;
                     }
@@ -117,9 +114,6 @@ namespace logindirector.Helpers
             // No valid user detected - expire their authentication if they have any, then return false
             try
             {
-                // TEMP logging for backchannel debug
-                RollbarLocator.RollbarInstance.Error("No valid session, user is being logged out for SID - " + userSid);
-
                 httpContext.Session.Clear();
                 await httpContext.SignOutAsync("CookieAuth");
             }

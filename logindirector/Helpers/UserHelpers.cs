@@ -25,7 +25,7 @@ namespace logindirector.Helpers
             _memoryCache = memoryCache;
         }
 
-        public bool HasValidUserRoles(AdaptorUserModel userModel)
+        public bool HasValidUserRoles(AdaptorUserModel userModel, string domain)
         {
             // Check whether the user has a valid role for this application
             if (userModel.coreRoles != null && userModel.coreRoles.Any())
@@ -42,7 +42,16 @@ namespace logindirector.Helpers
             // Also check against additionalRoles incase a valid role has been added by means of a usergroup
             if (userModel.additionalRoles != null && userModel.additionalRoles.Any())
             {
-                List<string> relevantRoles = userModel.additionalRoles.Where(r => r == AppConstants.RoleKey_JaeggerSupplier || r == AppConstants.RoleKey_JaeggerBuyer || r == AppConstants.RoleKey_CatUser || r == AppConstants.RoleKey_CatAdmin).ToList();
+                List<string> relevantRoles = new List<string>();
+
+                if (domain == _configuration.GetValue<string>("ExitDomains:JaeggerDomain"))
+                {
+                    relevantRoles = userModel.additionalRoles.Where(r => r == AppConstants.RoleKey_JaeggerSupplier || r == AppConstants.RoleKey_JaeggerBuyer || r == AppConstants.RoleKey_CatUser || r == AppConstants.RoleKey_CatAdmin).ToList();
+                }
+                else
+                {
+                    relevantRoles = userModel.additionalRoles.Where(r => r == AppConstants.RoleKey_JaeggerBuyer || r == AppConstants.RoleKey_CatUser || r == AppConstants.RoleKey_CatAdmin).ToList();
+                }
 
                 if (relevantRoles != null && relevantRoles.Any())
                 {

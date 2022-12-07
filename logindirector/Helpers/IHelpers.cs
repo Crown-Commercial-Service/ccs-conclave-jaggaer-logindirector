@@ -7,7 +7,7 @@ namespace logindirector.Helpers
 {
     public interface IHelpers
     {
-        bool HasValidUserRoles(AdaptorUserModel userModel);
+        bool HasValidUserRoles(AdaptorUserModel userModel, string domain);
 
         ErrorViewModel BuildErrorModelForUser(string sessionUserRequestJson);
 

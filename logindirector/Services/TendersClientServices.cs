@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Rollbar;
 using logindirector.Constants;
 using logindirector.Models.TendersApi;
+using Newtonsoft.Json;
 
 namespace logindirector.Services
 {
@@ -22,7 +23,7 @@ namespace logindirector.Services
         }
 
         // Retrieves the status of a Jaegger user matching the authenticated user
-        public async Task<UserStatusModel> GetUserStatus(string username, string accessToken)
+        public async Task<UserStatusModel> GetUserStatus(string username, string accessToken, string domain)
         {
             UserStatusModel model = null;
 
@@ -55,8 +56,23 @@ namespace logindirector.Services
                     }
                     else if (responseModel.StatusCode == HttpStatusCode.OK)
                     {
-                        // The user exists in Jaegger and their account has already been merged
-                        model.UserStatus = AppConstants.Tenders_UserStatus_AlreadyMerged;
+                        // Status suggests already merged, but we need to check that the response marries up to this
+                        if (domain == _configuration.GetValue<string>("ExitDomains:CatDomain"))
+                        {
+                            ExistingUserRolesModel existingRolesModel = JsonConvert.DeserializeObject<ExistingUserRolesModel>(responseModel.ResponseValue);
+
+                            if (existingRolesModel != null && !existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Buyer))
+                            {
+                                // User is on the CAS domain and does not have an existing buyer merged, so despite the 200 this needs flagging to go to the merge prompt
+                                model.UserStatus = AppConstants.Tenders_UserStatus_ActionRequired;
+                            }
+                        }
+
+                        if (String.IsNullOrWhiteSpace(model.UserStatus))
+                        {
+                            // The user exists in Jaegger and their account has already been merged successfully
+                            model.UserStatus = AppConstants.Tenders_UserStatus_AlreadyMerged;
+                        }
                     }
                     else
                     {

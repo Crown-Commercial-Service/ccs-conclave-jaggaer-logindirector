@@ -33,5 +33,8 @@
 
         public static string Display_JaeggerServiceName = "CCS eSourcing";
         public static string Display_CatServiceName = "Contract Award Service";
+
+        public static string ExistingRoleKey_Buyer = "buyer";
+        public static string ExistingRoleKey_Supplier = "supplier";
     }
 }

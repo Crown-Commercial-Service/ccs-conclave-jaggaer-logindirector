@@ -93,7 +93,7 @@ namespace logindirector.Controllers
                                 if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_ActionRequired)
                                 {
                                     // The user needs to either merge or create a Jaegger / CaT account - display the merge prompt
-                                    ServiceViewModel model = GetServiceViewModelForRequest();
+                                    ServiceViewModel model = GetServiceViewModelForRequest(userModel);
 
                                     return View("~/Views/Merging/MergePrompt.cshtml", model);
                                 }
@@ -295,14 +295,14 @@ namespace logindirector.Controllers
         }
 
         // Uses the request data stored in session to build a ServiceViewModel for use later in views
-        internal ServiceViewModel GetServiceViewModelForRequest()
+        internal ServiceViewModel GetServiceViewModelForRequest(AdaptorUserModel userModel)
         {
             ServiceViewModel model = new ServiceViewModel();
 
             // Get the request data from session
             string requestSessionData = HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey);
 
-            if (!string.IsNullOrWhiteSpace(requestSessionData))
+            if (!string.IsNullOrWhiteSpace(requestSessionData) && userModel != null)
             {
                 RequestSessionModel storedRequestModel = JsonConvert.DeserializeObject<RequestSessionModel>(requestSessionData);
 
@@ -312,11 +312,22 @@ namespace logindirector.Controllers
                     {
                         // Looks like a Jaegger request
                         model.ServiceDisplayName = AppConstants.Display_JaeggerServiceName;
+
+                        // For Jaegger requests we need to check the additional roles in the userModel, so we know if we need to display an error message in the view
+                        if (userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && !userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerSupplier))
+                        {
+                            model.ShowBuyerError = true;
+                        }
+                        else if (!userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerSupplier))
+                        {
+                            model.ShowSupplierError = true;
+                        }
                     }
                     else
                     {
                         // Must be a CaT request
                         model.ServiceDisplayName = AppConstants.Display_CatServiceName;
+                        model.ShowBuyerError = true;
                     }
                 }
             }

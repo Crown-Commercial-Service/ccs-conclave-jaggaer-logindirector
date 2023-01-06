@@ -66,7 +66,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: ${{ github.base_ref }}-deploymentArchive
-          path: ${{ github.workspace }}/logindirector/bin/Debug/netcoreapp3.1/publish/
+          path: ${{ github.workspace }}/logindirector/bin/Debug/net6.0/publish/
 
   deploy:
     if: github.event.pull_request.merged
@@ -100,7 +100,7 @@ jobs:
         uses: actions/download-artifact@v2.0.10
         with:
           name: ${{ github.base_ref}}-deploymentArchive
-          path: ${{ github.workspace }}/logindirector/bin/Release/netcoreapp3.1/publish/
+          path: ${{ github.workspace }}/logindirector/bin/Release/net6.0/publish/
 
       - name: Deploy to Cloud Foundry - development
         id: cf_dev

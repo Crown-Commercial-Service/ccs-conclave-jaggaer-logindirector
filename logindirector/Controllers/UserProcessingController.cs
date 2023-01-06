@@ -120,13 +120,13 @@ namespace logindirector.Controllers
                     else
                     {
                         // User is not permitted to use the Login Director - log error, and present error
-                        if (userModel == null)
-                        {
-                            RollbarLocator.RollbarInstance.Info("Adaptor response appears to be null for user - " + userEmail);
-                        }
-                        else if (!_userHelpers.HasValidUserRoles(userModel))
+                        if (userModel != null)
                         {
                             RollbarLocator.RollbarInstance.Info("User Failed Valid Roles Check - " + userEmail);
+                        }
+                        else
+                        {
+                            RollbarLocator.RollbarInstance.Info("Adaptor response appears to be null for user - " + userEmail);
                         }
 
                         ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));

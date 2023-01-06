@@ -99,6 +99,7 @@ namespace logindirector.Controllers
                                 else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_Unauthorised)
                                 {
                                     // The user is not authorised to use the service - display the unauthorised message
+                                    RollbarLocator.RollbarInstance.Info("Tenders GET response is Unauthorised for user - " + userEmail);
                                     ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
                                     return View("~/Views/Errors/Unauthorised.cshtml", model);
                                 }
@@ -119,7 +120,14 @@ namespace logindirector.Controllers
                     else
                     {
                         // User is not permitted to use the Login Director - log error, and present error
-                        RollbarLocator.RollbarInstance.Error("Attempted access by unauthorised SSO user - " + userEmail);
+                        if (userModel != null)
+                        {
+                            RollbarLocator.RollbarInstance.Info("User Failed Valid Roles Check - " + userEmail);
+                        }
+                        else
+                        {
+                            RollbarLocator.RollbarInstance.Info("Adaptor response appears to be null for user - " + userEmail);
+                        }
 
                         ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
                         return View("~/Views/Errors/Unauthorised.cshtml", model);
@@ -187,6 +195,7 @@ namespace logindirector.Controllers
                                 else if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_MissingRole)
                                 {
                                     // The user is missing a Jaegger / CaT role in PPG.  Display the unauthorised message
+                                    RollbarLocator.RollbarInstance.Info("Tenders PUT response is Unauthorised for user - " + userEmail);
                                     return View("~/Views/Errors/Unauthorised.cshtml", model);
                                 }
                                 else if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_HelpdeskRequired)

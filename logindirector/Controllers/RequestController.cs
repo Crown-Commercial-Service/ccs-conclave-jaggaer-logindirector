@@ -15,6 +15,7 @@ using System.Runtime.CompilerServices;
 using logindirector.Helpers;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
+using Rollbar;
 
 // Controller to handle all incoming and outgoing requests to and from the application
 [assembly: InternalsVisibleTo("LoginDirectorTests")]
@@ -234,6 +235,7 @@ namespace logindirector.Controllers
         [Route("/director/unauthorised", Order = 1)]
         public IActionResult Unauthorised()
         {
+            RollbarLocator.RollbarInstance.Info("Fixed unauthorised access route has been triggered");
             ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
 
             return View("~/Views/Errors/Unauthorised.cshtml", model);

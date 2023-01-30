@@ -244,7 +244,7 @@ namespace logindirector
         private void ConfigureRollbarSingleton()
         {
             string rollbarAccessToken = _configuration.GetValue<string>("Rollbar:AccessToken");
-            string rollbarEnvironment = _currentEnvironment.EnvironmentName;
+            string rollbarEnvironment = _configuration.GetValue<string>("Rollbar:EnvironmentName");
 
             RollbarLocator.RollbarInstance.Configure(new RollbarLoggerConfig(rollbarAccessToken, rollbarEnvironment));
         }

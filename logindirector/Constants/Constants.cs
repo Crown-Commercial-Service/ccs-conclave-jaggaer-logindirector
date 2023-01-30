@@ -9,7 +9,6 @@
         public static string RoleKey_JaeggerSupplier = "JAEGGER_SUPPLIER";
         public static string RoleKey_JaeggerBuyer = "JAEGGER_BUYER";
         public static string RoleKey_CatUser = "CAT_USER";
-        public static string RoleKey_CatAdmin = "CAT_ADMINISTRATOR";
 
         public static string Session_UserKey = "UserModel";
         public static string Session_RequestDetailsKey = "RequestDetails";

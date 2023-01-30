@@ -42,7 +42,7 @@ namespace logindirector.Helpers
             // Also check against additionalRoles incase a valid role has been added by means of a usergroup
             if (userModel.additionalRoles != null && userModel.additionalRoles.Any())
             {
-                List<string> relevantRoles = userModel.additionalRoles.Where(r => r == AppConstants.RoleKey_JaeggerSupplier || r == AppConstants.RoleKey_JaeggerBuyer || r == AppConstants.RoleKey_CatUser || r == AppConstants.RoleKey_CatAdmin).ToList();
+                List<string> relevantRoles = userModel.additionalRoles.Where(r => r == AppConstants.RoleKey_JaeggerSupplier || r == AppConstants.RoleKey_JaeggerBuyer || r == AppConstants.RoleKey_CatUser).ToList();
 
                 if (relevantRoles != null && relevantRoles.Any())
                 {

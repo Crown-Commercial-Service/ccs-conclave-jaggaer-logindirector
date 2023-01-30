@@ -16,6 +16,7 @@ using logindirector.Helpers;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Rollbar;
+using Microsoft.AspNetCore.Diagnostics;
 
 // Controller to handle all incoming and outgoing requests to and from the application
 [assembly: InternalsVisibleTo("LoginDirectorTests")]
@@ -26,12 +27,14 @@ namespace logindirector.Controllers
         public IMemoryCache _memoryCache;
         public IConfiguration _configuration { get; }
         public IHelpers _userHelpers;
+        private readonly IHttpContextAccessor _context;
 
-        public RequestController(IMemoryCache memoryCache, IConfiguration configuration, IHelpers userHelpers)
+        public RequestController(IMemoryCache memoryCache, IConfiguration configuration, IHelpers userHelpers, IHttpContextAccessor context)
         {
             _memoryCache = memoryCache;
             _configuration = configuration;
             _userHelpers = userHelpers;
+            _context = context;
         }
 
         // Catch all route for all incoming requests EXCEPT the callback path - order set to 999 to ensure fixed routes supercede it
@@ -247,7 +250,17 @@ namespace logindirector.Controllers
         [Route("/director/unauthorised", Order = 1)]
         public IActionResult Unauthorised()
         {
-            RollbarLocator.RollbarInstance.Info("Fixed unauthorised access route has been triggered");
+            IExceptionHandlerPathFeature exceptionDetails = _context.HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+
+            if (exceptionDetails != null && exceptionDetails.Error != null)
+            {
+                RollbarLocator.RollbarInstance.Error(exceptionDetails.Error);
+            }
+            else
+            {
+                RollbarLocator.RollbarInstance.Error("Unhandled exception encountered with no available error detail");
+            }
+
             ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
 
             return View("~/Views/Errors/Unauthorised.cshtml", model);

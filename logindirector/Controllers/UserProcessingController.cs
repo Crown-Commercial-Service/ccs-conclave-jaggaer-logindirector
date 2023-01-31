@@ -248,7 +248,12 @@ namespace logindirector.Controllers
                     // We can check against any value in the model to confirm we still have the request details.  Just use the desired path here
                     if (storedRequestModel != null && !string.IsNullOrWhiteSpace(storedRequestModel.requestedPath))
                     {
-                        // User session seems to still exist.  User can now be sent on to process their original request
+                        // User session seems to still exist.  We now need to check with Tenders that their account is now in the expected state, before we action their request
+                        UserStatusModel userStatusModel = await _tendersClientServices.GetUserStatus(userEmail, accessToken, true);
+
+                        // TODO: React according to responses gleaned above
+
+                        // User seems to be as expected, so now action the request
                         return RedirectToAction("ActionRequest", "Request");
                     }
                 }

@@ -22,7 +22,7 @@ namespace logindirector.Services
         }
 
         // Retrieves the status of a Jaegger user matching the authenticated user
-        public async Task<UserStatusModel> GetUserStatus(string username, string accessToken)
+        public async Task<UserStatusModel> GetUserStatus(string username, string accessToken, bool isPostProcessing)
         {
             UserStatusModel model = null;
 
@@ -35,35 +35,16 @@ namespace logindirector.Services
 
                 if (responseModel != null)
                 {
-                    // We now need to map our response to a useful model to return
-                    model = new UserStatusModel();
-
-                    if (responseModel.StatusCode == HttpStatusCode.NotFound && responseModel.ResponseValue.Contains("not found in Jaggaer"))
+                    // We now need to process the response according to whether this request is pre or post user processing
+                    if (!isPostProcessing)
                     {
-                        // The user either doesn't exist in Jaegger, or their account is unmerged
-                        model.UserStatus = AppConstants.Tenders_UserStatus_ActionRequired;
-                    }
-                    else if (responseModel.StatusCode == HttpStatusCode.Forbidden)
-                    {
-                        // There's either a user mismatch at the Tenders end or the user doesn't have access to the service
-                        model.UserStatus = AppConstants.Tenders_UserStatus_Unauthorised;
-                    }
-                    else if (responseModel.StatusCode == HttpStatusCode.Conflict)
-                    {
-                        // There's a role mismatch between what PPG says the user should be and what Tenders says the user should be
-                        model.UserStatus = AppConstants.Tenders_UserStatus_Conflict;
-                    }
-                    else if (responseModel.StatusCode == HttpStatusCode.OK)
-                    {
-                        // The user exists in Jaegger and their account has already been merged
-                        model.UserStatus = AppConstants.Tenders_UserStatus_AlreadyMerged;
+                        // This is pre user processing
+                        model = HandleUserStatusResponsePreProcessing(responseModel);
                     }
                     else
                     {
-                        // This is an unexpected error response from Tenders that we can't handle
-                        RollbarLocator.RollbarInstance.Info("Invalid Tenders Response - StatusCode: " + responseModel.StatusCode + " --- ResponseValue: " + responseModel.ResponseValue);
-
-                        model.UserStatus = AppConstants.Tenders_UserStatus_Error;
+                        // This is post user processing
+                        model = HandleUserStatusResponsePostProcessing(responseModel);
                     }
                 }
                 else
@@ -75,6 +56,52 @@ namespace logindirector.Services
             {
                 RollbarLocator.RollbarInstance.Error(ex);
             }
+
+            return model;
+        }
+
+        // Processes a user response from Tenders GetUserStatus according to the rules in place for when querying before the user has been processed
+        internal UserStatusModel HandleUserStatusResponsePreProcessing(GenericResponseModel responseModel)
+        {
+            UserStatusModel model = new UserStatusModel();
+
+            if (responseModel.StatusCode == HttpStatusCode.NotFound && responseModel.ResponseValue.Contains("not found in Jaggaer"))
+            {
+                // The user either doesn't exist in Jaegger, or their account is unmerged
+                model.UserStatus = AppConstants.Tenders_UserStatus_ActionRequired;
+            }
+            else if (responseModel.StatusCode == HttpStatusCode.Forbidden)
+            {
+                // There's either a user mismatch at the Tenders end or the user doesn't have access to the service
+                model.UserStatus = AppConstants.Tenders_UserStatus_Unauthorised;
+            }
+            else if (responseModel.StatusCode == HttpStatusCode.Conflict)
+            {
+                // There's a role mismatch between what PPG says the user should be and what Tenders says the user should be
+                model.UserStatus = AppConstants.Tenders_UserStatus_Conflict;
+            }
+            else if (responseModel.StatusCode == HttpStatusCode.OK)
+            {
+                // The user exists in Jaegger and their account has already been merged
+                model.UserStatus = AppConstants.Tenders_UserStatus_AlreadyMerged;
+            }
+            else
+            {
+                // This is an unexpected error response from Tenders that we can't handle
+                RollbarLocator.RollbarInstance.Info("Invalid Tenders Response - StatusCode: " + responseModel.StatusCode + " --- ResponseValue: " + responseModel.ResponseValue);
+
+                model.UserStatus = AppConstants.Tenders_UserStatus_Error;
+            }
+
+            return model;
+        }
+
+        // Processes a user response from Tenders GetUserStatus according to the rules in place for when querying after the user has been processed
+        internal UserStatusModel HandleUserStatusResponsePostProcessing(GenericResponseModel responseModel)
+        {
+            UserStatusModel model = new UserStatusModel();
+
+            // TODO: New rules get applied here
 
             return model;
         }

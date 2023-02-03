@@ -116,18 +116,18 @@ namespace logindirector.Services
             {
                 if (responseModel.StatusCode == HttpStatusCode.OK && userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && rolesResponseModel.roles.Count == 1 && rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Buyer))
                 {
-                    // The user has been successfully merged and the roles Tenders reports matches with the roles PPG reports
+                    // The user has been successfully merged and the roles Tenders reports matches with the roles PPG reports (AC2)
                     model.UserStatus = AppConstants.Tenders_UserStatus_AlreadyMerged;
-                }
-                else if (responseModel.StatusCode == HttpStatusCode.OK && userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && !rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Buyer))
-                {
-                    // Looks like the merge failed at the Tenders end
-                    model.UserStatus = AppConstants.Tenders_UserStatus_MergeFailed;
                 }
                 else if (responseModel.StatusCode == HttpStatusCode.Conflict || (userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Supplier)) || (userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerSupplier) && rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Buyer)))
                 {
-                    // Looks like there's a role mismatch between the PPG roles and what Tenders has actually created
+                    // Looks like there's a role mismatch between the PPG roles and what Tenders has actually created (AC4, AC6)
                     model.UserStatus = AppConstants.Tenders_UserStatus_Conflict;
+                }
+                else if (responseModel.StatusCode == HttpStatusCode.OK && userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && !rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Buyer))
+                {
+                    // Looks like the merge failed at the Tenders end (AC3)
+                    model.UserStatus = AppConstants.Tenders_UserStatus_MergeFailed;
                 }
 
                 // TODO: Finish applying new rules

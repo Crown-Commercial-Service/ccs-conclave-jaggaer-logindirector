@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using logindirector.Constants;
+using logindirector.Models.AdaptorService;
 using logindirector.Models.TendersApi;
 using logindirector.Services;
 using Microsoft.Extensions.Configuration;
@@ -12,8 +14,10 @@ namespace LoginDirectorTests
 	public class UserStatusTests
 	{
 		internal TendersClientServices tendersClientServices;
+        string tendersBuyerResponseJson = "{\"roles\":[\"buyer\"]}";
+        string tendersSupplierResponseJson = "{\"roles\":[\"supplier\"]}";
 
-		[TestInitialize]
+        [TestInitialize]
 		public void Startup()
 		{
             IConfigurationRoot configuration = new ConfigurationBuilder().Build();
@@ -115,6 +119,86 @@ namespace LoginDirectorTests
 
 			return model;
         }
-	}
+
+        [TestMethod]
+        public void Postprocessing_PPG_Buyer_With_Jaegger_Buyer_Response_Should_Return_Already_Merged()
+        {
+            // Set up the mock objects we need to test against
+            GenericResponseModel responseModel = new GenericResponseModel
+            {
+                StatusCode = HttpStatusCode.OK,
+                ResponseValue = tendersBuyerResponseJson
+            };
+            AdaptorUserModel userModel = new AdaptorUserModel
+            {
+                additionalRoles = new List<string>()
+            };
+            userModel.additionalRoles.Add(AppConstants.RoleKey_JaeggerBuyer);
+
+            // Now test our fake objects against the method
+            UserStatusModel model = tendersClientServices.HandleUserStatusResponsePostProcessing(responseModel, userModel);
+            Assert.IsTrue(model.UserStatus == AppConstants.Tenders_UserStatus_AlreadyMerged);
+        }
+
+        [TestMethod]
+        public void Postprocessing_PPG_Buyer_Without_Jaegger_Buyer_Response_Should_Return_Merge_Failure()
+        {
+            // Set up the mock objects we need to test against
+            GenericResponseModel responseModel = new GenericResponseModel
+            {
+                StatusCode = HttpStatusCode.OK,
+                ResponseValue = "{\"roles\":[\"\"]}"
+            };
+            AdaptorUserModel userModel = new AdaptorUserModel
+            {
+                additionalRoles = new List<string>()
+            };
+            userModel.additionalRoles.Add(AppConstants.RoleKey_JaeggerBuyer);
+
+            // Now test our fake objects against the method
+            UserStatusModel model = tendersClientServices.HandleUserStatusResponsePostProcessing(responseModel, userModel);
+            Assert.IsTrue(model.UserStatus == AppConstants.Tenders_UserStatus_MergeFailed);
+        }
+
+        [TestMethod]
+        public void Postprocessing_PPG_Buyer_With_Jaegger_Supplier_Response_Should_Return_Conflict()
+        {
+            // Set up the mock objects we need to test against
+            GenericResponseModel responseModel = new GenericResponseModel
+            {
+                StatusCode = HttpStatusCode.OK,
+                ResponseValue = tendersSupplierResponseJson
+            };
+            AdaptorUserModel userModel = new AdaptorUserModel
+            {
+                additionalRoles = new List<string>()
+            };
+            userModel.additionalRoles.Add(AppConstants.RoleKey_JaeggerBuyer);
+
+            // Now test our fake objects against the method
+            UserStatusModel model = tendersClientServices.HandleUserStatusResponsePostProcessing(responseModel, userModel);
+            Assert.IsTrue(model.UserStatus == AppConstants.Tenders_UserStatus_Conflict);
+        }
+
+        [TestMethod]
+        public void Postprocessing_PPG_Supplier_With_Jaegger_Buyer_Response_Should_Return_Conflict()
+        {
+            // Set up the mock objects we need to test against
+            GenericResponseModel responseModel = new GenericResponseModel
+            {
+                StatusCode = HttpStatusCode.OK,
+                ResponseValue = tendersBuyerResponseJson
+            };
+            AdaptorUserModel userModel = new AdaptorUserModel
+            {
+                additionalRoles = new List<string>()
+            };
+            userModel.additionalRoles.Add(AppConstants.RoleKey_JaeggerSupplier);
+
+            // Now test our fake objects against the method
+            UserStatusModel model = tendersClientServices.HandleUserStatusResponsePostProcessing(responseModel, userModel);
+            Assert.IsTrue(model.UserStatus == AppConstants.Tenders_UserStatus_Conflict);
+        }
+    }
 }
 

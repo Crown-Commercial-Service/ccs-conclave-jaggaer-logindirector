@@ -8,6 +8,8 @@ using Microsoft.Extensions.Configuration;
 using Rollbar;
 using logindirector.Constants;
 using logindirector.Models.TendersApi;
+using logindirector.Models.AdaptorService;
+using Newtonsoft.Json;
 
 namespace logindirector.Services
 {
@@ -100,6 +102,17 @@ namespace logindirector.Services
         internal UserStatusModel HandleUserStatusResponsePostProcessing(GenericResponseModel responseModel)
         {
             UserStatusModel model = new UserStatusModel();
+
+            // First we need to map the roles detail in the response to a usable model
+            RolesResponseModel rolesResponseModel = new RolesResponseModel();
+
+            if (!String.IsNullOrWhiteSpace(responseModel.ResponseValue) && responseModel.ResponseValue.Contains("roles"))
+            {
+                rolesResponseModel = JsonConvert.DeserializeObject<RolesResponseModel>(responseModel.ResponseValue);
+            }
+
+            // Now we should have all the information we need to determine user state
+
 
             // TODO: New rules get applied here
 

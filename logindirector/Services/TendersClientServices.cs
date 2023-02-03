@@ -24,7 +24,7 @@ namespace logindirector.Services
         }
 
         // Retrieves the status of a Jaegger user matching the authenticated user
-        public async Task<UserStatusModel> GetUserStatus(string username, string accessToken, bool isPostProcessing)
+        public async Task<UserStatusModel> GetUserStatus(string username, string accessToken, AdaptorUserModel userModel, bool isPostProcessing)
         {
             UserStatusModel model = null;
 
@@ -46,7 +46,7 @@ namespace logindirector.Services
                     else
                     {
                         // This is post user processing
-                        model = HandleUserStatusResponsePostProcessing(responseModel);
+                        model = HandleUserStatusResponsePostProcessing(responseModel, userModel);
                     }
                 }
                 else
@@ -99,7 +99,7 @@ namespace logindirector.Services
         }
 
         // Processes a user response from Tenders GetUserStatus according to the rules in place for when querying after the user has been processed
-        internal UserStatusModel HandleUserStatusResponsePostProcessing(GenericResponseModel responseModel)
+        internal UserStatusModel HandleUserStatusResponsePostProcessing(GenericResponseModel responseModel, AdaptorUserModel userModel)
         {
             UserStatusModel model = new UserStatusModel();
 
@@ -112,9 +112,24 @@ namespace logindirector.Services
             }
 
             // Now we should have all the information we need to determine user state
+            if (responseModel.StatusCode == HttpStatusCode.OK && userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && rolesResponseModel.roles.Count == 1 && rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Buyer))
+            {
+                // The user has been successfully merged and the roles Tenders reports matches with the roles PPG reports
+                model.UserStatus = AppConstants.Tenders_UserStatus_AlreadyMerged;
+            }
+            else if (responseModel.StatusCode == HttpStatusCode.OK && userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && !rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Buyer))
+            {
+                // Looks like the merge failed at the Tenders end
+                model.UserStatus = AppConstants.Tenders_UserStatus_MergeFailed;
+            }
+            else if (responseModel.StatusCode == HttpStatusCode.Conflict || (userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Supplier)) || (userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerSupplier) && rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Buyer)))
+            {
+                // Looks like there's a role mismatch between the PPG roles and what Tenders has actually created
+                model.UserStatus = AppConstants.Tenders_UserStatus_Conflict;
+            }
 
-
-            // TODO: New rules get applied here
+            // TODO: Finish applying new rules
+            // Done up to and including AC6.  AC5 not done, comment added to case (unclear how it's achieved)
 
             return model;
         }

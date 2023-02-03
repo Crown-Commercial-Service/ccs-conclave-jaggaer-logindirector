@@ -234,9 +234,10 @@ namespace logindirector.Controllers
             // Firstly, since the user is coming back from an external service make sure their session with us still exists - if it doesn't, we can't continue
             string userEmail = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value,
                    accessToken = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Authentication)?.Value,
-                   userSid = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Sid)?.Value;
+                   userSid = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Sid)?.Value,
+                   userSessionData = HttpContext.Session.GetString(AppConstants.Session_UserKey);
 
-            if (!string.IsNullOrWhiteSpace(userEmail) && !string.IsNullOrWhiteSpace(accessToken) && await _userHelpers.DoesUserHaveValidSession(HttpContext, userSid))
+            if (!string.IsNullOrWhiteSpace(userEmail) && !string.IsNullOrWhiteSpace(accessToken) && !string.IsNullOrWhiteSpace(userSessionData) && await _userHelpers.DoesUserHaveValidSession(HttpContext, userSid))
             {
                 // User is still in session - make sure we have their request details too though, else we've nothing to action
                 string requestSessionData = HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey);
@@ -244,12 +245,13 @@ namespace logindirector.Controllers
                 if (!string.IsNullOrWhiteSpace(requestSessionData))
                 {
                     RequestSessionModel storedRequestModel = JsonConvert.DeserializeObject<RequestSessionModel>(requestSessionData);
+                    AdaptorUserModel storedUserModel = JsonConvert.DeserializeObject<AdaptorUserModel>(userSessionData);
 
                     // We can check against any value in the model to confirm we still have the request details.  Just use the desired path here
-                    if (storedRequestModel != null && !string.IsNullOrWhiteSpace(storedRequestModel.requestedPath))
+                    if (storedRequestModel != null && !string.IsNullOrWhiteSpace(storedRequestModel.requestedPath) && storedUserModel != null)
                     {
                         // User session seems to still exist.  We now need to check with Tenders that their account is now in the expected state, before we action their request
-                        UserStatusModel userStatusModel = await _tendersClientServices.GetUserStatus(userEmail, accessToken, true);
+                        UserStatusModel userStatusModel = await _tendersClientServices.GetUserStatus(userEmail, accessToken, true, storedUserModel);
 
                         // TODO: React according to responses gleaned above
 

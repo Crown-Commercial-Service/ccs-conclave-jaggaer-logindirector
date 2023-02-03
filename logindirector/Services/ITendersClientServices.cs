@@ -8,7 +8,7 @@ namespace logindirector.Services
     // Interface class for TendersClientServices
     public interface ITendersClientServices
     {
-        Task<UserStatusModel> GetUserStatus(string username, string accessToken, AdaptorUserModel userModel, bool isPostProcessing = false);
+        Task<UserStatusModel> GetUserStatus(string username, string accessToken, AdaptorUserModel userModel = null, bool isPostProcessing = false);
 
         Task<UserCreationModel> CreateJaeggerUser(string username, string accessToken);
 

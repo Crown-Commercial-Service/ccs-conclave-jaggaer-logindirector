@@ -251,7 +251,7 @@ namespace logindirector.Controllers
                     if (storedRequestModel != null && !string.IsNullOrWhiteSpace(storedRequestModel.requestedPath) && storedUserModel != null)
                     {
                         // User session seems to still exist.  We now need to check with Tenders that their account is now in the expected state, before we action their request
-                        UserStatusModel userStatusModel = await _tendersClientServices.GetUserStatus(userEmail, accessToken, true, storedUserModel);
+                        UserStatusModel userStatusModel = await _tendersClientServices.GetUserStatus(userEmail, accessToken, storedUserModel, true);
 
                         // TODO: React according to responses gleaned above
 

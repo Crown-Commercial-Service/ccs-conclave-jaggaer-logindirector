@@ -112,24 +112,27 @@ namespace logindirector.Services
             }
 
             // Now we should have all the information we need to determine user state
-            if (responseModel.StatusCode == HttpStatusCode.OK && userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && rolesResponseModel.roles.Count == 1 && rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Buyer))
+            if (userModel != null)
             {
-                // The user has been successfully merged and the roles Tenders reports matches with the roles PPG reports
-                model.UserStatus = AppConstants.Tenders_UserStatus_AlreadyMerged;
-            }
-            else if (responseModel.StatusCode == HttpStatusCode.OK && userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && !rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Buyer))
-            {
-                // Looks like the merge failed at the Tenders end
-                model.UserStatus = AppConstants.Tenders_UserStatus_MergeFailed;
-            }
-            else if (responseModel.StatusCode == HttpStatusCode.Conflict || (userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Supplier)) || (userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerSupplier) && rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Buyer)))
-            {
-                // Looks like there's a role mismatch between the PPG roles and what Tenders has actually created
-                model.UserStatus = AppConstants.Tenders_UserStatus_Conflict;
-            }
+                if (responseModel.StatusCode == HttpStatusCode.OK && userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && rolesResponseModel.roles.Count == 1 && rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Buyer))
+                {
+                    // The user has been successfully merged and the roles Tenders reports matches with the roles PPG reports
+                    model.UserStatus = AppConstants.Tenders_UserStatus_AlreadyMerged;
+                }
+                else if (responseModel.StatusCode == HttpStatusCode.OK && userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && !rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Buyer))
+                {
+                    // Looks like the merge failed at the Tenders end
+                    model.UserStatus = AppConstants.Tenders_UserStatus_MergeFailed;
+                }
+                else if (responseModel.StatusCode == HttpStatusCode.Conflict || (userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Supplier)) || (userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerSupplier) && rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Buyer)))
+                {
+                    // Looks like there's a role mismatch between the PPG roles and what Tenders has actually created
+                    model.UserStatus = AppConstants.Tenders_UserStatus_Conflict;
+                }
 
-            // TODO: Finish applying new rules
-            // Done up to and including AC6.  AC5 not done, comment added to case (unclear how it's achieved)
+                // TODO: Finish applying new rules
+                // Done up to and including AC6.  AC5 not done, comment added to case (unclear how it's achieved)
+            }
 
             return model;
         }

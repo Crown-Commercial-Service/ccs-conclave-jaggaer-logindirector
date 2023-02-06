@@ -10,6 +10,7 @@ using logindirector.Constants;
 using logindirector.Models.TendersApi;
 using logindirector.Models.AdaptorService;
 using Newtonsoft.Json;
+using logindirector.Models;
 
 namespace logindirector.Services
 {
@@ -24,7 +25,7 @@ namespace logindirector.Services
         }
 
         // Retrieves the status of a Jaegger user matching the authenticated user
-        public async Task<UserStatusModel> GetUserStatus(string username, string accessToken, AdaptorUserModel userModel, bool isPostProcessing)
+        public async Task<UserStatusModel> GetUserStatus(string username, string accessToken, AdaptorUserModel userModel, ServiceViewModel serviceModel, bool isPostProcessing)
         {
             UserStatusModel model = null;
 
@@ -46,7 +47,7 @@ namespace logindirector.Services
                     else
                     {
                         // This is post user processing
-                        model = HandleUserStatusResponsePostProcessing(responseModel, userModel);
+                        model = HandleUserStatusResponsePostProcessing(responseModel, userModel, serviceModel);
                     }
                 }
                 else
@@ -99,7 +100,7 @@ namespace logindirector.Services
         }
 
         // Processes a user response from Tenders GetUserStatus according to the rules in place for when querying after the user has been processed
-        internal UserStatusModel HandleUserStatusResponsePostProcessing(GenericResponseModel responseModel, AdaptorUserModel userModel)
+        internal UserStatusModel HandleUserStatusResponsePostProcessing(GenericResponseModel responseModel, AdaptorUserModel userModel, ServiceViewModel serviceModel)
         {
             UserStatusModel model = new UserStatusModel();
 
@@ -112,29 +113,69 @@ namespace logindirector.Services
             }
 
             // Now we should have all the information we need to determine user state
-            if (userModel != null)
+            if (userModel != null && serviceModel != null)
             {
-                if (responseModel.StatusCode == HttpStatusCode.OK && userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && rolesResponseModel.roles.Count == 1 && rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Buyer))
+                if (serviceModel.ServiceDisplayName == AppConstants.Display_CatServiceName)
                 {
-                    // The user has been successfully merged and the roles Tenders reports matches with the roles PPG reports (AC2)
-                    model.UserStatus = AppConstants.Tenders_UserStatus_AlreadyMerged;
+                    // We're dealing with a CAS request, so apply CAS validation rules
+                    model.UserStatus = GetPostProcessedUserStatusForCAS(responseModel, userModel, rolesResponseModel);
                 }
-                else if (responseModel.StatusCode == HttpStatusCode.Conflict || (userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Supplier)) || (userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerSupplier) && rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Buyer)))
+                else
                 {
-                    // Looks like there's a role mismatch between the PPG roles and what Tenders has actually created (AC4, AC6)
-                    model.UserStatus = AppConstants.Tenders_UserStatus_Conflict;
+                    // We're dealing with an eSourcing request, so apply eSourcing validation rules
+                    model.UserStatus = GetPostProcessedUserStatusForEsourcing(responseModel, userModel, rolesResponseModel);
                 }
-                else if (responseModel.StatusCode == HttpStatusCode.OK && userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && !rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Buyer))
-                {
-                    // Looks like the merge failed at the Tenders end (AC3)
-                    model.UserStatus = AppConstants.Tenders_UserStatus_MergeFailed;
-                }
-
-                // TODO: Finish applying new rules
-                // Done up to and including AC6.  AC5 not done, comment added to case (unclear how it's achieved)
             }
 
             return model;
+        }
+
+        // Applies user status validation logic for users coming to us on the CAS domain
+        internal string GetPostProcessedUserStatusForCAS(GenericResponseModel responseModel, AdaptorUserModel userModel, RolesResponseModel rolesResponseModel)
+        {
+            // By default, return an error should nothing override it
+            string userStatusValue = AppConstants.Tenders_UserStatus_Error;
+
+            if (responseModel.StatusCode == HttpStatusCode.OK && userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && rolesResponseModel.roles.Count == 1 && rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Buyer))
+            {
+                // The user has been successfully merged and the roles Tenders reports matches with the roles PPG reports (AC2, AC7)
+                userStatusValue = AppConstants.Tenders_UserStatus_AlreadyMerged;
+            }
+            else if (userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerSupplier) && !userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer))
+            {
+                // The user only has a Supplier role in PPG - this isn't valid for the CAS domain (AC6)
+                userStatusValue = AppConstants.Tenders_UserStatus_Conflict;
+            }
+            else if (responseModel.StatusCode == HttpStatusCode.Conflict || (userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Supplier) && !rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Buyer)))
+            {
+                // Looks like there's a role mismatch between the PPG roles and what Tenders has actually created (AC4)
+                userStatusValue = AppConstants.Tenders_UserStatus_MergeMismatch;
+            }
+            else if (responseModel.StatusCode == HttpStatusCode.OK && userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerSupplier) && rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Supplier) && !rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Buyer))
+            {
+                // Only one of the two accounts the user has has been merged, and it's the supplier.  As this is a CAS domain request this is not enough and more action is required (AC8)
+                userStatusValue = AppConstants.Tenders_UserStatus_ActionRequired;
+            }
+            else if (responseModel.StatusCode == HttpStatusCode.OK && userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && !rolesResponseModel.roles.Contains(AppConstants.Tenders_Roles_Buyer))
+            {
+                // Looks like the merge failed at the Tenders end (AC3)
+                userStatusValue = AppConstants.Tenders_UserStatus_MergeFailed;
+            }
+
+            // TODO: Currently missing AC5, AC9 and AC10.  Waiting to get response format that can tell me which org an account is in.  Done other than that
+
+            return userStatusValue;
+        }
+
+        // Applies user status validation logic for users coming to us on the eSourcing domain
+        internal string GetPostProcessedUserStatusForEsourcing(GenericResponseModel responseModel, AdaptorUserModel userModel, RolesResponseModel rolesResponseModel)
+        {
+            // By default, return an error should nothing override it
+            string userStatusValue = AppConstants.Tenders_UserStatus_Error;
+
+            // TODO: eSourcing validation rules go here
+
+            return userStatusValue;
         }
 
         // Requests Jaegger to create a new Jaegger user for the authenticated user

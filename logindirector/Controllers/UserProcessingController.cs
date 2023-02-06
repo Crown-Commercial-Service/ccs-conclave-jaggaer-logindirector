@@ -246,12 +246,13 @@ namespace logindirector.Controllers
                 {
                     RequestSessionModel storedRequestModel = JsonConvert.DeserializeObject<RequestSessionModel>(requestSessionData);
                     AdaptorUserModel storedUserModel = JsonConvert.DeserializeObject<AdaptorUserModel>(userSessionData);
+                    ServiceViewModel serviceModel = GetServiceViewModelForRequest();
 
                     // We can check against any value in the model to confirm we still have the request details.  Just use the desired path here
-                    if (storedRequestModel != null && !string.IsNullOrWhiteSpace(storedRequestModel.requestedPath) && storedUserModel != null)
+                    if (storedRequestModel != null && !string.IsNullOrWhiteSpace(storedRequestModel.requestedPath) && storedUserModel != null && serviceModel != null)
                     {
                         // User session seems to still exist.  We now need to check with Tenders that their account is now in the expected state, before we action their request
-                        UserStatusModel userStatusModel = await _tendersClientServices.GetUserStatus(userEmail, accessToken, storedUserModel, true);
+                        UserStatusModel userStatusModel = await _tendersClientServices.GetUserStatus(userEmail, accessToken, storedUserModel, serviceModel, true);
 
                         // TODO: React according to responses gleaned above
 

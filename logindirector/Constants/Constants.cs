@@ -22,6 +22,7 @@
         public static string Tenders_UserStatus_Error = "UnexpectedResponse";
         public static string Tenders_UserStatus_Unauthorised = "Unauthorised";
         public static string Tenders_UserStatus_Conflict = "RoleMismatch";
+        public static string Tenders_UserStatus_MergeMismatch = "MergeMismatch";
         public static string Tenders_UserStatus_MergeFailed = "UserMergeFailed";
 
         public static string Tenders_UserCreation_Success = "UserCreated";

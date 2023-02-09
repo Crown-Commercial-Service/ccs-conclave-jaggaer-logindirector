@@ -37,7 +37,9 @@ namespace LoginDirectorTests
             IConfigurationRoot configuration = new ConfigurationBuilder().Build();
             userHelpers = new UserHelpers(configuration, memoryCache);
 
-            requestController = new RequestController(memoryCache, configuration, userHelpers);
+            IHttpContextAccessor context = new HttpContextAccessor();
+
+            requestController = new RequestController(memoryCache, configuration, userHelpers, context);
             userProcessingController = new UserProcessingController(null, null, null, memoryCache, configuration);
             sessionController = new SessionController(configuration, memoryCache);
         }

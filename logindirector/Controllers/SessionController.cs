@@ -85,6 +85,11 @@ namespace logindirector.Controllers
 
             if (_memoryCache.TryGetValue(cacheKey, out sessionsList))
             {
+                if (sessionsList == null)
+                {
+                    sessionsList = new List<UserSessionModel>();
+                }
+
                 sessionsList = sessionsList.Where(p => p.sessionId != sessionId).ToList();
             }
 

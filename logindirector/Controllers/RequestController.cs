@@ -16,6 +16,7 @@ using logindirector.Helpers;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Rollbar;
+using Microsoft.AspNetCore.Diagnostics;
 
 // Controller to handle all incoming and outgoing requests to and from the application
 [assembly: InternalsVisibleTo("LoginDirectorTests")]
@@ -26,12 +27,14 @@ namespace logindirector.Controllers
         public IMemoryCache _memoryCache;
         public IConfiguration _configuration { get; }
         public IHelpers _userHelpers;
+        private readonly IHttpContextAccessor _context;
 
-        public RequestController(IMemoryCache memoryCache, IConfiguration configuration, IHelpers userHelpers)
+        public RequestController(IMemoryCache memoryCache, IConfiguration configuration, IHelpers userHelpers, IHttpContextAccessor context)
         {
             _memoryCache = memoryCache;
             _configuration = configuration;
             _userHelpers = userHelpers;
+            _context = context;
         }
 
         // Catch all route for all incoming requests EXCEPT the callback path - order set to 999 to ensure fixed routes supercede it
@@ -172,27 +175,39 @@ namespace logindirector.Controllers
 
         internal bool isUserFromSupportedSource()
         {
-            // Default response should always be that the request is not from a supported source, unless proven otherwise
-            bool isSupported = false;
+            bool isLocalSource = Convert.ToBoolean(Environment.GetEnvironmentVariable("IsLocal"));
 
-            // We need to inspect the domain that the request is coming from and determine whether it's one of our supported sources
-            if (Request?.Host != null && !string.IsNullOrWhiteSpace(Request.Host.Host))
+            if (isLocalSource)
             {
-                string requestSource = Request.Host.Host.ToLower();
-                List<string> supportedSources = new List<string>
+                // Application is running on local, so skip this check but also log a note to say we skipped it just incase it happens elsewhere so we can track it
+                RollbarLocator.RollbarInstance.Info("Apparent local access - skipping source check");
+
+                return true;
+            }
+            else
+            {
+                // Default response should always be that the request is not from a supported source, unless proven otherwise
+                bool isSupported = false;
+
+                // We need to inspect the domain that the request is coming from and determine whether it's one of our supported sources
+                if (Request?.Host != null && !string.IsNullOrWhiteSpace(Request.Host.Host))
+                {
+                    string requestSource = Request.Host.Host.ToLower();
+                    List<string> supportedSources = new List<string>
                 {
                     _configuration.GetValue<string>("SupportedSources:JaeggerSource"),
                     _configuration.GetValue<string>("SupportedSources:CatSource")
                 };
 
-                if (supportedSources.Contains(requestSource))
-                {
-                    // Request comes from a supported source
-                    isSupported = true;
+                    if (supportedSources.Contains(requestSource))
+                    {
+                        // Request comes from a supported source
+                        isSupported = true;
+                    }
                 }
-            }
 
-            return isSupported;
+                return isSupported;
+            }
         }
 
         internal void storeRequestDetailsInSession(RequestSessionModel model)
@@ -235,7 +250,17 @@ namespace logindirector.Controllers
         [Route("/director/unauthorised", Order = 1)]
         public IActionResult Unauthorised()
         {
-            RollbarLocator.RollbarInstance.Info("Fixed unauthorised access route has been triggered");
+            IExceptionHandlerPathFeature exceptionDetails = _context.HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+
+            if (exceptionDetails != null && exceptionDetails.Error != null)
+            {
+                RollbarLocator.RollbarInstance.Error(exceptionDetails.Error);
+            }
+            else
+            {
+                RollbarLocator.RollbarInstance.Error("Unhandled exception encountered with no available error detail");
+            }
+
             ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
 
             return View("~/Views/Errors/Unauthorised.cshtml", model);

@@ -265,19 +265,21 @@ namespace logindirector.Controllers
             if (userModel != null && !String.IsNullOrWhiteSpace(userModel.emailAddress))
             {
                 // A single entry in the cache needs to contain the user's email, an entry timestamp, and their session ID
-                List<UserSessionModel> sessionsList;
+                List<UserSessionModel> sessionsList = new List<UserSessionModel>(),
+                   cachedList = new List<UserSessionModel>();
                 string cacheKey = AppConstants.CentralCache_Key;
 
-                if (_memoryCache.TryGetValue(cacheKey, out sessionsList))
+                if (_memoryCache.TryGetValue(cacheKey, out cachedList))
                 {
-                    // The cache already has entries - filter out any expired ones
-                    sessionsList = sessionsList.Where(p => p.sessionStart > DateTime.Now.AddMinutes(-15)).ToList();
+                    if (cachedList != null && cachedList.Any())
+                    {
+                        // There's an active and valid cached list with entries, so use that instead of a new list
+                        sessionsList = cachedList;
+                    }
                 }
-                else
-                {
-                    // No existing entries in the cache, so start it fresh
-                    sessionsList = new List<UserSessionModel>();
-                }
+
+                // Now we have a valid sessions list - start by filtering out any expired ones
+                sessionsList = sessionsList.Where(p => p.sessionStart > DateTime.Now.AddMinutes(-15)).ToList();
 
                 // Now the list has been updated, if there's no existing entry for the current user, we need to add a new entry
                 UserSessionModel existingModel = sessionsList.FirstOrDefault(p => p.userEmail == userModel.emailAddress);

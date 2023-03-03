@@ -4,7 +4,6 @@
     public class AppConstants
     {
         public static string Adaptor_OrgSchemeType = "GB-CCS";
-        public static string Adaptor_ClientRoleAssignment = "Login Director";
 
         public static string RoleKey_JaeggerSupplier = "JAEGGER_SUPPLIER";
         public static string RoleKey_JaeggerBuyer = "JAEGGER_BUYER";

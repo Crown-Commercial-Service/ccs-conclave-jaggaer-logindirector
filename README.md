@@ -17,7 +17,7 @@ Technology Overview
 -------------------
 The core technologies for the project are:
 
-* .NET Core (C#) v3
+* .NET Core (C#) v6
 * .NET OAuth middleware
 * Razor templating
 * MSTest Test Framework

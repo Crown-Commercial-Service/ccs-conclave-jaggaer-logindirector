@@ -70,7 +70,7 @@ namespace logindirector.Controllers
                     // User appears to be successfully authenticated with SSO service - so fetch their user data from the adaptor service
                     AdaptorUserModel userModel = await _adaptorClientServices.GetUserInformation(userEmail);
 
-                    if (userModel != null && _userHelpers.HasValidUserRoles(userModel))
+                    if (userModel != null && _userHelpers.HasValidUserRoles(userModel, JsonConvert.DeserializeObject<RequestSessionModel>(requestDetails)))
                     {
                         // Serialise the model as JSON and store it in the session
                         HttpContext.Session.SetString(AppConstants.Session_UserKey, JsonConvert.SerializeObject(userModel));

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -26,13 +26,13 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Steeltoe.Common.Hosting" Version="3.2.3" />
     <PackageReference Include="Steeltoe.Management.CloudFoundryCore" Version="3.2.3" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.27.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.30.1" />
     <PackageReference Include="Rollbar.NetCore.AspNet" Version="5.2.0" />
     <PackageReference Include="Amazon.AspNetCore.DataProtection.SSM" Version="3.1.0" />
-    <PackageReference Include="Amazon.Extensions.Configuration.SystemsManager" Version="5.0.1" />
-    <PackageReference Include="AWSSDK.Core" Version="3.7.106.2" />
-    <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.101.30" />
-    <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="3.7.103.48" />
+    <PackageReference Include="Amazon.Extensions.Configuration.SystemsManager" Version="5.0.2" />
+    <PackageReference Include="AWSSDK.Core" Version="3.7.106.35" />
+    <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.102.2" />
+    <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="3.7.104.31" />
     <PackageReference Include="Steeltoe.Extensions.Configuration.CloudFoundryCore" Version="3.2.3" />
     <PackageReference Include="MSTest.TestFramework" Version="3.0.2" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />

@@ -34,7 +34,7 @@
     <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.103.1" />
     <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="3.7.104.35" />
     <PackageReference Include="Steeltoe.Extensions.Configuration.CloudFoundryCore" Version="3.2.3" />
-    <PackageReference Include="MSTest.TestFramework" Version="3.0.2" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.0.4" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="System.Security.Cryptography.Xml" Version="7.0.1" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />

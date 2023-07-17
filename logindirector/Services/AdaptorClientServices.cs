@@ -30,7 +30,7 @@ namespace logindirector.Services
                 // Fetch the information we need from the User Information route
                 string userInfoRouteUri = _configuration.GetValue<string>("SsoService:SsoDomain") + _configuration.GetValue<string>("SsoService:RoutePaths:AdaptorPath");
 
-                string responseContent = await PerformAdaptorRequest(userInfoRouteUri + "?user-name=" + HttpUtility.HtmlEncode(username));
+                string responseContent = await PerformAdaptorRequest(userInfoRouteUri + "?user-name=" + HttpUtility.UrlEncode(username));
 
                 if (responseContent != null)
                 {

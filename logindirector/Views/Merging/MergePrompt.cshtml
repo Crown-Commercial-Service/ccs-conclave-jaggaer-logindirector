@@ -9,6 +9,19 @@
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
             <h1 class="govuk-heading-xl page-title page-title--tight">Account creation</h1>
+
+            @if (Model.ShowBuyerError)
+            {
+                <p class="govuk-error-message">A buyer account is required to use this service.</p>
+                <br />
+            }
+
+            @if (Model.ShowSupplierError)
+            {
+                <p class="govuk-error-message">A supplier account is required to use this service.</p>
+                <br />
+            }
+
             <form id="merge-selection-form" method="POST" action="/director/process-user">
                 <div id="merge-selection-group" class="govuk-form-group">
                     <fieldset class="govuk-fieldset" aria-describedby="merge-prompt-error">

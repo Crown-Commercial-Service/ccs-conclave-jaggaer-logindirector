@@ -25,35 +25,6 @@ namespace logindirector.Helpers
             _memoryCache = memoryCache;
         }
 
-        public bool HasValidUserRoles(AdaptorUserModel userModel, RequestSessionModel requestSessionModel)
-        {
-            // Check whether the user has a valid role / domain configuration for this application via both coreRoles and additionalRoles, and session request object
-            if (userModel.coreRoles != null && userModel.coreRoles.Any())
-            {
-                if ((requestSessionModel.domain == _configuration.GetValue<string>("ExitDomains:CatDomain") && userModel.coreRoles.FirstOrDefault(r => r.roleKey == AppConstants.RoleKey_CatUser) != null) ||
-                    (requestSessionModel.domain == _configuration.GetValue<string>("ExitDomains:JaeggerDomain") && userModel.coreRoles.FirstOrDefault(r => r.roleKey == AppConstants.RoleKey_JaeggerBuyer) != null) ||
-                    (requestSessionModel.domain == _configuration.GetValue<string>("ExitDomains:JaeggerDomain") && userModel.coreRoles.FirstOrDefault(r => r.roleKey == AppConstants.RoleKey_JaeggerSupplier) != null))
-                {
-                    // Valid core role / domain configuration found - return true
-                    return true;
-                }
-            }
-
-            if (userModel.additionalRoles != null && userModel.additionalRoles.Any())
-            {
-                if ((requestSessionModel.domain == _configuration.GetValue<string>("ExitDomains:CatDomain") && userModel.additionalRoles.FirstOrDefault(r => r == AppConstants.RoleKey_CatUser) != null) ||
-                    (requestSessionModel.domain == _configuration.GetValue<string>("ExitDomains:JaeggerDomain") && userModel.additionalRoles.FirstOrDefault(r => r == AppConstants.RoleKey_JaeggerBuyer) != null) ||
-                    (requestSessionModel.domain == _configuration.GetValue<string>("ExitDomains:JaeggerDomain") && userModel.additionalRoles.FirstOrDefault(r => r == AppConstants.RoleKey_JaeggerSupplier) != null))
-                {
-                    // Valid additional role / domain configuration found - return true
-                    return true;
-                }
-            }
-
-            // No valid role / domain configuration found for this user - return false
-            return false;
-        }
-
         public ErrorViewModel BuildErrorModelForUser(string sessionUserRequestJson)
         {
             // An error has occurred processing the user's request and we need an ErrorViewModel to represent that in various views.  Spool one up

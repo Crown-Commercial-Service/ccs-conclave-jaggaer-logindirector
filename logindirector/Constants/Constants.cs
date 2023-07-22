@@ -1,6 +1,8 @@
 ﻿namespace logindirector.Constants
 {
-    // Class to hold all constants for the application
+    /**
+     * Class to hold all constants for the application
+     */
     public class AppConstants
     {
         public static string Adaptor_OrgSchemeType = "GB-CCS";
@@ -31,5 +33,8 @@
 
         public static string Display_JaeggerServiceName = "CCS eSourcing";
         public static string Display_CatServiceName = "Contract Award Service";
+
+        public static string ExistingRoleKey_Buyer = "buyer";
+        public static string ExistingRoleKey_Supplier = "supplier";
     }
 }

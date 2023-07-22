@@ -8,10 +8,13 @@ using Microsoft.Extensions.Configuration;
 using Rollbar;
 using logindirector.Constants;
 using logindirector.Models.TendersApi;
+using Newtonsoft.Json;
 
 namespace logindirector.Services
 {
-    // Service Client for the Tenders API service - where Jaegger operations are performed against
+    /**
+     * Service Client for the Tenders API service - where Jaegger operations are performed against
+     */
     public class TendersClientServices : ITendersClientServices
     {
         public IConfiguration _configuration { get; }
@@ -21,8 +24,10 @@ namespace logindirector.Services
             _configuration = configuration;
         }
 
-        // Retrieves the status of a Jaegger user matching the authenticated user
-        public async Task<UserStatusModel> GetUserStatus(string username, string accessToken)
+        /**
+         * Retrieves the status of a Jaegger user matching the authenticated user
+         */
+        public async Task<UserStatusModel> GetUserStatus(string username, string accessToken, string domain)
         {
             UserStatusModel model = null;
 
@@ -55,8 +60,8 @@ namespace logindirector.Services
                     }
                     else if (responseModel.StatusCode == HttpStatusCode.OK)
                     {
-                        // The user exists in Jaegger and their account has already been merged
-                        model.UserStatus = AppConstants.Tenders_UserStatus_AlreadyMerged;
+                        // Response suggests the user has already been merged, but we need to validate this
+                        model.UserStatus = ValidateTendersResponseMatchesMergedStatus(domain, responseModel);
                     }
                     else
                     {
@@ -79,7 +84,30 @@ namespace logindirector.Services
             return model;
         }
 
-        // Requests Jaegger to create a new Jaegger user for the authenticated user
+        /**
+         * Validates an OK status response from Tenders to be sure that it's really correct when on the CAS domain
+         */
+        public string ValidateTendersResponseMatchesMergedStatus(string domain, GenericResponseModel responseModel)
+        {
+            // Status suggests already merged, but we need to check that the response marries up to this
+            if (domain == _configuration.GetValue<string>("ExitDomains:CatDomain"))
+            {
+                ExistingUserRolesModel existingRolesModel = JsonConvert.DeserializeObject<ExistingUserRolesModel>(responseModel.ResponseValue);
+
+                if (existingRolesModel != null && !existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Buyer))
+                {
+                    // User is on the CAS domain and does not have an existing buyer merged, so despite the 200 this needs flagging to go to the merge prompt
+                    return AppConstants.Tenders_UserStatus_ActionRequired;
+                }
+            }
+
+            // If we've got to here, the user exists in Jaegger and their account has already been merged successfully
+            return AppConstants.Tenders_UserStatus_AlreadyMerged;
+        }
+
+        /**
+         * Requests Jaegger to create a new Jaegger user for the authenticated user
+         */
         public async Task<UserCreationModel> CreateJaeggerUser(string username, string accessToken)
         {
             UserCreationModel model = null;
@@ -136,7 +164,9 @@ namespace logindirector.Services
             return model;
         }
 
-        // Core method that performs a request to the Tenders API using parameters passed to it
+        /**
+         * Core method that performs a request to the Tenders API using parameters passed to it
+         */
         public async Task<GenericResponseModel> PerformTendersRequest(string routeUri, string accessToken, HttpMethod method)
         {
             GenericResponseModel model = null;

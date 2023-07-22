@@ -40,7 +40,7 @@ namespace LoginDirectorTests
             IHttpContextAccessor context = new HttpContextAccessor();
 
             requestController = new RequestController(memoryCache, configuration, userHelpers, context);
-            userProcessingController = new UserProcessingController(null, null, null, memoryCache, configuration);
+            userProcessingController = new UserProcessingController(null, null, null, memoryCache, configuration, null);
             sessionController = new SessionController(configuration, memoryCache);
         }
 

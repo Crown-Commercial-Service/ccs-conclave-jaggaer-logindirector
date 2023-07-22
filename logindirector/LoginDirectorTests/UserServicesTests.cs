@@ -7,13 +7,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using logindirector.Models;
+using logindirector.Services;
 
 namespace LoginDirectorTests
 {
     [TestClass]
     public class UserHelpersTests
     {
-        internal UserHelpers userHelpers;
+        internal IUserServices userServices;
         internal AdaptorUserModel userModel;
         internal RequestSessionModel requestSessionModel;
 
@@ -36,7 +37,7 @@ namespace LoginDirectorTests
 
             IConfigurationRoot configuration = new ConfigurationBuilder().AddInMemoryCollection(testConfiguration).Build();
 
-            userHelpers = new UserHelpers(configuration, memoryCache);
+            userServices = new UserServices(configuration);
             userModel = new AdaptorUserModel
             {
                 coreRoles = new List<AdaptorUserRoleModel>(),
@@ -53,7 +54,7 @@ namespace LoginDirectorTests
             requestSessionModel.domain = catTestDomain;
 
             // Now test our fake objects against the method
-            Assert.AreEqual(userHelpers.HasValidUserRoles(userModel, requestSessionModel), true);
+            Assert.AreEqual(userServices.DoesUserHaveValidRolePreProcessing(userModel, requestSessionModel), true);
         }
 
         [TestMethod]
@@ -64,7 +65,7 @@ namespace LoginDirectorTests
             requestSessionModel.domain = jaeggerTestDomain;
 
             // Now test our fake objects against the method
-            Assert.AreEqual(userHelpers.HasValidUserRoles(userModel, requestSessionModel), false);
+            Assert.AreEqual(userServices.DoesUserHaveValidRolePreProcessing(userModel, requestSessionModel), false);
         }
 
         [TestMethod]
@@ -75,7 +76,7 @@ namespace LoginDirectorTests
             requestSessionModel.domain = jaeggerTestDomain;
 
             // Now test our fake objects against the method
-            Assert.AreEqual(userHelpers.HasValidUserRoles(userModel, requestSessionModel), true);
+            Assert.AreEqual(userServices.DoesUserHaveValidRolePreProcessing(userModel, requestSessionModel), true);
         }
 
         [TestMethod]
@@ -86,7 +87,7 @@ namespace LoginDirectorTests
             requestSessionModel.domain = jaeggerTestDomain;
 
             // Now test our fake objects against the method
-            Assert.AreEqual(userHelpers.HasValidUserRoles(userModel, requestSessionModel), true);
+            Assert.AreEqual(userServices.DoesUserHaveValidRolePreProcessing(userModel, requestSessionModel), true);
         }
 
         [TestMethod]
@@ -97,7 +98,7 @@ namespace LoginDirectorTests
             requestSessionModel.domain = catTestDomain;
 
             // Now test our fake objects against the method
-            Assert.AreEqual(userHelpers.HasValidUserRoles(userModel, requestSessionModel), false);
+            Assert.AreEqual(userServices.DoesUserHaveValidRolePreProcessing(userModel, requestSessionModel), false);
         }
 
         [TestMethod]
@@ -108,14 +109,14 @@ namespace LoginDirectorTests
             requestSessionModel.domain = catTestDomain;
 
             // Now test our fake objects against the method
-            Assert.AreEqual(userHelpers.HasValidUserRoles(userModel, requestSessionModel), false);
+            Assert.AreEqual(userServices.DoesUserHaveValidRolePreProcessing(userModel, requestSessionModel), false);
         }
 
         [TestMethod]
         public void User_Without_Valid_Role_Should_Return_False()
         {
             // Test our fake object against this method with no roles added
-            Assert.AreEqual(userHelpers.HasValidUserRoles(userModel, requestSessionModel), false);
+            Assert.AreEqual(userServices.DoesUserHaveValidRolePreProcessing(userModel, requestSessionModel), false);
         }
     }
 }

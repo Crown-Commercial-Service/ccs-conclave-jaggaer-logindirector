@@ -7,8 +7,6 @@ namespace logindirector.Helpers
 {
     public interface IHelpers
     {
-        bool HasValidUserRoles(AdaptorUserModel userModel, RequestSessionModel requestSessionModel);
-
         ErrorViewModel BuildErrorModelForUser(string sessionUserRequestJson);
 
         Task<bool> DoesUserHaveValidSession(HttpContext httpContext, string userSid);

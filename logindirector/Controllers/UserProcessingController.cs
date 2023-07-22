@@ -24,14 +24,16 @@ namespace logindirector.Controllers
     {
         public IAdaptorClientServices _adaptorClientServices;
         public ITendersClientServices _tendersClientServices;
+        public IUserServices _userServices;
         public IHelpers _userHelpers;
         public IMemoryCache _memoryCache;
         public IConfiguration _configuration { get; }
 
-        public UserProcessingController(IAdaptorClientServices adaptorClientServices, ITendersClientServices tendersClientServices, IHelpers userHelpers, IMemoryCache memoryCache, IConfiguration configuration)
+        public UserProcessingController(IAdaptorClientServices adaptorClientServices, ITendersClientServices tendersClientServices, IHelpers userHelpers, IMemoryCache memoryCache, IConfiguration configuration, IUserServices userServices)
         {
             _adaptorClientServices = adaptorClientServices;
             _tendersClientServices = tendersClientServices;
+            _userServices = userServices;
             _userHelpers = userHelpers;
             _memoryCache = memoryCache;
             _configuration = configuration;
@@ -69,8 +71,9 @@ namespace logindirector.Controllers
                 {
                     // User appears to be successfully authenticated with SSO service - so fetch their user data from the adaptor service
                     AdaptorUserModel userModel = await _adaptorClientServices.GetUserInformation(userEmail);
+                    RequestSessionModel requestModel = JsonConvert.DeserializeObject<RequestSessionModel>(requestDetails);
 
-                    if (userModel != null && _userHelpers.HasValidUserRoles(userModel, JsonConvert.DeserializeObject<RequestSessionModel>(requestDetails)))
+                    if (userModel != null && requestModel != null && _userServices.DoesUserHaveValidRolePreProcessing(userModel, requestModel))
                     {
                         // Serialise the model as JSON and store it in the session
                         HttpContext.Session.SetString(AppConstants.Session_UserKey, JsonConvert.SerializeObject(userModel));
@@ -84,7 +87,7 @@ namespace logindirector.Controllers
 
                         if (!string.IsNullOrWhiteSpace(accessToken))
                         {
-                            UserStatusModel userStatusModel = await _tendersClientServices.GetUserStatus(userEmail, accessToken);
+                            UserStatusModel userStatusModel = await _tendersClientServices.GetUserStatus(userEmail, accessToken, requestModel.domain);
 
                             if (userStatusModel != null)
                             {
@@ -92,7 +95,7 @@ namespace logindirector.Controllers
                                 if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_ActionRequired)
                                 {
                                     // The user needs to either merge or create a Jaegger / CaT account - display the merge prompt
-                                    ServiceViewModel model = GetServiceViewModelForRequest();
+                                    ServiceViewModel model = GetServiceViewModelForRequest(userModel);
 
                                     return View("~/Views/Merging/MergePrompt.cshtml", model);
                                 }
@@ -304,15 +307,17 @@ namespace logindirector.Controllers
             }
         }
 
-        // Uses the request data stored in session to build a ServiceViewModel for use later in views
-        internal ServiceViewModel GetServiceViewModelForRequest()
+        /**
+         * Uses the request data stored in session to build a ServiceViewModel for use later in views
+         */
+        internal ServiceViewModel GetServiceViewModelForRequest(AdaptorUserModel userModel)
         {
             ServiceViewModel model = new ServiceViewModel();
 
             // Get the request data from session
             string requestSessionData = HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey);
 
-            if (!string.IsNullOrWhiteSpace(requestSessionData))
+            if (!string.IsNullOrWhiteSpace(requestSessionData) && userModel != null)
             {
                 RequestSessionModel storedRequestModel = JsonConvert.DeserializeObject<RequestSessionModel>(requestSessionData);
 
@@ -322,11 +327,22 @@ namespace logindirector.Controllers
                     {
                         // Looks like a Jaegger request
                         model.ServiceDisplayName = AppConstants.Display_JaeggerServiceName;
+
+                        // For Jaegger requests we need to check the additional roles in the userModel, so we know if we need to display an error message in the view
+                        if (userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && !userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerSupplier))
+                        {
+                            model.ShowBuyerError = true;
+                        }
+                        else if (!userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerSupplier))
+                        {
+                            model.ShowSupplierError = true;
+                        }
                     }
                     else
                     {
                         // Must be a CaT request
                         model.ServiceDisplayName = AppConstants.Display_CatServiceName;
+                        model.ShowBuyerError = true;
                     }
                 }
             }

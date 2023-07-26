@@ -9,10 +9,12 @@ namespace logindirector.Services
      */
     public interface ITendersClientServices
     {
-        Task<UserStatusModel> GetUserStatus(string username, string accessToken, string domain);
+        Task<UserStatusModel> GetUserStatusPreProcessing(string username, string accessToken, string domain);
 
         Task<UserCreationModel> CreateJaeggerUser(string username, string accessToken);
 
         Task<GenericResponseModel> PerformTendersRequest(string routeUri, string accessToken, HttpMethod method);
+
+        Task<UserStatusModel> GetUserStatusPostProcessing(string username, string accessToken, string domain);
     }
 }

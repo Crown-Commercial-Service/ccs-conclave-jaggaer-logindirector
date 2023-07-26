@@ -87,7 +87,7 @@ namespace logindirector.Controllers
 
                         if (!string.IsNullOrWhiteSpace(accessToken))
                         {
-                            UserStatusModel userStatusModel = await _tendersClientServices.GetUserStatus(userEmail, accessToken, requestModel.domain);
+                            UserStatusModel userStatusModel = await _tendersClientServices.GetUserStatusPreProcessing(userEmail, accessToken, requestModel.domain);
 
                             if (userStatusModel != null)
                             {

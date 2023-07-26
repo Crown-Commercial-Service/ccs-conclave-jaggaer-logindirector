@@ -31,10 +31,18 @@
         public static string Tenders_UserCreation_Error = "UnexpectedFailure";
         public static string Tenders_UserCreation_AlreadyExists = "UserAlreadyExists";
 
+        public static string Tenders_PostProcessingStatus_Valid = "ValidState";
+        public static string Tenders_PostProcessingStatus_MergeFailure = "MergeFailed";
+        public static string Tenders_PostProcessingStatus_Conflict = "RoleConflict";
+        public static string Tenders_PostProcessingStatus_WrongAccountMerged = "WrongMerge";
+        public static string Tenders_PostProcessingStatus_EvaluatorMerged = "EvaluatorMerged";
+        public static string Tenders_PostProcessingStatus_Error = "UnexpectedResponse";
+
         public static string Display_JaeggerServiceName = "CCS eSourcing";
         public static string Display_CatServiceName = "Contract Award Service";
 
         public static string ExistingRoleKey_Buyer = "buyer";
         public static string ExistingRoleKey_Supplier = "supplier";
+        public static string ExistingRoleKey_Evaluator = "evaluator";
     }
 }

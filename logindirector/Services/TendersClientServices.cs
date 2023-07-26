@@ -9,6 +9,10 @@ using Rollbar;
 using logindirector.Constants;
 using logindirector.Models.TendersApi;
 using Newtonsoft.Json;
+using System.Linq;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Diagnostics;
+using logindirector.Models;
 
 namespace logindirector.Services
 {
@@ -18,16 +22,18 @@ namespace logindirector.Services
     public class TendersClientServices : ITendersClientServices
     {
         public IConfiguration _configuration { get; }
+        private readonly IHttpContextAccessor _context;
 
-        public TendersClientServices(IConfiguration configuration)
+        public TendersClientServices(IConfiguration configuration, IHttpContextAccessor context)
         {
             _configuration = configuration;
+            _context = context;
         }
 
         /**
-         * Retrieves the status of a Jaegger user matching the authenticated user
+         * Retrieves the status of a Jaegger user matching the authenticated user before they have been processed by the service
          */
-        public async Task<UserStatusModel> GetUserStatus(string username, string accessToken, string domain)
+        public async Task<UserStatusModel> GetUserStatusPreProcessing(string username, string accessToken, string domain)
         {
             UserStatusModel model = null;
 
@@ -196,6 +202,119 @@ namespace logindirector.Services
             }
 
             return model;
+        }
+
+        /**
+         * Retrieves and check the status of a Jaegger user matching the authenticated user after they have been processed by the service
+         * Different rules apply here than in the initial check
+         */
+        public async Task<UserStatusModel> GetUserStatusPostProcessing(string username, string accessToken, string domain)
+        {
+            UserStatusModel model = null;
+
+            try
+            {
+                // Fetch the information we need from the User GET route
+                string userRouteUri = _configuration.GetValue<string>("TendersApi:ApiDomain") + _configuration.GetValue<string>("TendersApi:RoutePaths:UserPath");
+
+                GenericResponseModel responseModel = await PerformTendersRequest(userRouteUri + HttpUtility.UrlEncode(username), accessToken, HttpMethod.Get);
+
+                if (responseModel != null)
+                {
+                    // We now need to map our response to a useful model to return - different rules apply depending on the service we're trying to access
+                    model = new UserStatusModel();
+
+                    // TODO: Cleanup this - for now let's address the acceptance by splitting on domain
+                    if (domain == _configuration.GetValue<string>("ExitDomains:CatDomain"))
+                    {
+                        if (responseModel.StatusCode == HttpStatusCode.OK)
+                        {
+                            // The processing appears to have worked fine, but we need to check that their role state matches what we expect
+                            string requestDetails = _context.HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey);
+
+                            if (!String.IsNullOrWhiteSpace(requestDetails))
+                            {
+                                RequestSessionModel requestModel = JsonConvert.DeserializeObject<RequestSessionModel>(requestDetails);
+
+                                model.UserStatus = ValidateTendersResponseMatchesExpectedPostProcessingState(domain, responseModel, requestModel);
+                            }
+                            else
+                            {
+                                // We can't access the user's information from session - we therefore have to assume there's an error
+                                RollbarLocator.RollbarInstance.Info("Cannot access user information from session to validate processing");
+
+                                model.UserStatus = AppConstants.Tenders_PostProcessingStatus_Error;
+                            }
+                        }
+                        else if (responseModel.StatusCode == HttpStatusCode.NotFound && responseModel.ResponseValue.Contains("not found in Jaggaer"))
+                        {
+                            // The processing appears to have failed - they should have an account by now
+                            model.UserStatus = AppConstants.Tenders_PostProcessingStatus_MergeFailure;
+                        }
+                        else if (responseModel.StatusCode == HttpStatusCode.Conflict || responseModel.StatusCode == HttpStatusCode.Forbidden)
+                        {
+                            // There's a role mismatch between the user's PPG roles and what Tenders is finding in Jaegger
+                            model.UserStatus = AppConstants.Tenders_PostProcessingStatus_Conflict;
+                        }
+                        else
+                        {
+                            // This is an unexpected error response from Tenders that we can't handle
+                            RollbarLocator.RollbarInstance.Info("Invalid Tenders Response - StatusCode: " + responseModel.StatusCode + " --- ResponseValue: " + responseModel.ResponseValue);
+
+                            model.UserStatus = AppConstants.Tenders_PostProcessingStatus_Error;
+                        }
+                    }
+                    else
+                    {
+
+                    }
+                }
+                else
+                {
+                    RollbarLocator.RollbarInstance.Error("Tenders API Request returned null response");
+                }
+            }
+            catch (Exception ex)
+            {
+                RollbarLocator.RollbarInstance.Error(ex);
+            }
+
+            return model;
+        }
+
+        /**
+         * Validates an pos-processing OK status response from Tenders to be sure that it's really correct based on the service being accessed
+         */
+        public string ValidateTendersResponseMatchesExpectedPostProcessingState(string domain, GenericResponseModel responseModel, RequestSessionModel requestModel)
+        {
+            // Status suggests the merge was successful, but we need to check that this is actually true based on reported account state
+            ExistingUserRolesModel existingRolesModel = JsonConvert.DeserializeObject<ExistingUserRolesModel>(responseModel.ResponseValue);
+
+            if (existingRolesModel != null && existingRolesModel.roles.Any())
+            {
+                if (domain == _configuration.GetValue<string>("ExitDomains:CatDomain"))
+                {
+                    // We don't need to bother checking roles for this domain - we know they must only have a CAT_USER role so can act accordingly
+                    if (existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Buyer))
+                    {
+                        // They've a buyer account, so they're good to go
+                        return AppConstants.Tenders_PostProcessingStatus_Valid;
+                    }
+                    else if (existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Supplier) && !existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Evaluator))
+                    {
+                        // They've only got a supplier account - indicates a mismatch
+                        return AppConstants.Tenders_PostProcessingStatus_Conflict;
+                    }
+                    else if (existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Evaluator) && !existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Supplier))
+                    {
+                        // They've only got an evaluator account - indicates the merge needs to be re-tried with a different account
+                        return AppConstants.Tenders_PostProcessingStatus_EvaluatorMerged;
+                    }
+                }
+            }
+
+            // If we've got to here, the details of the response don't appear to back up that the status code is actually "OK".  We have to assume merge failure
+            return AppConstants.Tenders_PostProcessingStatus_MergeFailure;
         }
     }
 }

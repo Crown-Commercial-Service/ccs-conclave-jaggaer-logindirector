@@ -341,9 +341,10 @@ namespace logindirector.Services
                             // SSO service says buyer only, Tenders says evaluator only - indicates the merge needs to be re-tried with a different account
                             return AppConstants.Tenders_PostProcessingStatus_EvaluatorMerged;
                         }
-                        else if (userSsoRoleState == AppConstants.RoleSetup_EsourcingBuyerOnly && existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Buyer) && existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Supplier))
+                        else if ((userSsoRoleState == AppConstants.RoleSetup_EsourcingBuyerOnly && existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Buyer) && existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Supplier))
+                            || (userSsoRoleState == AppConstants.RoleSetup_EsourcingSupplierOnly && existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Buyer) && existingRolesModel.roles.Count == 1))
                         {
-                            // SSO service says buyer only, Tenders says both buyer and supplier - indicates a role mismatch
+                            // SSO service says one thing, Tenders says another - indicates a role mismatch
                             return AppConstants.Tenders_PostProcessingStatus_RoleMismatch;
                         }
                     }

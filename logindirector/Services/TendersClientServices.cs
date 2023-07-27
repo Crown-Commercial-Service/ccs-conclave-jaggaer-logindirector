@@ -13,6 +13,9 @@ using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Diagnostics;
 using logindirector.Models;
+using logindirector.Models.AdaptorService;
+using System.Security.Claims;
+using System.Collections.Generic;
 
 namespace logindirector.Services
 {
@@ -23,11 +26,13 @@ namespace logindirector.Services
     {
         public IConfiguration _configuration { get; }
         private readonly IHttpContextAccessor _context;
+        public IUserServices _userServices;
 
-        public TendersClientServices(IConfiguration configuration, IHttpContextAccessor context)
+        public TendersClientServices(IConfiguration configuration, IHttpContextAccessor context, IUserServices userServices)
         {
             _configuration = configuration;
             _context = context;
+            _userServices = userServices;
         }
 
         /**
@@ -224,49 +229,41 @@ namespace logindirector.Services
                     // We now need to map our response to a useful model to return - different rules apply depending on the service we're trying to access
                     model = new UserStatusModel();
 
-                    // TODO: Cleanup this - for now let's address the acceptance by splitting on domain
-                    if (domain == _configuration.GetValue<string>("ExitDomains:CatDomain"))
+                    if (responseModel.StatusCode == HttpStatusCode.OK)
                     {
-                        if (responseModel.StatusCode == HttpStatusCode.OK)
-                        {
-                            // The processing appears to have worked fine, but we need to check that their role state matches what we expect
-                            string requestDetails = _context.HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey);
+                        // The processing appears to have worked fine, but we need to check that their role state matches what we expect
+                        string requestDetails = _context.HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey);
 
-                            if (!String.IsNullOrWhiteSpace(requestDetails))
-                            {
-                                RequestSessionModel requestModel = JsonConvert.DeserializeObject<RequestSessionModel>(requestDetails);
-
-                                model.UserStatus = ValidateTendersResponseMatchesExpectedPostProcessingState(domain, responseModel, requestModel);
-                            }
-                            else
-                            {
-                                // We can't access the user's information from session - we therefore have to assume there's an error
-                                RollbarLocator.RollbarInstance.Info("Cannot access user information from session to validate processing");
-
-                                model.UserStatus = AppConstants.Tenders_PostProcessingStatus_Error;
-                            }
-                        }
-                        else if (responseModel.StatusCode == HttpStatusCode.NotFound && responseModel.ResponseValue.Contains("not found in Jaggaer"))
+                        if (!String.IsNullOrWhiteSpace(requestDetails))
                         {
-                            // The processing appears to have failed - they should have an account by now
-                            model.UserStatus = AppConstants.Tenders_PostProcessingStatus_MergeFailure;
-                        }
-                        else if (responseModel.StatusCode == HttpStatusCode.Conflict || responseModel.StatusCode == HttpStatusCode.Forbidden)
-                        {
-                            // There's a role mismatch between the user's PPG roles and what Tenders is finding in Jaegger
-                            model.UserStatus = AppConstants.Tenders_PostProcessingStatus_Conflict;
+                            RequestSessionModel requestModel = JsonConvert.DeserializeObject<RequestSessionModel>(requestDetails);
+
+                            model.UserStatus = await ValidateTendersResponseMatchesExpectedPostProcessingState(domain, responseModel, requestModel, username);
                         }
                         else
                         {
-                            // This is an unexpected error response from Tenders that we can't handle
-                            RollbarLocator.RollbarInstance.Info("Invalid Tenders Response - StatusCode: " + responseModel.StatusCode + " --- ResponseValue: " + responseModel.ResponseValue);
+                            // We can't access the user's information from session - we therefore have to assume there's an error
+                            RollbarLocator.RollbarInstance.Info("Cannot access user information from session to validate processing");
 
                             model.UserStatus = AppConstants.Tenders_PostProcessingStatus_Error;
                         }
                     }
+                    else if (responseModel.StatusCode == HttpStatusCode.NotFound && responseModel.ResponseValue.Contains("not found in Jaggaer"))
+                    {
+                        // The processing appears to have failed - they should have an account by now
+                        model.UserStatus = AppConstants.Tenders_PostProcessingStatus_MergeFailure;
+                    }
+                    else if (responseModel.StatusCode == HttpStatusCode.Conflict || responseModel.StatusCode == HttpStatusCode.Forbidden)
+                    {
+                        // There's a role mismatch between the user's PPG roles and what Tenders is finding in Jaegger
+                        model.UserStatus = AppConstants.Tenders_PostProcessingStatus_Conflict;
+                    }
                     else
                     {
+                        // This is an unexpected error response from Tenders that we can't handle
+                        RollbarLocator.RollbarInstance.Info("Invalid Tenders Response - StatusCode: " + responseModel.StatusCode + " --- ResponseValue: " + responseModel.ResponseValue);
 
+                        model.UserStatus = AppConstants.Tenders_PostProcessingStatus_Error;
                     }
                 }
                 else
@@ -283,33 +280,78 @@ namespace logindirector.Services
         }
 
         /**
-         * Validates an pos-processing OK status response from Tenders to be sure that it's really correct based on the service being accessed
+         * Validates a post-processing OK status response from Tenders to be sure that it's really correct based on the service being accessed
          */
-        public string ValidateTendersResponseMatchesExpectedPostProcessingState(string domain, GenericResponseModel responseModel, RequestSessionModel requestModel)
+        public async Task<string> ValidateTendersResponseMatchesExpectedPostProcessingState(string domain, GenericResponseModel responseModel, RequestSessionModel requestModel, string username)
         {
             // Status suggests the merge was successful, but we need to check that this is actually true based on reported account state
             ExistingUserRolesModel existingRolesModel = JsonConvert.DeserializeObject<ExistingUserRolesModel>(responseModel.ResponseValue);
 
             if (existingRolesModel != null && existingRolesModel.roles.Any())
             {
+                // TODO: Probably want to split these out into a different method per domain once all the acceptance is covered off
                 if (domain == _configuration.GetValue<string>("ExitDomains:CatDomain"))
                 {
-                    // We don't need to bother checking roles for this domain - we know they must only have a CAT_USER role so can act accordingly
-                    if (existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Buyer))
+                    // We need to know the user's SSO service role state to process this
+                    string userSsoRoleState = await _userServices.GetCasSsoRoleState(username);
+
+                    if (!String.IsNullOrWhiteSpace(userSsoRoleState))
                     {
-                        // They've a buyer account, so they're good to go
-                        return AppConstants.Tenders_PostProcessingStatus_Valid;
+                        if (userSsoRoleState != AppConstants.RoleSetup_CasRole)
+                        {
+                            // User does not have the CAS role - indicates the role setup must have changed during processing
+                            return AppConstants.Tenders_PostProcessingStatus_RoleMismatch;
+                        }
+                        else if (existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Buyer))
+                        {
+                            // They've a buyer account, so they're good to go
+                            return AppConstants.Tenders_PostProcessingStatus_Valid;
+                        }
+                        else if (existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Supplier) && !existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Evaluator))
+                        {
+                            // They've only got a supplier account - indicates the wrong account type was merged
+                            return AppConstants.Tenders_PostProcessingStatus_WrongType;
+                        }
+                        else if (existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Evaluator) && !existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Supplier))
+                        {
+                            // They've only got an evaluator account - indicates the merge needs to be re-tried with a different account
+                            return AppConstants.Tenders_PostProcessingStatus_EvaluatorMerged;
+                        }
                     }
-                    else if (existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Supplier) && !existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Evaluator))
+                }
+                else
+                {
+                    // We need to know the user's SSO service role state to process this
+                    string userSsoRoleState = await _userServices.GetEsourcingSsoRoleState(username);
+
+                    if (!String.IsNullOrWhiteSpace(userSsoRoleState))
                     {
-                        // They've only got a supplier account - indicates a mismatch
-                        return AppConstants.Tenders_PostProcessingStatus_Conflict;
+                        if (userSsoRoleState == AppConstants.RoleSetup_EsourcingBuyerOnly && existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Buyer) && existingRolesModel.roles.Count == 1)
+                        {
+                            // SSO service says buyer only, as does Tenders - this is valid
+                            return AppConstants.Tenders_PostProcessingStatus_Valid;
+                        }
+                        else if (userSsoRoleState == AppConstants.RoleSetup_EsourcingBuyerOnly && existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Supplier) && existingRolesModel.roles.Count == 1)
+                        {
+                            // SSO service says buyer only, Tenders says supplier only - a merge failure has occurred
+                            return AppConstants.Tenders_PostProcessingStatus_MergeFailure;
+                        }
+                        else if (userSsoRoleState == AppConstants.RoleSetup_EsourcingBuyerOnly && existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Evaluator) && existingRolesModel.roles.Count == 1)
+                        {
+                            // SSO service says buyer only, Tenders says evaluator only - indicates the merge needs to be re-tried with a different account
+                            return AppConstants.Tenders_PostProcessingStatus_EvaluatorMerged;
+                        }
+                        else if (userSsoRoleState == AppConstants.RoleSetup_EsourcingBuyerOnly && existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Buyer) && existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Supplier))
+                        {
+                            // SSO service says buyer only, Tenders says both buyer and supplier - indicates a role mismatch
+                            return AppConstants.Tenders_PostProcessingStatus_RoleMismatch;
+                        }
                     }
-                    else if (existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Evaluator) && !existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Supplier))
-                    {
-                        // They've only got an evaluator account - indicates the merge needs to be re-tried with a different account
-                        return AppConstants.Tenders_PostProcessingStatus_EvaluatorMerged;
-                    }
+
+                    // If we get to here we can't fetch the current user roles, so we can't tell what we should be checking for, so return an error state
+                    RollbarLocator.RollbarInstance.Info("Can't fetch roles from PPG for user post-processing state check");
+
+                    return AppConstants.Tenders_PostProcessingStatus_Error;
                 }
             }
 

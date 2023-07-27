@@ -36,6 +36,8 @@
         public static string Tenders_PostProcessingStatus_Conflict = "RoleConflict";
         public static string Tenders_PostProcessingStatus_WrongAccountMerged = "WrongMerge";
         public static string Tenders_PostProcessingStatus_EvaluatorMerged = "EvaluatorMerged";
+        public static string Tenders_PostProcessingStatus_WrongType = "WrongAccountTypeMerged";
+        public static string Tenders_PostProcessingStatus_RoleMismatch = "RoleMismatch";
         public static string Tenders_PostProcessingStatus_Error = "UnexpectedResponse";
 
         public static string Display_JaeggerServiceName = "CCS eSourcing";
@@ -44,5 +46,11 @@
         public static string ExistingRoleKey_Buyer = "buyer";
         public static string ExistingRoleKey_Supplier = "supplier";
         public static string ExistingRoleKey_Evaluator = "evaluator";
+
+        public static string RoleSetup_EsourcingBothRoles = "BuyerAndSupplier";
+        public static string RoleSetup_EsourcingBuyerOnly = "Buyer";
+        public static string RoleSetup_EsourcingSupplierOnly = "Supplier";
+        public static string RoleSetup_CasRole = "CAS";
+        public static string RoleSetup_NoRoles = "InvalidRoleSetup";
     }
 }

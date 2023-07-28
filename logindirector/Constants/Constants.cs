@@ -38,6 +38,7 @@
         public static string Tenders_PostProcessingStatus_EvaluatorMerged = "EvaluatorMerged";
         public static string Tenders_PostProcessingStatus_WrongType = "WrongAccountTypeMerged";
         public static string Tenders_PostProcessingStatus_RoleMismatch = "RoleMismatch";
+        public static string Tenders_PostProcessingStatus_NotEnoughAccounts = "NotEnoughAccountsMerged";
         public static string Tenders_PostProcessingStatus_Error = "UnexpectedResponse";
 
         public static string Display_JaeggerServiceName = "CCS eSourcing";

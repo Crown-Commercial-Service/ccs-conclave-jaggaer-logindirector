@@ -327,14 +327,17 @@ namespace logindirector.Services
                     if (!String.IsNullOrWhiteSpace(userSsoRoleState))
                     {
                         if ((userSsoRoleState == AppConstants.RoleSetup_EsourcingBuyerOnly && existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Buyer) && existingRolesModel.roles.Count == 1) ||
-                            (userSsoRoleState == AppConstants.RoleSetup_EsourcingSupplierOnly && existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Supplier) && existingRolesModel.roles.Count == 1))
+                            (userSsoRoleState == AppConstants.RoleSetup_EsourcingSupplierOnly && existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Supplier) && existingRolesModel.roles.Count == 1) ||
+                            (userSsoRoleState == AppConstants.RoleSetup_EsourcingBothRoles && existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Buyer) && existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Supplier)))
                         {
                             // SSO service says one thing only, as does Tenders - this is valid
                             return AppConstants.Tenders_PostProcessingStatus_Valid;
                         }
-                        else if (userSsoRoleState == AppConstants.RoleSetup_EsourcingBuyerOnly && existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Supplier) && existingRolesModel.roles.Count == 1)
+                        else if ((userSsoRoleState == AppConstants.RoleSetup_EsourcingBuyerOnly && existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Supplier) && existingRolesModel.roles.Count == 1) ||
+                            (userSsoRoleState == AppConstants.RoleSetup_EsourcingBothRoles && existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Evaluator) && existingRolesModel.roles.Count == 1))
                         {
                             // SSO service says buyer only, Tenders says supplier only - a merge failure has occurred
+                            // Also true if SSO service says both roles but Tenders says evaluator
                             return AppConstants.Tenders_PostProcessingStatus_MergeFailure;
                         }
                         else if ((userSsoRoleState == AppConstants.RoleSetup_EsourcingBuyerOnly || userSsoRoleState == AppConstants.RoleSetup_EsourcingSupplierOnly) && existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Evaluator) && existingRolesModel.roles.Count == 1)
@@ -347,6 +350,12 @@ namespace logindirector.Services
                         {
                             // SSO service says one thing, Tenders says another - indicates a role mismatch
                             return AppConstants.Tenders_PostProcessingStatus_RoleMismatch;
+                        }
+                        else if ((userSsoRoleState == AppConstants.RoleSetup_EsourcingBothRoles && (existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Buyer) || existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Supplier)) && existingRolesModel.roles.Count == 1) ||
+                            (userSsoRoleState == AppConstants.RoleSetup_EsourcingBothRoles && existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Evaluator) && (existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Supplier) || existingRolesModel.roles.Contains(AppConstants.ExistingRoleKey_Buyer)) && existingRolesModel.roles.Count == 2))
+                        {
+                            // The user does not have enough accounts merged
+                            return AppConstants.Tenders_PostProcessingStatus_NotEnoughAccounts;
                         }
                     }
 

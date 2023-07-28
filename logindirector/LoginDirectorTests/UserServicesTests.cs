@@ -36,8 +36,9 @@ namespace LoginDirectorTests
             };
 
             IConfigurationRoot configuration = new ConfigurationBuilder().AddInMemoryCollection(testConfiguration).Build();
+            IAdaptorClientServices adaptorClientServices = serviceProvider.GetService<IAdaptorClientServices>();
 
-            userServices = new UserServices(configuration);
+            userServices = new UserServices(configuration, adaptorClientServices);
             userModel = new AdaptorUserModel
             {
                 coreRoles = new List<AdaptorUserRoleModel>(),

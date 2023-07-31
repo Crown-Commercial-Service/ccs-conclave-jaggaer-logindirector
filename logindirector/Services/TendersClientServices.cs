@@ -31,7 +31,7 @@ namespace logindirector.Services
                 // Fetch the information we need from the User GET route
                 string userRouteUri = _configuration.GetValue<string>("TendersApi:ApiDomain") + _configuration.GetValue<string>("TendersApi:RoutePaths:UserPath");
 
-                GenericResponseModel responseModel = await PerformTendersRequest(userRouteUri + HttpUtility.HtmlEncode(username), accessToken, HttpMethod.Get);
+                GenericResponseModel responseModel = await PerformTendersRequest(userRouteUri + HttpUtility.UrlEncode(username), accessToken, HttpMethod.Get);
 
                 if (responseModel != null)
                 {
@@ -89,7 +89,7 @@ namespace logindirector.Services
                 // Perform our request against the User PUT route
                 string userRouteUri = _configuration.GetValue<string>("TendersApi:ApiDomain") + _configuration.GetValue<string>("TendersApi:RoutePaths:UserPath");
 
-                GenericResponseModel responseModel = await PerformTendersRequest(userRouteUri + HttpUtility.HtmlEncode(username), accessToken, HttpMethod.Put);
+                GenericResponseModel responseModel = await PerformTendersRequest(userRouteUri + HttpUtility.UrlEncode(username), accessToken, HttpMethod.Put);
 
                 if (responseModel != null)
                 {

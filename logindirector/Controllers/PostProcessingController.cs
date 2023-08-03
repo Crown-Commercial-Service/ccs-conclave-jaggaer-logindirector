@@ -86,7 +86,9 @@ namespace logindirector.Controllers
                             }
                             else if (userStatusModel.UserStatus == AppConstants.Tenders_PostProcessingStatus_MergeFailure)
                             {
-                                // TODO: Display error page directing the user to CSC (MergeError.cshtml)
+                                // The system has failed to merge the user.  Display the merge error message
+                                ErrorViewModel errorViewModel = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+                                return View("~/Views/Errors/MergeError.cshtml", errorViewModel);
                             }
                             else if (userStatusModel.UserStatus == AppConstants.Tenders_PostProcessingStatus_RoleMismatch)
                             {

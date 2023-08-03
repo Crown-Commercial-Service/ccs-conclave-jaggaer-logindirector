@@ -47,7 +47,7 @@ namespace logindirector.Controllers
 
             if (await _userHelpers.DoesUserHaveValidSession(HttpContext, userSid))
             {
-                // We also need to check to validate that processing has been successfully completed
+                // We also need to check to validate that processing has been successfully completed via another Tenders call
                 string accessToken = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Authentication)?.Value,
                     userEmail = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value,
                     requestDetails = HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey);
@@ -84,7 +84,35 @@ namespace logindirector.Controllers
 
                                 return Redirect(requestedRoute);
                             }
-                            // TODO: Other response cases
+                            else if (userStatusModel.UserStatus == AppConstants.Tenders_PostProcessingStatus_MergeFailure)
+                            {
+                                // TODO: Display error page directing the user to CSC (MergeError.cshtml)
+                            }
+                            else if (userStatusModel.UserStatus == AppConstants.Tenders_PostProcessingStatus_RoleMismatch)
+                            {
+                                // TODO: Display error page saying wrong account merged or permissions changed (new)
+                            }
+                            else
+                            {
+                                // This can be one of various conflict states - check to see which
+                                if (userStatusModel.UserStatus == AppConstants.Tenders_PostProcessingStatus_Conflict)
+                                {
+                                    // TODO: Display merge screen with an error saying “you’ve merged the wrong type of account” (e.g. buyer when supplier wanted)
+                                }
+                                else if (userStatusModel.UserStatus == AppConstants.Tenders_PostProcessingStatus_EvaluatorMerged)
+                                {
+                                    // TODO: Display merge screen with an error saying “you’ve merged with an evaluator” (probably the same as Conflict above display wise)
+                                }
+                                else if (userStatusModel.UserStatus == AppConstants.Tenders_PostProcessingStatus_WrongType)
+                                {
+                                    // TODO: Display merge screen with an error saying “you’ve not merged what you need” (e.g. supplier merged by buyer wanted for CAS access - same as Conflict)
+                                }
+                                else
+                                {
+                                    // Has to be NotEnoughAccounts
+                                    // TODO: Display merge screen with an error saying “you’ve not merged enough accounts” (e.g. buyer and supplier but only supplier - same as Conflict)
+                                }
+                            }
                         }
 
                         // If we've gotten this far there's been some kind of issue fetching the request details from session.  Display Session Expiry message

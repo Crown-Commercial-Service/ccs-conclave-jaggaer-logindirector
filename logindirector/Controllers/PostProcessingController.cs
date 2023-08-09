@@ -92,7 +92,8 @@ namespace logindirector.Controllers
                             }
                             else if (userStatusModel.UserStatus == AppConstants.Tenders_PostProcessingStatus_RoleMismatch)
                             {
-                                // TODO: Display error page saying wrong account merged or permissions changed (new)
+                                ErrorViewModel errorViewModel = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
+                                return View("~/Views/Errors/WrongAccountMerged.cshtml", errorViewModel);
                             }
                             else
                             {

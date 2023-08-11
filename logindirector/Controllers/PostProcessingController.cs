@@ -97,24 +97,8 @@ namespace logindirector.Controllers
                             }
                             else
                             {
-                                // This can be one of various conflict states - check to see which
-                                if (userStatusModel.UserStatus == AppConstants.Tenders_PostProcessingStatus_Conflict)
-                                {
-                                    // TODO: Display merge screen with an error saying “you’ve merged the wrong type of account” (e.g. buyer when supplier wanted)
-                                }
-                                else if (userStatusModel.UserStatus == AppConstants.Tenders_PostProcessingStatus_EvaluatorMerged)
-                                {
-                                    // TODO: Display merge screen with an error saying “you’ve merged with an evaluator” (probably the same as Conflict above display wise)
-                                }
-                                else if (userStatusModel.UserStatus == AppConstants.Tenders_PostProcessingStatus_WrongType)
-                                {
-                                    // TODO: Display merge screen with an error saying “you’ve not merged what you need” (e.g. supplier merged by buyer wanted for CAS access - same as Conflict)
-                                }
-                                else
-                                {
-                                    // Has to be NotEnoughAccounts
-                                    // TODO: Display merge screen with an error saying “you’ve not merged enough accounts” (e.g. buyer and supplier but only supplier - same as Conflict)
-                                }
+                                // This can be one of various conflict states - in each though we just need to send the user back to the merge page and display different messages, so do this
+                                return RedirectToAction("ProcessUser", "UserProcessing", new { processError = userStatusModel.UserStatus });
                             }
                         }
 
@@ -136,4 +120,3 @@ namespace logindirector.Controllers
         }
     }
 }
-

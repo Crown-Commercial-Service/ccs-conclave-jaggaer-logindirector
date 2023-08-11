@@ -16,6 +16,7 @@ using logindirector.Constants;
 using logindirector.Models;
 using Microsoft.Extensions.Configuration;
 using System.Threading.Tasks;
+using System.Linq.Expressions;
 
 // Controller to handle all user processing actions done by the application, before outgoing requests are applied
 namespace logindirector.Controllers
@@ -115,7 +116,7 @@ namespace logindirector.Controllers
                                 else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_AlreadyMerged)
                                 {
                                     // User is already merged, so we're good here - send the user to have their initial request processed
-                                    return RedirectToAction("ActionRequest", "Request");
+                                    return RedirectToAction("ActionRequest", "PostProcessing");
                                 }
                             }
                         }
@@ -184,7 +185,7 @@ namespace logindirector.Controllers
                             if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_Success)
                             {
                                 // User account has been created - now we can proceed to action their initial request
-                                return RedirectToAction("ActionRequest", "Request");
+                                return RedirectToAction("ActionRequest", "PostProcessing");
                             }
                             else
                             {
@@ -252,7 +253,7 @@ namespace logindirector.Controllers
                     if (storedRequestModel != null && !string.IsNullOrWhiteSpace(storedRequestModel.requestedPath))
                     {
                         // User session seems to still exist.  User can now be sent on to process their original request
-                        return RedirectToAction("ActionRequest", "Request");
+                        return RedirectToAction("ActionRequest", "PostProcessing");
                     }
                 }
             }
@@ -344,6 +345,29 @@ namespace logindirector.Controllers
                         model.ServiceDisplayName = AppConstants.Display_CatServiceName;
                         model.ShowBuyerError = true;
                     }
+                }
+            }
+
+            // Check if a processing error has been passed to us in the QueryString and map it if it has
+            if (!String.IsNullOrWhiteSpace(HttpContext.Request.Query["processError"]))
+            {
+                string mappedError = HttpContext.Request.Query["processError"].ToString();
+
+                if (mappedError == AppConstants.Tenders_PostProcessingStatus_Conflict)
+                {
+                    model.ShowProcessConflictError = true;
+                }
+                else if (mappedError == AppConstants.Tenders_PostProcessingStatus_EvaluatorMerged)
+                {
+                    model.ShowProcessEvaluatorError = true;
+                }
+                else if (mappedError == AppConstants.Tenders_PostProcessingStatus_WrongType)
+                {
+                    model.ShowProcessTypeError = true;
+                }
+                else if (mappedError == AppConstants.Tenders_PostProcessingStatus_NotEnoughAccounts)
+                {
+                    model.ShowProcessNotEnoughAccountsError = true;
                 }
             }
 

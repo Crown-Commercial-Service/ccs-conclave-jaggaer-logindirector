@@ -22,6 +22,30 @@
                 <br />
             }
 
+            @if (Model.ShowProcessConflictError)
+            {
+                <p class="govuk-error-message">You have merged the wrong type of account, please try again.</p>
+                <br />
+            }
+
+            @if (Model.ShowProcessEvaluatorError)
+            {
+                <p class="govuk-error-message">You have merged with an evaluator account, please try again.</p>
+                <br />
+            }
+
+            @if (Model.ShowProcessTypeError)
+            {
+                <p class="govuk-error-message">The account you have merged does not match the permissions you need, please try again.</p>
+                <br />
+            }
+
+            @if (Model.ShowProcessNotEnoughAccountsError)
+            {
+                <p class="govuk-error-message">Yout have not yet merged enough accounts to match your permissions, please try again.</p>
+                <br />
+            }
+
             <form id="merge-selection-form" method="POST" action="/director/process-user">
                 <div id="merge-selection-group" class="govuk-form-group">
                     <fieldset class="govuk-fieldset" aria-describedby="merge-prompt-error">

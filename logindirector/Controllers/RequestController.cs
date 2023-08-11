@@ -98,7 +98,7 @@ namespace logindirector.Controllers
                             else
                             {
                                 // User has already been fully processed - send them to the Request Processing endpoint (we'll validate session there)
-                                return RedirectToAction("ActionRequest", "Request");
+                                return RedirectToAction("ActionRequest", "PostProcessing");
                             }
                         }
                         else

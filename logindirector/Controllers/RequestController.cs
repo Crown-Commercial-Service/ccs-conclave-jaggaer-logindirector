@@ -98,7 +98,7 @@ namespace logindirector.Controllers
                             else
                             {
                                 // User has already been fully processed - send them to the Request Processing endpoint (we'll validate session there)
-                                return RedirectToAction("ActionRequest", "Request");
+                                return RedirectToAction("ActionRequest", "PostProcessing");
                             }
                         }
                         else
@@ -119,57 +119,6 @@ namespace logindirector.Controllers
             {
                 // Request appears to be from unsupported source.  Redirect the user to Conclave itself and remove them from this application flow
                 return Redirect(_configuration.GetValue<string>("DashboardPath"));
-            }
-        }
-
-        // Route to process and execute outgoing requests, once a user has been logged in and processed
-        [Route("/director/action-request", Order = 1)]
-        [Authorize]
-        public async Task<IActionResult> ActionRequest()
-        {
-            // First, check to see that the user's session is valid in the central cache
-            string userSid = User?.Claims?.FirstOrDefault(o => o.Type == ClaimTypes.Sid)?.Value;
-
-            if (await _userHelpers.DoesUserHaveValidSession(HttpContext, userSid))
-            {
-                // Update our session value to indicate that the user has now been processed within this session
-                HttpContext.Session.SetString(AppConstants.Session_ProcessingRequiredKey, "false");
-
-                // User appears to be valid, so now we can process their request from the stored request object
-                string requestJson = HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey);
-
-                if (!string.IsNullOrWhiteSpace(requestJson))
-                {
-                    RequestSessionModel requestModel = JsonConvert.DeserializeObject<RequestSessionModel>(requestJson);
-
-                    if (requestModel != null)
-                    {
-                        // We've got the user's request details from session.  Now action them as a GET redirect (POSTs were handled earlier)
-                        string requestedRoute;
-
-                        if (requestModel.domain == _configuration.GetValue<string>("ExitDomains:JaeggerDomain"))
-                        {
-                            // Jaegger requests are always sent direct to a specific endpoint
-                            requestedRoute = requestModel.protocol + "://" + requestModel.domain;
-                        }
-                        else
-                        {
-                            // CAS requests go to where the user requested
-                            requestedRoute = requestModel.protocol + "://" + requestModel.domain + requestModel.requestedPath;
-                        }
-
-                        return Redirect(requestedRoute);
-                    }
-                }
-
-                // If we've gotten this far there's been some kind of issue fetching the request details from session.  Display Session Expiry message
-                ErrorViewModel model = _userHelpers.BuildErrorModelForUser(HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey));
-                return View("~/Views/Errors/SessionExpired.cshtml", model);
-            }
-            else
-            {
-                // User does not appear to have a valid session in the central cache - clear them down and send them to re-authenticate at the Process User endpoint
-                return RedirectToAction("ProcessUser", "UserProcessing");
             }
         }
 

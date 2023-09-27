@@ -58,6 +58,7 @@ namespace logindirector
             services.AddScoped<IAdaptorClientServices, AdaptorClientServices>();
             services.AddScoped<ITendersClientServices, TendersClientServices>();
             services.AddScoped<IHelpers, UserHelpers>();
+            services.AddScoped<IUserServices, UserServices>();
 
             // Enable Session for the app
             services.AddDistributedMemoryCache();

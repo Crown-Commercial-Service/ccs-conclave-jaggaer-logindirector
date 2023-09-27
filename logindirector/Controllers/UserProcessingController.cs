@@ -16,6 +16,7 @@ using logindirector.Constants;
 using logindirector.Models;
 using Microsoft.Extensions.Configuration;
 using System.Threading.Tasks;
+using System.Linq.Expressions;
 
 // Controller to handle all user processing actions done by the application, before outgoing requests are applied
 namespace logindirector.Controllers
@@ -24,14 +25,16 @@ namespace logindirector.Controllers
     {
         public IAdaptorClientServices _adaptorClientServices;
         public ITendersClientServices _tendersClientServices;
+        public IUserServices _userServices;
         public IHelpers _userHelpers;
         public IMemoryCache _memoryCache;
         public IConfiguration _configuration { get; }
 
-        public UserProcessingController(IAdaptorClientServices adaptorClientServices, ITendersClientServices tendersClientServices, IHelpers userHelpers, IMemoryCache memoryCache, IConfiguration configuration)
+        public UserProcessingController(IAdaptorClientServices adaptorClientServices, ITendersClientServices tendersClientServices, IHelpers userHelpers, IMemoryCache memoryCache, IConfiguration configuration, IUserServices userServices)
         {
             _adaptorClientServices = adaptorClientServices;
             _tendersClientServices = tendersClientServices;
+            _userServices = userServices;
             _userHelpers = userHelpers;
             _memoryCache = memoryCache;
             _configuration = configuration;
@@ -69,8 +72,9 @@ namespace logindirector.Controllers
                 {
                     // User appears to be successfully authenticated with SSO service - so fetch their user data from the adaptor service
                     AdaptorUserModel userModel = await _adaptorClientServices.GetUserInformation(userEmail);
+                    RequestSessionModel requestModel = JsonConvert.DeserializeObject<RequestSessionModel>(requestDetails);
 
-                    if (userModel != null && _userHelpers.HasValidUserRoles(userModel, JsonConvert.DeserializeObject<RequestSessionModel>(requestDetails)))
+                    if (userModel != null && requestModel != null && _userServices.DoesUserHaveValidRolePreProcessing(userModel, requestModel))
                     {
                         // Serialise the model as JSON and store it in the session
                         HttpContext.Session.SetString(AppConstants.Session_UserKey, JsonConvert.SerializeObject(userModel));
@@ -84,7 +88,7 @@ namespace logindirector.Controllers
 
                         if (!string.IsNullOrWhiteSpace(accessToken))
                         {
-                            UserStatusModel userStatusModel = await _tendersClientServices.GetUserStatus(userEmail, accessToken);
+                            UserStatusModel userStatusModel = await _tendersClientServices.GetUserStatusPreProcessing(userEmail, accessToken, requestModel.domain);
 
                             if (userStatusModel != null)
                             {
@@ -92,7 +96,7 @@ namespace logindirector.Controllers
                                 if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_ActionRequired)
                                 {
                                     // The user needs to either merge or create a Jaegger / CaT account - display the merge prompt
-                                    ServiceViewModel model = GetServiceViewModelForRequest();
+                                    ServiceViewModel model = GetServiceViewModelForRequest(userModel);
 
                                     return View("~/Views/Merging/MergePrompt.cshtml", model);
                                 }
@@ -112,7 +116,7 @@ namespace logindirector.Controllers
                                 else if (userStatusModel.UserStatus == AppConstants.Tenders_UserStatus_AlreadyMerged)
                                 {
                                     // User is already merged, so we're good here - send the user to have their initial request processed
-                                    return RedirectToAction("ActionRequest", "Request");
+                                    return RedirectToAction("ActionRequest", "PostProcessing");
                                 }
                             }
                         }
@@ -181,7 +185,7 @@ namespace logindirector.Controllers
                             if (userCreationModel.CreationStatus == AppConstants.Tenders_UserCreation_Success)
                             {
                                 // User account has been created - now we can proceed to action their initial request
-                                return RedirectToAction("ActionRequest", "Request");
+                                return RedirectToAction("ActionRequest", "PostProcessing");
                             }
                             else
                             {
@@ -249,7 +253,7 @@ namespace logindirector.Controllers
                     if (storedRequestModel != null && !string.IsNullOrWhiteSpace(storedRequestModel.requestedPath))
                     {
                         // User session seems to still exist.  User can now be sent on to process their original request
-                        return RedirectToAction("ActionRequest", "Request");
+                        return RedirectToAction("ActionRequest", "PostProcessing");
                     }
                 }
             }
@@ -304,15 +308,17 @@ namespace logindirector.Controllers
             }
         }
 
-        // Uses the request data stored in session to build a ServiceViewModel for use later in views
-        internal ServiceViewModel GetServiceViewModelForRequest()
+        /**
+         * Uses the request data stored in session to build a ServiceViewModel for use later in views
+         */
+        internal ServiceViewModel GetServiceViewModelForRequest(AdaptorUserModel userModel)
         {
             ServiceViewModel model = new ServiceViewModel();
 
             // Get the request data from session
             string requestSessionData = HttpContext.Session.GetString(AppConstants.Session_RequestDetailsKey);
 
-            if (!string.IsNullOrWhiteSpace(requestSessionData))
+            if (!string.IsNullOrWhiteSpace(requestSessionData) && userModel != null)
             {
                 RequestSessionModel storedRequestModel = JsonConvert.DeserializeObject<RequestSessionModel>(requestSessionData);
 
@@ -322,12 +328,46 @@ namespace logindirector.Controllers
                     {
                         // Looks like a Jaegger request
                         model.ServiceDisplayName = AppConstants.Display_JaeggerServiceName;
+
+                        // For Jaegger requests we need to check the additional roles in the userModel, so we know if we need to display an error message in the view
+                        if (userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && !userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerSupplier))
+                        {
+                            model.ShowBuyerError = true;
+                        }
+                        else if (!userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerBuyer) && userModel.additionalRoles.Contains(AppConstants.RoleKey_JaeggerSupplier))
+                        {
+                            model.ShowSupplierError = true;
+                        }
                     }
                     else
                     {
                         // Must be a CaT request
                         model.ServiceDisplayName = AppConstants.Display_CatServiceName;
+                        model.ShowBuyerError = true;
                     }
+                }
+            }
+
+            // Check if a processing error has been passed to us in the QueryString and map it if it has
+            if (!String.IsNullOrWhiteSpace(HttpContext.Request.Query["processError"]))
+            {
+                string mappedError = HttpContext.Request.Query["processError"].ToString();
+
+                if (mappedError == AppConstants.Tenders_PostProcessingStatus_Conflict)
+                {
+                    model.ShowProcessConflictError = true;
+                }
+                else if (mappedError == AppConstants.Tenders_PostProcessingStatus_EvaluatorMerged)
+                {
+                    model.ShowProcessEvaluatorError = true;
+                }
+                else if (mappedError == AppConstants.Tenders_PostProcessingStatus_WrongType)
+                {
+                    model.ShowProcessTypeError = true;
+                }
+                else if (mappedError == AppConstants.Tenders_PostProcessingStatus_NotEnoughAccounts)
+                {
+                    model.ShowProcessNotEnoughAccountsError = true;
                 }
             }
 

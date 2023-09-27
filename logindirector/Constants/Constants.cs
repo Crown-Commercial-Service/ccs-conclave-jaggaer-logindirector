@@ -10,6 +10,7 @@
         public static string RoleKey_JaeggerSupplier = "JAEGGER_SUPPLIER";
         public static string RoleKey_JaeggerBuyer = "JAEGGER_BUYER";
         public static string RoleKey_CatUser = "CAT_USER";
+        public static string RoleKey_Evaluator = "EVALUATOR"; // TODO: Need to set the real value here from PPG
 
         public static string Session_UserKey = "UserModel";
         public static string Session_RequestDetailsKey = "RequestDetails";

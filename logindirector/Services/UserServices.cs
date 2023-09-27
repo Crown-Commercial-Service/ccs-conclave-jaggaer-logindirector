@@ -33,7 +33,9 @@ namespace logindirector.Services
             if (userModel.coreRoles != null && userModel.coreRoles.Any())
             {
                 if ((requestSessionModel.domain == _configuration.GetValue<string>("ExitDomains:CatDomain") && userModel.coreRoles.FirstOrDefault(r => r.roleKey == AppConstants.RoleKey_CatUser) != null) ||
+                    (requestSessionModel.domain == _configuration.GetValue<string>("ExitDomains:CatDomain") && userModel.coreRoles.FirstOrDefault(r => r.roleKey == AppConstants.RoleKey_Evaluator) != null) ||
                     (requestSessionModel.domain == _configuration.GetValue<string>("ExitDomains:JaeggerDomain") && userModel.coreRoles.FirstOrDefault(r => r.roleKey == AppConstants.RoleKey_JaeggerBuyer) != null) ||
+                    (requestSessionModel.domain == _configuration.GetValue<string>("ExitDomains:JaeggerDomain") && userModel.coreRoles.FirstOrDefault(r => r.roleKey == AppConstants.RoleKey_Evaluator) != null) ||
                     (requestSessionModel.domain == _configuration.GetValue<string>("ExitDomains:JaeggerDomain") && userModel.coreRoles.FirstOrDefault(r => r.roleKey == AppConstants.RoleKey_JaeggerSupplier) != null))
                 {
                     // Valid core role / domain configuration found - return true
@@ -44,7 +46,9 @@ namespace logindirector.Services
             if (userModel.additionalRoles != null && userModel.additionalRoles.Any())
             {
                 if ((requestSessionModel.domain == _configuration.GetValue<string>("ExitDomains:CatDomain") && userModel.additionalRoles.FirstOrDefault(r => r == AppConstants.RoleKey_CatUser) != null) ||
+                    (requestSessionModel.domain == _configuration.GetValue<string>("ExitDomains:CatDomain") && userModel.additionalRoles.FirstOrDefault(r => r == AppConstants.RoleKey_Evaluator) != null) ||
                     (requestSessionModel.domain == _configuration.GetValue<string>("ExitDomains:JaeggerDomain") && userModel.additionalRoles.FirstOrDefault(r => r == AppConstants.RoleKey_JaeggerBuyer) != null) ||
+                    (requestSessionModel.domain == _configuration.GetValue<string>("ExitDomains:JaeggerDomain") && userModel.additionalRoles.FirstOrDefault(r => r == AppConstants.RoleKey_Evaluator) != null) ||
                     (requestSessionModel.domain == _configuration.GetValue<string>("ExitDomains:JaeggerDomain") && userModel.additionalRoles.FirstOrDefault(r => r == AppConstants.RoleKey_JaeggerSupplier) != null))
                 {
                     // Valid additional role / domain configuration found - return true

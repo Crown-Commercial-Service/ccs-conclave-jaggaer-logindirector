@@ -13,10 +13,8 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using Rollbar;
 using Rollbar.NetCore.AspNet;
-using Steeltoe.Extensions.Configuration.CloudFoundry;
 using logindirector.Services;
 using logindirector.Helpers;
-using Amazon.SecurityToken;
 using System.Linq;
 
 namespace logindirector
@@ -36,10 +34,6 @@ namespace logindirector
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddOptions();
-            services.ConfigureCloudFoundryOptions(_configuration);
-
-            services.AddDefaultAWSOptions(_configuration.GetAWSOptions());
-            services.AddAWSService<IAmazonSecurityTokenService>();
 
             // Enable Rollbar logging
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
@@ -160,6 +154,7 @@ namespace logindirector
             });
             services.AddMiniProfiler(options => options.RouteBasePath = "/profiler");
 
+            services.AddHealthChecks();
         }
 
         private static async Task CreateAuthTicket(OAuthCreatingTicketContext context)
@@ -231,6 +226,8 @@ namespace logindirector
             app.UseAuthorization();
 
             app.UseSession();
+
+            app.UseHealthChecks("/healthcheck");
 
             app.UseEndpoints(endpoints =>
             {

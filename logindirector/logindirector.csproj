@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <UserSecretsId>28629cd0-2560-4850-b320-451fe4fce19d</UserSecretsId>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -10,6 +9,7 @@
       <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
       <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
       <DockerfileContext>.</DockerfileContext>
+      <UserSecretsId>2595dee5-9094-427e-b5a8-99a9c5ca82ab</UserSecretsId>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

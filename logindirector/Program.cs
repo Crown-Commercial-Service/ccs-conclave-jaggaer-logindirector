@@ -24,8 +24,7 @@ namespace logindirector
             }
         }
 
-        private static IHostBuilder CreateCloudFoundryHostBuilder(string[] args)
-        {
+        private static IHostBuilder CreateCloudFoundryHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .UseCloudHosting(5000, 2021)
                 .AddCloudFoundryConfiguration()
@@ -54,7 +53,7 @@ namespace logindirector
                 {
                     webBuilder.UseStartup<Startup>();
                 });
-        }
+
 
         public static IHostBuilder CreateAWSHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)

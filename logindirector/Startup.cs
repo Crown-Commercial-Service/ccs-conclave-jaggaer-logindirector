@@ -16,6 +16,8 @@ using Rollbar.NetCore.AspNet;
 using logindirector.Services;
 using logindirector.Helpers;
 using System.Linq;
+using Amazon.SecurityToken;
+using Steeltoe.Extensions.Configuration.CloudFoundry;
 
 namespace logindirector
 {
@@ -34,6 +36,15 @@ namespace logindirector
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddOptions();
+
+            var deploymentEnvironment = Environment.GetEnvironmentVariable("DEPLOYMENT_ENVIRONMENT");
+
+            if (string.IsNullOrEmpty(deploymentEnvironment) || deploymentEnvironment == "CloudFoundry")
+            {
+                services.ConfigureCloudFoundryOptions(_configuration);
+                services.AddDefaultAWSOptions(_configuration.GetAWSOptions());
+                services.AddAWSService<IAmazonSecurityTokenService>();
+            }
 
             // Enable Rollbar logging
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();

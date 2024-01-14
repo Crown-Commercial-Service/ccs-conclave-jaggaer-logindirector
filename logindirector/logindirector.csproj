@@ -26,7 +26,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Steeltoe.Common.Hosting" Version="3.2.6" />
     <PackageReference Include="Steeltoe.Management.CloudFoundryCore" Version="3.2.6" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.3" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.2.0" />
     <PackageReference Include="Rollbar.NetCore.AspNet" Version="5.2.0" />
     <PackageReference Include="Amazon.AspNetCore.DataProtection.SSM" Version="3.2.0" />
     <PackageReference Include="Amazon.Extensions.Configuration.SystemsManager" Version="6.0.0" />

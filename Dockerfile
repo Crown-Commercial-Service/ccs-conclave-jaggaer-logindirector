@@ -4,11 +4,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:6.0-alpine AS base
 WORKDIR /app
 EXPOSE 80
 
-# Update packages
-RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get clean
-
 FROM mcr.microsoft.com/dotnet/sdk:6.0-alpine AS build
 WORKDIR /src
 COPY ["logindirector/logindirector.csproj", "."]

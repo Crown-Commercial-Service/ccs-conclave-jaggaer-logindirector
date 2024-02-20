@@ -17,7 +17,7 @@ RUN dotnet publish "logindirector.csproj" -c Release -o /app/publish /p:UseAppHo
 
 FROM base AS final
 
-RUN apk upgrade
+RUN apk upgrade && apk add curl && rm -rf /var/cache/apk
 
 WORKDIR /app
 COPY --from=publish /app/publish .

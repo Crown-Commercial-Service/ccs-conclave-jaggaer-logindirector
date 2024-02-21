@@ -1,10 +1,10 @@
-using System;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using Steeltoe.Extensions.Configuration.CloudFoundry;
 using Steeltoe.Common.Hosting;
+using System;
 using System.Linq;
+using Steeltoe.Extensions.Configuration.CloudFoundry;
 
 namespace logindirector
 {
@@ -12,14 +12,22 @@ namespace logindirector
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+            var deploymentEnvironment = Environment.GetEnvironmentVariable("DEPLOYMENT_ENVIRONMENT");
 
+            if (string.IsNullOrEmpty(deploymentEnvironment) || deploymentEnvironment == "CloudFoundry")
+            {
+                CreateCloudFoundryHostBuilder(args).Build().Run();
+            }
+            else if (deploymentEnvironment == "AWS")
+            {
+                CreateAWSHostBuilder(args).Build().Run();
+            }
         }
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
+        private static IHostBuilder CreateCloudFoundryHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-            .UseCloudHosting(5000,2021)
-            .AddCloudFoundryConfiguration()
+                .UseCloudHosting(5000, 2021)
+                .AddCloudFoundryConfiguration()
 
                 .ConfigureAppConfiguration((hostingContext, config) =>
                 {
@@ -45,5 +53,16 @@ namespace logindirector
                 {
                     webBuilder.UseStartup<Startup>();
                 });
+
+
+        public static IHostBuilder CreateAWSHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration(c =>
+                {
+                    c.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                        .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json", true, true)
+                        .AddEnvironmentVariables();
+                })
+                .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
     }
 }

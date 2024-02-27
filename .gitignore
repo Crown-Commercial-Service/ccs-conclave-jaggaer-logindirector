@@ -63,3 +63,4 @@ packages/*
 
 # Microsoft Fakes
 FakesAssemblies/
+/Docker/docker-compose.yaml

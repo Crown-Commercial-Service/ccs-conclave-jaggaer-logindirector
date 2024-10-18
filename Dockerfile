@@ -16,7 +16,7 @@ FROM build AS publish
 RUN dotnet publish "logindirector.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
-RUN apk upgrade && apk add curl && rm -rf /var/cache/apk
+RUN apk upgrade && apk del busybox ca-certificates curl git && rm -rf /var/cache/apk
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "logindirector.dll"]

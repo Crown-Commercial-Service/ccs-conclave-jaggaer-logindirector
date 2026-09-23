@@ -21,7 +21,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\logindirector.csproj" />
+      <ProjectReference Include="..\logindirector\logindirector.csproj" />
     </ItemGroup>
 
 </Project>

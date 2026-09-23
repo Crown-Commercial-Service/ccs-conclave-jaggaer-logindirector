@@ -6,7 +6,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Assert = NUnit.Framework.Assert;
 
-namespace LoginDirectorTests;
+namespace LoginDirectorTests.Helpers;
 
 [TestFixture]
 public class UserHelpersTests

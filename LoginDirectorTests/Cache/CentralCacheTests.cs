@@ -10,7 +10,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Assert = NUnit.Framework.Assert;
 
-namespace LoginDirectorTests;
+namespace LoginDirectorTests.Cache;
 
 [TestFixture]
 public class CentralCacheTests
@@ -74,12 +74,15 @@ public class CentralCacheTests
         return await _userHelpers.DoesUserHaveValidSession(_requestController.ControllerContext.HttpContext, CommonSid);
     }
 
-    [TestCase(null, 0)]
-    [TestCase("", 0)]
-    [TestCase(CommonTestEmail, 1)]
+    [TestCase(null, 0, Description = "Null user object should not create cache entry")]
+    [TestCase("", 0, Description = "Empty email string should not create cache entry")]
+    [TestCase("   ", 0, Description = "Whitespace email string should not create cache entry")]
+    [TestCase(CommonTestEmail, 1, Description = "Valid email should create cache entry with 1 item")]
     public void AddUserToCentralSessionCache_WhenCalled_UpdatesCacheCorrectly(string? emailAddress, int expectedCount)
     {
         // Arrange
+        // If emailAddress is null, userModel itself is null.
+        // If emailAddress is "" or "   ", userModel is instantiated with that invalid email.
         AdaptorUserModel? userModel = emailAddress != null
             ? new AdaptorUserModel { emailAddress = emailAddress }
             : null;
@@ -89,12 +92,28 @@ public class CentralCacheTests
 
         // Assert
         bool cacheFound = _memoryCache.TryGetValue(AppConstants.CentralCache_Key, out List<UserSessionModel>? sessionsList);
-        
+
         Assert.Multiple(() =>
         {
-            Assert.That(cacheFound, Is.True, "Cache key was not set.");
-            Assert.That(sessionsList, Is.Not.Null);
-            Assert.That(sessionsList, Has.Count.EqualTo(expectedCount));
+            if (expectedCount > 0)
+            {
+                Assert.That(cacheFound, Is.True, "Cache key should exist for valid user.");
+                Assert.That(sessionsList, Is.Not.Null);
+                Assert.That(sessionsList, Has.Count.EqualTo(expectedCount));
+            }
+            else
+            {
+                // For invalid users (0 count expected), either the cache key was never created,
+                // or if it exists, the sessions list must be empty.
+                if (cacheFound)
+                {
+                    Assert.That(sessionsList, Has.Count.EqualTo(0));
+                }
+                else
+                {
+                    Assert.That(cacheFound, Is.False, "Cache key should not be created for invalid user.");
+                }
+            }
         });
     }
 

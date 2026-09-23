@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using Steeltoe.Common.Hosting;
 using System;
 using System.Linq;
-using Steeltoe.Extensions.Configuration.CloudFoundry;
+using Steeltoe.Bootstrap.AutoConfiguration;
+using Steeltoe.Configuration.CloudFoundry;
 
 namespace logindirector
 {
@@ -26,7 +26,7 @@ namespace logindirector
 
         private static IHostBuilder CreateCloudFoundryHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .UseCloudHosting(5000, 2021)
+                .AddSteeltoe()
                 .AddCloudFoundryConfiguration()
 
                 .ConfigureAppConfiguration((hostingContext, config) =>

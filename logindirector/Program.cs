@@ -3,12 +3,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Linq;
-using Steeltoe.Bootstrap.AutoConfiguration;
 using Steeltoe.Configuration.CloudFoundry;
 
 namespace logindirector
 {
-    public class Program
+    public static class Program
     {
         public static void Main(string[] args)
         {
@@ -25,34 +24,54 @@ namespace logindirector
         }
 
         private static IHostBuilder CreateCloudFoundryHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .AddSteeltoe()
-                .AddCloudFoundryConfiguration()
+        Host.CreateDefaultBuilder(args)
+            .AddCloudFoundryConfiguration()
+            .ConfigureAppConfiguration((hostingContext, config) =>
+            {
+                bool isDevelopment = hostingContext.HostingEnvironment.IsDevelopment();
 
-                .ConfigureAppConfiguration((hostingContext, config) =>
+                if (!isDevelopment)
                 {
-                    bool isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == Environments.Development;
+                    IConfigurationRoot interimConfig = config.Build();
 
-                    if (!isDevelopment)
+                    // "vcap:services" maps directly to VCAP_SERVICES in Steeltoe 4
+                    var cloudServiceConfig = interimConfig.GetSection("vcap:services")
+                        .Get<CloudFoundryServicesOptions>();
+
+                    var awsSsmService = cloudServiceConfig?.Services?["user-provided"]?
+                        .FirstOrDefault(s => string.Equals(s.Name, "aws-ssm", StringComparison.OrdinalIgnoreCase));
+
+                    if (awsSsmService?.Credentials != null)
                     {
-                        IConfigurationRoot configg = config.Build();
-                        CloudFoundryServicesOptions cloudServiceConfig = configg.GetSection("vcap").Get<CloudFoundryServicesOptions>();
-                        string cf_aws_access_key_id = cloudServiceConfig.Services["user-provided"].First(s => s.Name == "aws-ssm").Credentials["aws_access_key_id"].Value;
-                        string cf_aws_secret_access_key = cloudServiceConfig.Services["user-provided"].First(s => s.Name == "aws-ssm").Credentials["aws_secret_access_key"].Value;
-                        string cf_aws_region = cloudServiceConfig.Services["user-provided"].First(s => s.Name == "aws-ssm").Credentials["region"].Value;
+                        if (awsSsmService.Credentials.TryGetValue("aws_access_key_id", out var keyId))
+                            Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", keyId.Value);
 
-                        Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", cf_aws_access_key_id);
-                        Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", cf_aws_secret_access_key);
-                        Environment.SetEnvironmentVariable("AWS_REGION", cf_aws_region);
+                        if (awsSsmService.Credentials.TryGetValue("aws_secret_access_key", out var secretKey))
+                            Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", secretKey.Value);
+
+                        if (awsSsmService.Credentials.TryGetValue("region", out var region))
+                            Environment.SetEnvironmentVariable("AWS_REGION", region.Value);
                     }
+                    
+                    // AWS Systems Manager parameter store configuration
+                    config.AddSystemsManager("/", TimeSpan.FromMinutes(5));
+                }
+            })
+            .ConfigureWebHostDefaults(webBuilder =>
+            {
+                var cfPort = Environment.GetEnvironmentVariable("PORT") ?? Environment.GetEnvironmentVariable("SERVER_PORT");
 
-                    config.AddSystemsManager($"/", TimeSpan.FromMinutes(5));
-
-                })
-                .ConfigureWebHostDefaults(webBuilder =>
+                if (!string.IsNullOrEmpty(cfPort))
                 {
-                    webBuilder.UseStartup<Startup>();
-                });
+                    webBuilder.UseUrls($"http://*:{cfPort}");
+                }
+                else
+                {
+                    webBuilder.UseUrls("http://localhost:5000", "https://localhost:2021");
+                }
+
+                webBuilder.UseStartup<Startup>();
+            });
 
 
         public static IHostBuilder CreateAWSHostBuilder(string[] args) =>

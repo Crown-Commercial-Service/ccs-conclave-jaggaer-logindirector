@@ -52,4 +52,7 @@
       <_Parameter1>LoginDirectorTests</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="LoginDirectorTests\obj\LoginDirectorTests.csproj.nuget.dgspec.json" />
+  </ItemGroup>
 </Project>

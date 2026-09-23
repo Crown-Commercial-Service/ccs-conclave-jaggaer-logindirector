@@ -19,7 +19,6 @@ using Rollbar;
 using Microsoft.AspNetCore.Diagnostics;
 
 // Controller to handle all incoming and outgoing requests to and from the application
-[assembly: InternalsVisibleTo("LoginDirectorTests")]
 namespace logindirector.Controllers
 {
     public class RequestController : Controller

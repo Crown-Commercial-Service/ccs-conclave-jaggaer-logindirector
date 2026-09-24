@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Linq;
+using System.Reflection;
 using Steeltoe.Configuration.CloudFoundry;
 
 namespace logindirector
@@ -55,6 +56,11 @@ namespace logindirector
                         
                         // AWS Systems Manager parameter store configuration
                         config.AddSystemsManager("/", TimeSpan.FromMinutes(5));
+                    }
+                    else
+                    {
+                        // Force-load user secrets in development mode
+                        config.AddUserSecrets(Assembly.GetExecutingAssembly(), optional: false);
                     }
                 })
                 .ConfigureWebHostDefaults(webBuilder =>

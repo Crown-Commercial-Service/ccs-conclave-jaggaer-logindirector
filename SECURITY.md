@@ -1,6 +1,6 @@
-Contact: cybersecurity@crowncommercial.gov.uk
+Contact: cybersecurity@gca.gov.uk
 
-Policy: https://www.crowncommercial.gov.uk/about-ccs/vulnerability-disclosure-policy
+Policy: https://www.gca.gov.uk/about-gca/vulnerability-disclosure-policy
 
 Acknowledgements: https://github.com/Crown-Commercial-Service/ccs-vulnerability-disclosure-policy/blob/main/acknowledgements.txt
 

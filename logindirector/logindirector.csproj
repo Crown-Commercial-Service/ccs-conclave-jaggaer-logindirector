@@ -6,7 +6,7 @@
 
   <PropertyGroup>
       <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
-      <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+      <!--<GenerateAssemblyInfo>false</GenerateAssemblyInfo> TODO: Determine whether this is needed when deploying -->
       <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
       <DockerfileContext>.</DockerfileContext>
       <UserSecretsId>2595dee5-9094-427e-b5a8-99a9c5ca82ab</UserSecretsId>

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Security.Claims;
 using FluentAssertions;
 using logindirector.Constants;
@@ -51,7 +52,7 @@ namespace LoginDirectorTests.Controllers
             };
 
             _configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(inMemorySettings)
+                .AddInMemoryCollection(inMemorySettings!)
                 .Build();
 
             _controller = new RequestController(
@@ -74,8 +75,8 @@ namespace LoginDirectorTests.Controllers
         public void TearDown()
         {
             Environment.SetEnvironmentVariable("IsLocal", null);
-            _controller?.Dispose();
-            _controller = null;
+            _controller.Dispose();
+            _controller = null!;
         }
 
         #region Helper Methods Setup
@@ -92,7 +93,7 @@ namespace LoginDirectorTests.Controllers
         {
             if (isAuthenticated)
             {
-                Claim[] claims = new[] { new Claim(ClaimTypes.Sid, sid) };
+                Claim[] claims = [new Claim(ClaimTypes.Sid, sid)];
                 ClaimsIdentity identity = new ClaimsIdentity(claims, "TestAuth");
                 _httpContext.User = new ClaimsPrincipal(identity);
             }
@@ -396,9 +397,10 @@ namespace LoginDirectorTests.Controllers
             _controller.storeRequestDetailsInSession(model);
 
             // Assert
-            string json = _session.GetString(AppConstants.Session_RequestDetailsKey);
+            string? json = _session.GetString(AppConstants.Session_RequestDetailsKey);
             json.Should().NotBeNullOrEmpty();
-            RequestSessionModel deserialized = JsonConvert.DeserializeObject<RequestSessionModel>(json);
+            RequestSessionModel? deserialized = JsonConvert.DeserializeObject<RequestSessionModel>(json);
+            Debug.Assert(deserialized != null, nameof(deserialized) + " != null");
             deserialized.domain.Should().Be("test.com");
         }
 
@@ -456,7 +458,7 @@ namespace LoginDirectorTests.Controllers
 
             FeatureCollection featureCollection = new FeatureCollection();
             featureCollection.Set(exceptionFeatureMock.Object);
-            _mockHttpContextAccessor.Setup(a => a.HttpContext.Features).Returns(featureCollection);
+            _mockHttpContextAccessor.Setup(a => a.HttpContext!.Features).Returns(featureCollection);
 
             ErrorViewModel errorViewModel = new ErrorViewModel();
             _mockUserHelpers.Setup(h => h.BuildErrorModelForUser(It.IsAny<string>())).Returns(errorViewModel);
@@ -503,7 +505,7 @@ namespace LoginDirectorTests.Controllers
             ViewResult viewResult = (ViewResult)result;
             viewResult.ViewName.Should().Be("~/Views/Errors/Generic.cshtml");
             
-            ErrorViewModel model = viewResult.Model as ErrorViewModel;
+            ErrorViewModel model = viewResult.Model as ErrorViewModel ?? throw new InvalidOperationException();
             model.Should().NotBeNull();
             model.RequestId.Should().Be("trace-id-999");
         }
@@ -523,10 +525,10 @@ namespace LoginDirectorTests.Controllers
         public IEnumerable<string> Keys => _store.Keys;
 
         public void Clear() => _store.Clear();
-        public Task CommitAsync(System.Threading.CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task LoadAsync(System.Threading.CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task CommitAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task LoadAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
         public void Remove(string key) => _store.Remove(key);
         public void Set(string key, byte[] value) => _store[key] = value;
-        public bool TryGetValue(string key, out byte[] value) => _store.TryGetValue(key, out value);
+        public bool TryGetValue(string key, out byte[] value) => _store.TryGetValue(key, out value!);
     }
 }

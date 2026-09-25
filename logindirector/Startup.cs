@@ -17,7 +17,7 @@ using logindirector.Services;
 using logindirector.Helpers;
 using System.Linq;
 using Amazon.SecurityToken;
-using Steeltoe.Extensions.Configuration.CloudFoundry;
+using Steeltoe.Configuration.CloudFoundry;
 
 namespace logindirector
 {
@@ -41,7 +41,7 @@ namespace logindirector
 
             if (string.IsNullOrEmpty(deploymentEnvironment) || deploymentEnvironment == "CloudFoundry")
             {
-                services.ConfigureCloudFoundryOptions(_configuration);
+                services.AddCloudFoundryOptions();
                 services.AddDefaultAWSOptions(_configuration.GetAWSOptions());
                 services.AddAWSService<IAmazonSecurityTokenService>();
             }

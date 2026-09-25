@@ -64,3 +64,9 @@ packages/*
 # Microsoft Fakes
 FakesAssemblies/
 /Docker/docker-compose.yaml
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr

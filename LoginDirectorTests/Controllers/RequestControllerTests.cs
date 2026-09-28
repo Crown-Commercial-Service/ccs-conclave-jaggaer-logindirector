@@ -5,6 +5,7 @@ using logindirector.Constants;
 using logindirector.Controllers;
 using logindirector.Helpers;
 using logindirector.Models;
+using LoginDirectorTests.Shared;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
@@ -511,24 +512,5 @@ namespace LoginDirectorTests.Controllers
         }
 
         #endregion
-    }
-
-    /// <summary>
-    /// In-memory ISession implementation for controller testing
-    /// </summary>
-    public class TestSession : ISession
-    {
-        private readonly Dictionary<string, byte[]> _store = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
-
-        public bool IsAvailable => true;
-        public string Id => "TestSessionId";
-        public IEnumerable<string> Keys => _store.Keys;
-
-        public void Clear() => _store.Clear();
-        public Task CommitAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task LoadAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public void Remove(string key) => _store.Remove(key);
-        public void Set(string key, byte[] value) => _store[key] = value;
-        public bool TryGetValue(string key, out byte[] value) => _store.TryGetValue(key, out value!);
     }
 }

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Net;
-using System.Web;
-using System.Threading.Tasks;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
+using System.Web;
 using Microsoft.Extensions.Configuration;
 using Rollbar;
 using logindirector.Constants;
@@ -14,10 +14,12 @@ namespace logindirector.Services
     // Service Client for the Tenders API service - where Jaegger operations are performed against
     public class TendersClientServices : ITendersClientServices
     {
+        private readonly HttpClient _httpClient;
         public IConfiguration _configuration { get; }
 
-        public TendersClientServices(IConfiguration configuration)
+        public TendersClientServices(HttpClient httpClient, IConfiguration configuration)
         {
+            _httpClient = httpClient;
             _configuration = configuration;
         }
 
@@ -38,7 +40,7 @@ namespace logindirector.Services
                     // We now need to map our response to a useful model to return
                     model = new UserStatusModel();
 
-                    if (responseModel.StatusCode == HttpStatusCode.NotFound && responseModel.ResponseValue.Contains("not found in Jaggaer"))
+                    if (responseModel.StatusCode == HttpStatusCode.NotFound && responseModel.ResponseValue != null && responseModel.ResponseValue.Contains("not found in Jaggaer"))
                     {
                         // The user either doesn't exist in Jaegger, or their account is unmerged
                         model.UserStatus = AppConstants.Tenders_UserStatus_ActionRequired;
@@ -144,20 +146,19 @@ namespace logindirector.Services
             try
             {
                 // Establish a request to the specified route
-                HttpRequestMessage request = new HttpRequestMessage(method, routeUri);
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-
-                HttpClientHandler handler = new HttpClientHandler();
-                using (HttpClient client = new HttpClient(handler))
+                using (HttpRequestMessage request = new HttpRequestMessage(method, routeUri))
                 {
-                    HttpResponseMessage response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-                    // Now we have a response, we need to map a generic response model from it to use later - because we'll need access to the status code as well as the value later
-                    model = new GenericResponseModel
+                    using (HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
                     {
-                        StatusCode = response.StatusCode,
-                        ResponseValue = await response.Content.ReadAsStringAsync()
-                    };
+                        // Now we have a response, we need to map a generic response model from it to use later
+                        model = new GenericResponseModel
+                        {
+                            StatusCode = response.StatusCode,
+                            ResponseValue = await response.Content.ReadAsStringAsync()
+                        };
+                    }
                 }
             }
             catch (Exception ex)

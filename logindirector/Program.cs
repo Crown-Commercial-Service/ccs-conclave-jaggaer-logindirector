@@ -8,7 +8,7 @@ using Steeltoe.Configuration.CloudFoundry;
 
 namespace logindirector
 {
-    public static class Program
+    public class Program
     {
         public static void Main(string[] args)
         {
@@ -24,7 +24,7 @@ namespace logindirector
             }
         }
 
-        private static IHostBuilder CreateCloudFoundryHostBuilder(string[] args) =>
+        public static IHostBuilder CreateCloudFoundryHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .AddCloudFoundryConfiguration()
                 .ConfigureAppConfiguration((hostingContext, config) =>
@@ -78,7 +78,6 @@ namespace logindirector
 
                     webBuilder.UseStartup<Startup>();
                 });
-
 
         public static IHostBuilder CreateAWSHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)

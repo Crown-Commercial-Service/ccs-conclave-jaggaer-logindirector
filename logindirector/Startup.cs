@@ -60,8 +60,8 @@ namespace logindirector
             });
 
             // Register any custom services we have
-            services.AddScoped<IAdaptorClientServices, AdaptorClientServices>();
-            services.AddScoped<ITendersClientServices, TendersClientServices>();
+            services.AddHttpClient<IAdaptorClientServices, AdaptorClientServices>();
+            services.AddHttpClient<ITendersClientServices, TendersClientServices>();
             services.AddScoped<IHelpers, UserHelpers>();
 
             // Enable Session for the app

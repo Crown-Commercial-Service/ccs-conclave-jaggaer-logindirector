@@ -30,8 +30,9 @@ namespace logindirector
                 .ConfigureAppConfiguration((hostingContext, config) =>
                 {
                     bool isDevelopment = hostingContext.HostingEnvironment.IsDevelopment();
+                    bool isTesting = hostingContext.HostingEnvironment.IsEnvironment("Testing") || hostingContext.HostingEnvironment.IsEnvironment("Test");
 
-                    if (!isDevelopment)
+                    if (!isDevelopment && !isTesting)
                     {
                         IConfigurationRoot interimConfig = config.Build();
 
@@ -53,14 +54,14 @@ namespace logindirector
                             if (awsSsmService.Credentials.TryGetValue("region", out var region))
                                 Environment.SetEnvironmentVariable("AWS_REGION", region.Value);
                         }
-                        
+        
                         // AWS Systems Manager parameter store configuration
                         config.AddSystemsManager("/", TimeSpan.FromMinutes(5));
                     }
-                    else
+                    else if (isDevelopment)
                     {
-                        // Force-load user secrets in development mode
-                        config.AddUserSecrets(Assembly.GetExecutingAssembly(), optional: false);
+                        // Make secrets.json optional so CI/CD runners don't crash if it's missing
+                        config.AddUserSecrets(Assembly.GetExecutingAssembly(), optional: true);
                     }
                 })
                 .ConfigureWebHostDefaults(webBuilder =>

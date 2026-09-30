@@ -70,3 +70,13 @@ FakesAssemblies/
 *.iws
 *.iml
 *.ipr
+
+### NodeJS ###
+node_modules
+node
+
+### Compiled assets ###
+wwwroot/public/assets/application.css
+wwwroot/public/assets/application.js
+wwwroot/public/assets/images/*
+wwwroot/public/assets/fonts/*

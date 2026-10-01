@@ -21,8 +21,6 @@
     <Folder Include="Constants\" />
     <Folder Include="wwwroot\assets\" />
     <Folder Include="wwwroot\assets\images\" />
-    <Folder Include="wwwroot\assets\javascript\" />
-    <Folder Include="wwwroot\assets\stylesheets\" />
     <Folder Include="Models\TendersApi\" />
     <Folder Include="Views\Merging\" />
   </ItemGroup>

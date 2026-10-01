@@ -107,7 +107,11 @@ const buildScripts = async () => {
 /* Compile SCSS styling from local storage in SCSS */
 const buildStyles = () => {
     return src(`${paths.styles.src}/application.scss`)
-        .pipe(sass().on('error', sass.logError))
+        .pipe(
+            sass({
+                includePaths: ['node_modules']
+            }).on('error', sass.logError)
+        )
         .pipe(postcss([cssnano()]))
         .pipe(gulp.dest(paths.styles.dest));
 };

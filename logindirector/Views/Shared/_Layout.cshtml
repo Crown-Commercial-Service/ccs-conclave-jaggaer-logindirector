@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex,nofollow" />
     <title>@ViewData["Title"] - Login Director</title>
-    <link rel="stylesheet" href="~/Assets/styles/main.css">
+    <link rel="stylesheet" href="~/public/assets/application.css">
 </head>
 <body class="govuk-template__body">
     <mini-profiler position="@RenderPosition.Right" max-traces="5" />
@@ -16,9 +16,7 @@
     <header class="header-global header-global--home">
         <div class="ccs-width-container">
             <div class="nav-wrapper">
-                <span class="logo">
-                    <img src="~/Assets/images/CCS_WHITE_SML_AW.png" alt="Crown Commercial Service">
-                </span>
+                @await Html.PartialAsync("~/Views/Header/Logo.cshtml")
             </div>
         </div>
     </header>
@@ -64,8 +62,7 @@
             </div>
         </div>
     </footer>
-
-    <script src="~/Assets/scripts/libraries/jquery-3.6.0.js"></script>
-    <script src="~/Assets/scripts/app.js" asp-append-version="true"></script>
+    
+    <script src="~/public/assets/application.js" asp-append-version="true"></script>
 </body>
 </html>

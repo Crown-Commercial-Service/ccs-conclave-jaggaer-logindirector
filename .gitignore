@@ -76,7 +76,7 @@ node_modules
 node
 
 ### Compiled assets ###
-wwwroot/public/assets/application.css
-wwwroot/public/assets/application.js
-wwwroot/public/assets/images/*
-wwwroot/public/assets/fonts/*
+logindirector/wwwroot/public/assets/application.css
+logindirector/wwwroot/public/assets/application.js
+logindirector/wwwroot/public/assets/images/*
+logindirector/wwwroot/public/assets/fonts/*

@@ -11,9 +11,18 @@
 }
 
 .footer-logo-copyright {
-  padding-top: 4px;
+  padding-top: 10px;
+  padding-left: 16px;
 }
 
 .ccs-footer-feedback {
   background-color: #f4f8fb;
+}
+
+.govuk-footer__inline-list {
+  text-align: right;
+}
+
+.govuk-footer__link:link {
+  color: #000;
 }

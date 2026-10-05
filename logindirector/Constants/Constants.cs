@@ -29,7 +29,7 @@
         public const string Tenders_UserCreation_Error = "UnexpectedFailure";
         public const string Tenders_UserCreation_AlreadyExists = "UserAlreadyExists";
 
-        public const string Display_JaeggerServiceName = "CCS eSourcing";
+        public const string Display_JaeggerServiceName = "GCA eSourcing";
         public const string Display_CatServiceName = "Contract Award Service";
     }
 }

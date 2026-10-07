@@ -72,8 +72,9 @@ FakesAssemblies/
 *.ipr
 
 ### NodeJS ###
-node_modules
+node_modules/
 node
+.node/
 
 ### Compiled assets ###
 logindirector/wwwroot/public/assets/application.css

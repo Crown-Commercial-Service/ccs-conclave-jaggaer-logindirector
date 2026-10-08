@@ -4,12 +4,22 @@ updates:
   - package-ecosystem: "nuget"
     directory: "/logindirector"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
       day: "sunday"
+    open-pull-requests-limit: 25
 
   # Check for NuGet updates in the unit test project
   - package-ecosystem: "nuget"
     directory: "/LoginDirectorTests"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
       day: "sunday"
+    open-pull-requests-limit: 25
+      
+  # Check for NPM updates in the core application project
+  - package-ecosystem: "npm"
+    directory: "/logindirector"
+    schedule:
+      interval: "monthly"
+      day: "sunday"
+    open-pull-requests-limit: 25

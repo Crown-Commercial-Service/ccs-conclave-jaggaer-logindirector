@@ -260,7 +260,7 @@ namespace logindirector.Controllers
         }
 
         // Adds an entry for an authenticated user into the central session cache
-        internal void AddUserToCentralSessionCache(AdaptorUserModel userModel)
+        public void AddUserToCentralSessionCache(AdaptorUserModel userModel)
         {
             if (userModel != null && !String.IsNullOrWhiteSpace(userModel.emailAddress))
             {

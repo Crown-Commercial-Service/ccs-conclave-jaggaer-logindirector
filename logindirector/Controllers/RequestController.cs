@@ -11,15 +11,12 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using logindirector.Constants;
 using logindirector.Models;
-using System.Runtime.CompilerServices;
 using logindirector.Helpers;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
 using Rollbar;
 using Microsoft.AspNetCore.Diagnostics;
 
 // Controller to handle all incoming and outgoing requests to and from the application
-[assembly: InternalsVisibleTo("LoginDirectorTests")]
 namespace logindirector.Controllers
 {
     public class RequestController : Controller

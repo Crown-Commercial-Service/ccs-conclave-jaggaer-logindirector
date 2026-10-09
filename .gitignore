@@ -64,3 +64,20 @@ packages/*
 # Microsoft Fakes
 FakesAssemblies/
 /Docker/docker-compose.yaml
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NodeJS ###
+node_modules/
+node
+.node/
+
+### Compiled assets ###
+logindirector/wwwroot/public/assets/application.css
+logindirector/wwwroot/public/assets/application.js
+logindirector/wwwroot/public/assets/images/*
+logindirector/wwwroot/public/assets/fonts/*

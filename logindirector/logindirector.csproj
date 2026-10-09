@@ -1,50 +1,107 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
+
+    <!-- Node version configuration -->
+    <NodeVersion>v22.13.1</NodeVersion>
+    <LocalNodeDir>$(MSBuildProjectDirectory)/.node</LocalNodeDir>
   </PropertyGroup>
 
   <PropertyGroup>
-      <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
-      <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-      <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-      <DockerfileContext>.</DockerfileContext>
-      <UserSecretsId>2595dee5-9094-427e-b5a8-99a9c5ca82ab</UserSecretsId>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <!--<GenerateAssemblyInfo>false</GenerateAssemblyInfo> TODO: Determine whether this is needed when deploying -->
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>.</DockerfileContext>
+    <UserSecretsId>2595dee5-9094-427e-b5a8-99a9c5ca82ab</UserSecretsId>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+
   <ItemGroup>
     <Folder Include="Services\" />
     <Folder Include="Models\AdaptorService\" />
     <Folder Include="Constants\" />
-    <Folder Include="wwwroot\Assets\" />
-    <Folder Include="wwwroot\Assets\styles\" />
+    <Folder Include="wwwroot\assets\" />
+    <Folder Include="wwwroot\assets\images\" />
     <Folder Include="Models\TendersApi\" />
     <Folder Include="Views\Merging\" />
   </ItemGroup>
+
   <ItemGroup>
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.6" />
-    <PackageReference Include="MiniProfiler.AspNetCore.Mvc" Version="4.3.8" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.3.1" />
-    <PackageReference Include="Rollbar.NetCore.AspNet" Version="5.2.0" />
-    <PackageReference Include="MSTest.TestFramework" Version="3.2.1" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
+    <PackageReference Include="MiniProfiler.AspNetCore.Mvc" Version="4.5.4" />
+    <PackageReference Include="Newtonsoft.Json" Version="14.0.1-beta2" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />
+    <PackageReference Include="Rollbar.NetCore.AspNet" Version="5.2.2" />
+    <PackageReference Include="MSTest.TestFramework" Version="4.4.1" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.0" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="11.0.0-rc.1.26425.128" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
-    <PackageReference Include="Steeltoe.Common.Hosting" Version="3.2.6" />
-    <PackageReference Include="Steeltoe.Management.CloudFoundryCore" Version="3.2.6" />
-    <PackageReference Include="Amazon.AspNetCore.DataProtection.SSM" Version="3.2.0" />
-    <PackageReference Include="Amazon.Extensions.Configuration.SystemsManager" Version="6.0.0" />
-    <PackageReference Include="AWSSDK.Core" Version="3.7.302.12" />
-    <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.300.53" />
-    <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="3.7.302.8" />
-    <PackageReference Include="Steeltoe.Extensions.Configuration.CloudFoundryCore" Version="3.2.6" />
+    <PackageReference Include="Steeltoe.Bootstrap.AutoConfiguration" Version="4.3.0" />
+    <PackageReference Include="Steeltoe.Management.Endpoint" Version="4.3.0" />
+    <PackageReference Include="Amazon.AspNetCore.DataProtection.SSM" Version="4.0.3" />
+    <PackageReference Include="Amazon.Extensions.Configuration.SystemsManager" Version="7.1.1" />
+    <PackageReference Include="AWSSDK.Core" Version="4.0.102.8" />
+    <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.101.1" />
+    <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="4.0.104.1" />
+    <PackageReference Include="Steeltoe.Configuration.CloudFoundry" Version="4.3.0" />
   </ItemGroup>
+
   <ItemGroup>
     <Content Remove="LoginDirectorTests\obj\LoginDirectorTests.csproj.nuget.dgspec.json" />
-    <Content Remove="LoginDirectorTests\obj\LoginDirectorTests.csproj.nuget.dgspec.json" />
   </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>LoginDirectorTests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="LoginDirectorTests\obj\LoginDirectorTests.csproj.nuget.dgspec.json" />
+  </ItemGroup>
+
+  <!-- FE build on app run & publish config -->
+  <Target Name="EnsureIsolatedNode">
+    <PropertyGroup>
+      <NodeOs Condition="$([MSBuild]::IsOSPlatform('OSX'))">darwin</NodeOs>
+      <NodeOs Condition="$([MSBuild]::IsOSPlatform('Linux'))">linux</NodeOs>
+      <NodeOs Condition="$([MSBuild]::IsOSPlatform('Windows'))">win</NodeOs>
+
+      <NodeArch Condition="'$(NETCoreSdkRuntimeIdentifier)' != '' AND $(NETCoreSdkRuntimeIdentifier.Contains('arm64'))">arm64</NodeArch>
+      <NodeArch Condition="'$(NodeArch)' == '' AND '$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)' == 'Arm64'">arm64</NodeArch>
+      <NodeArch Condition="'$(NodeArch)' == ''">x64</NodeArch>
+    </PropertyGroup>
+
+    <!-- macOS / Linux download with curl or wget fallback -->
+    <Exec Condition="!Exists('$(LocalNodeDir)/bin/node') AND $([MSBuild]::IsOSPlatform('Windows')) == 'false'"
+          Command="mkdir -p &quot;$(LocalNodeDir)&quot; &amp;&amp; (curl -sL &quot;https://nodejs.org/dist/$(NodeVersion)/node-$(NodeVersion)-$(NodeOs)-$(NodeArch).tar.gz&quot; || wget -qO- &quot;https://nodejs.org/dist/$(NodeVersion)/node-$(NodeVersion)-$(NodeOs)-$(NodeArch).tar.gz&quot;) | tar -xz -C &quot;$(LocalNodeDir)&quot; --strip-components=1" />
+
+    <!-- Windows download -->
+    <Exec Condition="!Exists('$(LocalNodeDir)/node.exe') AND $([MSBuild]::IsOSPlatform('Windows'))"
+          Command="powershell -Command &quot;if (!(Test-Path '$(LocalNodeDir)')) { New-Item -ItemType Directory -Path '$(LocalNodeDir)' }; Invoke-WebRequest -Uri 'https://nodejs.org/dist/$(NodeVersion)/node-$(NodeVersion)-win-$(NodeArch).zip' -OutFile '$(LocalNodeDir)/node.zip'; Expand-Archive '$(LocalNodeDir)/node.zip' -DestinationPath '$(LocalNodeDir)' -Force; Get-ChildItem '$(LocalNodeDir)/node-$(NodeVersion)-win-$(NodeArch)/*' | Move-Item -Destination '$(LocalNodeDir)' -Force&quot;" />
+  </Target>
+
+  <!-- Executed during both standard Build and Publish phases -->
+  <Target Name="GenerateFrontendAssets"
+          BeforeTargets="BeforeBuild;ComputeFilesToPublish"
+          DependsOnTargets="EnsureIsolatedNode">
+    <PropertyGroup>
+      <LocalNodeBin Condition="$([MSBuild]::IsOSPlatform('Windows'))">$(LocalNodeDir)</LocalNodeBin>
+      <LocalNodeBin Condition="$([MSBuild]::IsOSPlatform('Windows')) == 'false'">$(LocalNodeDir)/bin</LocalNodeBin>
+    </PropertyGroup>
+
+    <!-- Run npm install if node_modules is missing -->
+    <Exec Command="npm install"
+          Condition="!Exists('node_modules')"
+          EnvironmentVariables="PATH=$(LocalNodeBin):$(PATH)"
+          ConsoleToMSBuild="true" />
+
+    <!-- Run generate-assets script -->
+    <Exec Command="npm run generate-assets"
+          EnvironmentVariables="PATH=$(LocalNodeBin):$(PATH)"
+          ConsoleToMSBuild="true" />
+  </Target>
 </Project>

@@ -1,0 +1,13 @@
+@use "../config" as *;
+
+.govuk-button {
+  background-color: gca-colour("button-green");
+
+  &:hover {
+    background-color: #96a138;
+  }
+}
+
+.govuk-button, .govuk-button:active, .govuk-button:focus, .govuk-button:hover, .govuk-button:link, .govuk-button:visited {
+  color: #0b0c0c;
+}

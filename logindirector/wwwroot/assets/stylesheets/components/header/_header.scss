@@ -1,0 +1,6 @@
+// Header style rules
+@use "../config" as *;
+
+.govuk-header {
+  background-color: $gca-brand-colour;
+}

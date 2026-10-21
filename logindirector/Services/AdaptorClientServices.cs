@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Web;
 using System.Threading.Tasks;
+using System.Web;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Rollbar;
@@ -13,10 +13,12 @@ namespace logindirector.Services
     // Service Client for the SSO Adaptor service - where we fetch user and department data from
     public class AdaptorClientServices : IAdaptorClientServices
     {
+        private readonly HttpClient _httpClient;
         public IConfiguration _configuration { get; }
 
-        public AdaptorClientServices(IConfiguration configuration)
+        public AdaptorClientServices(HttpClient httpClient, IConfiguration configuration)
         {
+            _httpClient = httpClient;
             _configuration = configuration;
         }
 
@@ -32,10 +34,14 @@ namespace logindirector.Services
 
                 string responseContent = await PerformAdaptorRequest(userInfoRouteUri + "?user-name=" + HttpUtility.UrlEncode(username));
 
-                if (responseContent != null)
+                if (!string.IsNullOrWhiteSpace(responseContent))
                 {
                     // We've got a response, so map the content to our object
-                    userInfo = JsonConvert.DeserializeObject<AdaptorUserModel>(responseContent);
+                    AdaptorUserModel deserialized = JsonConvert.DeserializeObject<AdaptorUserModel>(responseContent);
+                    if (deserialized != null)
+                    {
+                        userInfo = deserialized;
+                    }
                 }
             }
             catch (Exception ex)
@@ -57,18 +63,17 @@ namespace logindirector.Services
                        clientKey = _configuration.GetValue<string>("SsoService:ClientId");
 
                 // Establish a GET request to the specified route
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, routeUri);
-                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                request.Headers.Add("X-API-Key", adaptorKey);
-                request.Headers.Add("X-Consumer-ClientId", clientKey);
-
-                HttpClientHandler handler = new HttpClientHandler();
-                using (HttpClient client = new HttpClient(handler))
+                using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, routeUri))
                 {
-                    HttpResponseMessage response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-                    response.EnsureSuccessStatusCode();
+                    request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    request.Headers.Add("X-API-Key", adaptorKey);
+                    request.Headers.Add("X-Consumer-ClientId", clientKey);
 
-                    responseContent = await response.Content.ReadAsStringAsync();
+                    using (HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
+                    {
+                        response.EnsureSuccessStatusCode();
+                        responseContent = await response.Content.ReadAsStringAsync();
+                    }
                 }
             }
             catch (Exception ex)

@@ -1,4 +1,4 @@
-name: login director - build on PR
+name: Login Director - Build and Run Tests
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
       - "**/*.gitignore"
       - "**/*.gitattributes"
   pull_request:
-    types: [closed, opened, synchronize]
+    types: [opened, synchronize]
     branches: [develop, staging, main]
     paths-ignore:
       - "**/*.md"
@@ -16,54 +16,23 @@ on:
       - "**/*.gitattributes"
 
 jobs:
-  build:
-  
+  build-and-test:
     runs-on: ubuntu-latest
 
     env:
-      # Disable sending usage data to Microsof
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
-      # Stop wasting time caching packages
-      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
       DOTNET_NOLOGO: true
-      DOTNET_GENERATE_ASPNET_CERTIFICATE: false
-      DOTNET_ADD_GLOBAL_TOOLS_TO_PATH: false
-      DOTNET_MULTILEVEL_LOOKUP: 0
 
     steps:
-      - name: Checking your input
-        run: |
-          echo "github.event.pull_request.merged           : $MERGED_RAW"
-          echo "github.event.pull_request.merged  == true  : $MERGED_TRUE_BOOL"
-        env:
-          MERGED_RAW: ${{ github.event.pull_request.merged }}
-          MERGED_TRUE_BOOL: ${{ github.event.pull_request.merged == true }}
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - name: Check output
-        run: echo ${{ github.base_ref }}
-      
-      - name: Setup .NET v5.0
-        uses: actions/setup-dotnet@v1
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 6.0.417
+          dotnet-version: 10.0.x
 
-      - name: Restore
-        run: dotnet restore ${{ github.workspace }}/logindirector/logindirector.csproj
+      - name: Build Web App
+        run: dotnet build logindirector --configuration Release
 
-      - name: Build
-        run: dotnet build ${{ github.workspace }}/logindirector/logindirector.csproj --configuration Release --no-restore
-        #working-directory: ./logindirector
-
-      - name: Test
-        run: dotnet test ${{ github.workspace }}/logindirector/logindirector.csproj --no-restore
-        #working-directory: ./logindirector
-
-      - name: Publish
-        run: dotnet publish ${{ github.workspace }}/logindirector/logindirector.csproj
-
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ github.base_ref }}-deploymentArchive
-          path: ${{ github.workspace }}/logindirector/bin/Debug/net6.0/publish/
+      - name: Run Unit Tests
+        run: dotnet test LoginDirectorTests --configuration Release

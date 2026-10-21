@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using Steeltoe.Common.Hosting;
 using System;
 using System.Linq;
-using Steeltoe.Extensions.Configuration.CloudFoundry;
+using System.Reflection;
+using Steeltoe.Configuration.CloudFoundry;
 
 namespace logindirector
 {
@@ -24,36 +24,61 @@ namespace logindirector
             }
         }
 
-        private static IHostBuilder CreateCloudFoundryHostBuilder(string[] args) =>
+        public static IHostBuilder CreateCloudFoundryHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .UseCloudHosting(5000, 2021)
                 .AddCloudFoundryConfiguration()
-
                 .ConfigureAppConfiguration((hostingContext, config) =>
                 {
-                    bool isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == Environments.Development;
+                    bool isDevelopment = hostingContext.HostingEnvironment.IsDevelopment();
+                    bool isTesting = hostingContext.HostingEnvironment.IsEnvironment("Testing") || hostingContext.HostingEnvironment.IsEnvironment("Test");
 
-                    if (!isDevelopment)
+                    if (!isDevelopment && !isTesting)
                     {
-                        IConfigurationRoot configg = config.Build();
-                        CloudFoundryServicesOptions cloudServiceConfig = configg.GetSection("vcap").Get<CloudFoundryServicesOptions>();
-                        string cf_aws_access_key_id = cloudServiceConfig.Services["user-provided"].First(s => s.Name == "aws-ssm").Credentials["aws_access_key_id"].Value;
-                        string cf_aws_secret_access_key = cloudServiceConfig.Services["user-provided"].First(s => s.Name == "aws-ssm").Credentials["aws_secret_access_key"].Value;
-                        string cf_aws_region = cloudServiceConfig.Services["user-provided"].First(s => s.Name == "aws-ssm").Credentials["region"].Value;
+                        IConfigurationRoot interimConfig = config.Build();
 
-                        Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", cf_aws_access_key_id);
-                        Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", cf_aws_secret_access_key);
-                        Environment.SetEnvironmentVariable("AWS_REGION", cf_aws_region);
+                        // "vcap:services" maps directly to VCAP_SERVICES in Steeltoe 4
+                        var cloudServiceConfig = interimConfig.GetSection("vcap:services")
+                            .Get<CloudFoundryServicesOptions>();
+
+                        var awsSsmService = cloudServiceConfig?.Services?["user-provided"]?
+                            .FirstOrDefault(s => string.Equals(s.Name, "aws-ssm", StringComparison.OrdinalIgnoreCase));
+
+                        if (awsSsmService?.Credentials != null)
+                        {
+                            if (awsSsmService.Credentials.TryGetValue("aws_access_key_id", out var keyId))
+                                Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", keyId.Value);
+
+                            if (awsSsmService.Credentials.TryGetValue("aws_secret_access_key", out var secretKey))
+                                Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", secretKey.Value);
+
+                            if (awsSsmService.Credentials.TryGetValue("region", out var region))
+                                Environment.SetEnvironmentVariable("AWS_REGION", region.Value);
+                        }
+        
+                        // AWS Systems Manager parameter store configuration
+                        config.AddSystemsManager("/", TimeSpan.FromMinutes(5));
                     }
-
-                    config.AddSystemsManager($"/", TimeSpan.FromMinutes(5));
-
+                    else if (isDevelopment)
+                    {
+                        // Make secrets.json optional so CI/CD runners don't crash if it's missing
+                        config.AddUserSecrets(Assembly.GetExecutingAssembly(), optional: true);
+                    }
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
+                    var cfPort = Environment.GetEnvironmentVariable("PORT") ?? Environment.GetEnvironmentVariable("SERVER_PORT");
+
+                    if (!string.IsNullOrEmpty(cfPort))
+                    {
+                        webBuilder.UseUrls($"http://*:{cfPort}");
+                    }
+                    else
+                    {
+                        webBuilder.UseUrls("http://localhost:5000", "https://localhost:2021");
+                    }
+
                     webBuilder.UseStartup<Startup>();
                 });
-
 
         public static IHostBuilder CreateAWSHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)

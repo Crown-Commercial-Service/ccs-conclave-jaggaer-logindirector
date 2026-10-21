@@ -1,0 +1,24 @@
+// GCA branding settings
+@use "sass:map";
+@use "sass:string";
+
+$gca-colours: (
+        "button-green": #bbc946,
+        "red": #9b1a47,
+        "off-white": #f3f2f1,
+        "dark-red": #85163d,
+        "blue": rgb(143, 179, 255),
+);
+
+@function gca-colour($colour) {
+  $colour: string.quote($colour);
+
+  @if not map.has-key($gca-colours, $colour) {
+    @error "Unknown colour `#{$colour}`";
+  }
+
+  @return map.get($gca-colours, $colour);
+}
+
+$govuk-button-background-colour: gca-colour("button-green");
+$gca-brand-colour: gca-colour("blue") !default;

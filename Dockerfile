@@ -1,14 +1,27 @@
-#See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
+# See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
-FROM mcr.microsoft.com/dotnet/aspnet:6.0-alpine AS base
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS base
 WORKDIR /app
-EXPOSE 80
+EXPOSE 8080
 
-FROM mcr.microsoft.com/dotnet/sdk:6.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
+# Install Node.js & NPM into the SDK builder stage
+RUN apk add --no-cache nodejs npm
+
 WORKDIR /src
 COPY ["logindirector/logindirector.csproj", "."]
 RUN dotnet restore "./logindirector.csproj"
+
+# Copy package files and install npm dependencies using Docker layer caching
+COPY logindirector/package*.json ./
+RUN npm ci
+
+# Copy full application source code
 COPY logindirector .
+
+# Explicitly generate assets BEFORE dotnet build/publish runs
+RUN npm run generate-assets
+
 WORKDIR "/src/."
 RUN dotnet build "logindirector.csproj" -c Release -o /app/build
 

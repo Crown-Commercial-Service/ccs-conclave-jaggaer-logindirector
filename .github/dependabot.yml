@@ -1,31 +1,25 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
-# https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
-
 version: 2
 updates:
-  # Enable version updates for nuget
-  - package-ecosystem: "nuget" # See documentation for possible values
-  # Look for `package.json` and `lock` files in the `root` directory
-    directory: "/logindirector/" # Location of package manifests
-    # Check the nuget registry for updates every day (weekdays)
+  # Check for NuGet updates in the core application project
+  - package-ecosystem: "nuget"
+    directory: "/logindirector"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
       day: "sunday"
+    open-pull-requests-limit: 25
 
-  - package-ecosystem: "nuget" # See documentation for possible values
-  # Look for `package.json` and `lock` files in the `root` directory
-    directory: "/" # Location of package manifests
-    # Check the nuget registry for updates every day (weekdays)
+  # Check for NuGet updates in the unit test project
+  - package-ecosystem: "nuget"
+    directory: "/LoginDirectorTests"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
       day: "sunday"
-  
-  
-  #   # Maintain dependencies for GitHub Actions
-  # - package-ecosystem: "github-actions"
-  #   directory: "/"
-  #   schedule:
-  #     interval: "daily" 
-  #     interval: "daily" 
+    open-pull-requests-limit: 25
+      
+  # Check for NPM updates in the core application project
+  - package-ecosystem: "npm"
+    directory: "/logindirector"
+    schedule:
+      interval: "monthly"
+      day: "sunday"
+    open-pull-requests-limit: 25

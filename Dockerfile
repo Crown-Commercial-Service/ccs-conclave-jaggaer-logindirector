@@ -5,9 +5,17 @@ WORKDIR /app
 EXPOSE 8080
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
+# Install Node.js & NPM into the SDK builder stage
+RUN apk add --no-cache nodejs npm
+
 WORKDIR /src
 COPY ["logindirector/logindirector.csproj", "."]
 RUN dotnet restore "./logindirector.csproj"
+
+# Copy package files and install npm dependencies using Docker layer caching
+COPY logindirector/package*.json ./
+RUN npm ci
+
 COPY logindirector .
 WORKDIR "/src/."
 RUN dotnet build "logindirector.csproj" -c Release -o /app/build

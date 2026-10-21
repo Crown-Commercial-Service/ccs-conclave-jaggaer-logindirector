@@ -1,10 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-
-    <!-- Node version configuration -->
-    <NodeVersion>v22.13.1</NodeVersion>
-    <LocalNodeDir>$(MSBuildProjectDirectory)/.node</LocalNodeDir>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -62,50 +58,13 @@
   <ItemGroup>
     <_ContentIncludedByDefault Remove="LoginDirectorTests\obj\LoginDirectorTests.csproj.nuget.dgspec.json" />
   </ItemGroup>
-  
-  <!-- FE build on app run & publish config -->
-  <Target Name="EnsureIsolatedNode">
-    <PropertyGroup>
-      <NodeOs Condition="$([MSBuild]::IsOSPlatform('OSX'))">darwin</NodeOs>
-      <NodeOs Condition="$([MSBuild]::IsOSPlatform('Linux'))">linux</NodeOs>
-      <NodeOs Condition="$([MSBuild]::IsOSPlatform('Windows'))">win</NodeOs>
 
-      <NodeArch Condition="'$(NETCoreSdkRuntimeIdentifier)' != '' AND $(NETCoreSdkRuntimeIdentifier.Contains('arm64'))">arm64</NodeArch>
-      <NodeArch Condition="'$(NodeArch)' == '' AND '$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)' == 'Arm64'">arm64</NodeArch>
-      <NodeArch Condition="'$(NodeArch)' == ''">x64</NodeArch>
-    </PropertyGroup>
-
-    <!-- macOS / Linux download with curl or wget fallback -->
-    <Exec Condition="!Exists('$(LocalNodeDir)/bin/node') AND $([MSBuild]::IsOSPlatform('Windows')) == 'false'"
-          Command="mkdir -p &quot;$(LocalNodeDir)&quot; &amp;&amp; (curl -sL &quot;https://nodejs.org/dist/$(NodeVersion)/node-$(NodeVersion)-$(NodeOs)-$(NodeArch).tar.gz&quot; || wget -qO- &quot;https://nodejs.org/dist/$(NodeVersion)/node-$(NodeVersion)-$(NodeOs)-$(NodeArch).tar.gz&quot;) | tar -xz -C &quot;$(LocalNodeDir)&quot; --strip-components=1" />
-
-    <!-- Windows download -->
-    <Exec Condition="!Exists('$(LocalNodeDir)/node.exe') AND $([MSBuild]::IsOSPlatform('Windows'))"
-          Command="powershell -Command &quot;if (!(Test-Path '$(LocalNodeDir)')) { New-Item -ItemType Directory -Path '$(LocalNodeDir)' }; Invoke-WebRequest -Uri 'https://nodejs.org/dist/$(NodeVersion)/node-$(NodeVersion)-win-$(NodeArch).zip' -OutFile '$(LocalNodeDir)/node.zip'; Expand-Archive '$(LocalNodeDir)/node.zip' -DestinationPath '$(LocalNodeDir)' -Force; Get-ChildItem '$(LocalNodeDir)/node-$(NodeVersion)-win-$(NodeArch)/*' | Move-Item -Destination '$(LocalNodeDir)' -Force&quot;" />
-  </Target>
-
-  <!-- Executed during both standard Build and Publish phases -->
+  <!-- Only run asset generation when publishing/deploying the application -->
   <Target Name="GenerateFrontendAssets"
-          BeforeTargets="BeforeBuild;ComputeFilesToPublish"
-          DependsOnTargets="EnsureIsolatedNode">
-    <PropertyGroup>
-      <LocalNodeBin Condition="$([MSBuild]::IsOSPlatform('Windows'))">$(LocalNodeDir)</LocalNodeBin>
-      <LocalNodeBin Condition="$([MSBuild]::IsOSPlatform('Windows')) == 'false'">$(LocalNodeDir)/bin</LocalNodeBin>
+          BeforeTargets="ComputeFilesToPublish">
 
-      <!-- Explicit path to isolated npm executable -->
-      <NpmExe Condition="$([MSBuild]::IsOSPlatform('Windows'))">&quot;$(LocalNodeBin)/npm.cmd&quot;</NpmExe>
-      <NpmExe Condition="$([MSBuild]::IsOSPlatform('Windows')) == 'false'">&quot;$(LocalNodeBin)/npm&quot;</NpmExe>
-    </PropertyGroup>
-
-    <!-- Run npm install using isolated npm binary -->
-    <Exec Command="$(NpmExe) install"
-          Condition="!Exists('node_modules')"
-          EnvironmentVariables="PATH=$(LocalNodeBin):$(PATH)"
-          ConsoleToMSBuild="true" />
-
-    <!-- Run generate-assets script using isolated npm binary -->
-    <Exec Command="$(NpmExe) run generate-assets"
-          EnvironmentVariables="PATH=$(LocalNodeBin):$(PATH)"
+    <!-- Run generate-assets script using system npm inside Docker/CI -->
+    <Exec Command="npm run generate-assets"
           ConsoleToMSBuild="true" />
   </Target>
 </Project>

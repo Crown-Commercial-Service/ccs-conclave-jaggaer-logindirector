@@ -18,7 +18,7 @@
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^1.0.0",
     "cssnano": "^9.1.2",
-    "del": "^8.0.1",
+    "del": "^9.0.1",
     "gulp": "^5.0.1",
     "gulp-livereload": "^4.0.2",
     "gulp-postcss": "^10.0.0",

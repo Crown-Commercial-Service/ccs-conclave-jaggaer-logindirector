@@ -62,7 +62,7 @@
   <ItemGroup>
     <_ContentIncludedByDefault Remove="LoginDirectorTests\obj\LoginDirectorTests.csproj.nuget.dgspec.json" />
   </ItemGroup>
-
+  
   <!-- FE build on app run & publish config -->
   <Target Name="EnsureIsolatedNode">
     <PropertyGroup>
@@ -91,16 +91,20 @@
     <PropertyGroup>
       <LocalNodeBin Condition="$([MSBuild]::IsOSPlatform('Windows'))">$(LocalNodeDir)</LocalNodeBin>
       <LocalNodeBin Condition="$([MSBuild]::IsOSPlatform('Windows')) == 'false'">$(LocalNodeDir)/bin</LocalNodeBin>
+
+      <!-- Explicit path to isolated npm executable -->
+      <NpmExe Condition="$([MSBuild]::IsOSPlatform('Windows'))">&quot;$(LocalNodeBin)/npm.cmd&quot;</NpmExe>
+      <NpmExe Condition="$([MSBuild]::IsOSPlatform('Windows')) == 'false'">&quot;$(LocalNodeBin)/npm&quot;</NpmExe>
     </PropertyGroup>
 
-    <!-- Run npm install if node_modules is missing -->
-    <Exec Command="npm install"
+    <!-- Run npm install using isolated npm binary -->
+    <Exec Command="$(NpmExe) install"
           Condition="!Exists('node_modules')"
           EnvironmentVariables="PATH=$(LocalNodeBin):$(PATH)"
           ConsoleToMSBuild="true" />
 
-    <!-- Run generate-assets script -->
-    <Exec Command="npm run generate-assets"
+    <!-- Run generate-assets script using isolated npm binary -->
+    <Exec Command="$(NpmExe) run generate-assets"
           EnvironmentVariables="PATH=$(LocalNodeBin):$(PATH)"
           ConsoleToMSBuild="true" />
   </Target>

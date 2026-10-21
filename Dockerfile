@@ -16,7 +16,12 @@ RUN dotnet restore "./logindirector.csproj"
 COPY logindirector/package*.json ./
 RUN npm ci
 
+# Copy full application source code
 COPY logindirector .
+
+# Explicitly generate assets BEFORE dotnet build/publish runs
+RUN npm run generate-assets
+
 WORKDIR "/src/."
 RUN dotnet build "logindirector.csproj" -c Release -o /app/build
 

@@ -58,13 +58,4 @@
   <ItemGroup>
     <_ContentIncludedByDefault Remove="LoginDirectorTests\obj\LoginDirectorTests.csproj.nuget.dgspec.json" />
   </ItemGroup>
-
-  <!-- Only run asset generation when publishing/deploying the application -->
-  <Target Name="GenerateFrontendAssets"
-          BeforeTargets="ComputeFilesToPublish">
-
-    <!-- Run generate-assets script using system npm inside Docker/CI -->
-    <Exec Command="npm run generate-assets"
-          ConsoleToMSBuild="true" />
-  </Target>
 </Project>

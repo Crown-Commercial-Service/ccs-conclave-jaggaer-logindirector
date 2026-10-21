@@ -39,9 +39,9 @@
     <PackageReference Include="Steeltoe.Management.Endpoint" Version="4.3.0" />
     <PackageReference Include="Amazon.AspNetCore.DataProtection.SSM" Version="4.0.3" />
     <PackageReference Include="Amazon.Extensions.Configuration.SystemsManager" Version="7.1.1" />
-    <PackageReference Include="AWSSDK.Core" Version="4.0.102.11" />
+    <PackageReference Include="AWSSDK.Core" Version="4.0.102.12" />
     <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.101.4" />
-    <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="4.0.104.4" />
+    <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="4.0.104.5" />
     <PackageReference Include="Steeltoe.Configuration.CloudFoundry" Version="4.3.0" />
   </ItemGroup>
 

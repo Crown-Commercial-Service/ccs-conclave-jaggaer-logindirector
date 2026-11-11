@@ -17,7 +17,7 @@ using logindirector.Services;
 using logindirector.Helpers;
 using System.Linq;
 using Amazon.SecurityToken;
-using Steeltoe.Extensions.Configuration.CloudFoundry;
+using Steeltoe.Configuration.CloudFoundry;
 
 namespace logindirector
 {
@@ -41,7 +41,7 @@ namespace logindirector
 
             if (string.IsNullOrEmpty(deploymentEnvironment) || deploymentEnvironment == "CloudFoundry")
             {
-                services.ConfigureCloudFoundryOptions(_configuration);
+                services.AddCloudFoundryOptions();
                 services.AddDefaultAWSOptions(_configuration.GetAWSOptions());
                 services.AddAWSService<IAmazonSecurityTokenService>();
             }
@@ -60,8 +60,8 @@ namespace logindirector
             });
 
             // Register any custom services we have
-            services.AddScoped<IAdaptorClientServices, AdaptorClientServices>();
-            services.AddScoped<ITendersClientServices, TendersClientServices>();
+            services.AddHttpClient<IAdaptorClientServices, AdaptorClientServices>();
+            services.AddHttpClient<ITendersClientServices, TendersClientServices>();
             services.AddScoped<IHelpers, UserHelpers>();
 
             // Enable Session for the app

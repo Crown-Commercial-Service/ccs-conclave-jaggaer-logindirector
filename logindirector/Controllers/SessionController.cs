@@ -77,7 +77,7 @@ namespace logindirector.Controllers
             return StatusCode(400);
         }
 
-        internal void RemoveUserFromCentralSessionCache(string sessionId)
+        public void RemoveUserFromCentralSessionCache(string sessionId)
         {
             // We need to expire any entries in the central session cache that have the provided session ID
             List<UserSessionModel> sessionsList;

@@ -1,0 +1,29 @@
+{
+  "name": "login-director",
+  "version": "2.0.0",
+  "description": "Government Commercial Agency Login Director application user interface",
+  "author": "Government Commercial Agency",
+  "type": "module",
+  "scripts": {
+    "generate-assets": "npm run build-assets",
+    "build-assets": "gulp build",
+    "watch-assets": "gulp watch-assets"
+  },
+  "dependencies": {
+    "govuk-frontend": "^6.5.1",
+    "jquery": "^4.0.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^29.0.3",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-terser": "^1.0.0",
+    "cssnano": "^9.1.2",
+    "del": "^8.0.1",
+    "gulp": "^5.0.1",
+    "gulp-livereload": "^4.0.2",
+    "gulp-postcss": "^10.0.0",
+    "gulp-sass": "^6.0.1",
+    "rollup": "^4.63.5",
+    "sass": "^1.105.1"
+  }
+}
